@@ -1,0 +1,391 @@
+#!/bin/bash
+
+#
+# Constants
+
+HELP_MESSAGE='Usage:
+  ./amalgamate [options]
+
+  -m, --main-header <main_header_path>    specify main header file explicitly
+  -o, --output <dir_path>                 specify output directory
+  -v, --verbose                           verbose mode
+  -h, --help                              show this message
+
+'
+
+HEADER_STRING_TEMPLATE='%s// ============================================================================\n%s// == %s ==%s'
+FOOTER_STRING_TEMPLATE='\n%s// == %s ==\n%s// ============================================================================%s'
+
+DEFAULT_OUTPUT_FOLDER='amalgamated'
+
+output_dir_path="$(pwd)/$DEFAULT_OUTPUT_FOLDER/"
+printf_verbose_function=do_nothing
+
+
+#
+# Functions
+
+printf_error()
+{
+	local format=$1
+	local arguments=${@:2}
+
+	printf "$format" $arguments >&2
+}
+
+
+setup()
+{
+	local arguments=("$@")
+
+	local index=( 0 )
+	local argument_count="${#arguments[@]}"
+	while [ $index -lt $argument_count ]
+	do
+		local argument="${arguments[$index]}"
+		case "$argument" in
+			-m|--main-header)
+				((++index))
+				main_header_file="${arguments[$index]}"
+				;;
+
+			-o|--output)
+				((++index))
+				output_dir_path=$(expand_path "${arguments[$index]}")/
+				;;
+
+			-v|--verbose)
+				printf_verbose_function=printf
+				;;
+
+			-h|--help)
+				printf "$HELP_MESSAGE"
+				exit
+				;;
+		esac
+
+		((++index))
+	done
+}
+
+
+do_nothing()
+{
+	:
+}
+
+
+printf_verbose()
+{
+	local format=$1
+	local arguments=${@:2}
+
+	"$printf_verbose_function" "$format" $arguments
+}
+
+
+array_contains_item()
+{
+	local item=$1
+	local array=("${@:2}")
+
+	local current
+	for current in ${array[@]}
+	do
+		if [ "$current" == "$item" ]
+		then
+			return 0
+		fi
+	done
+
+	return 1
+}
+
+
+is_include_line()
+{
+	local line=$1
+
+	[[ $line =~ ^[\ \t]*\#[\ \t]*include[\ \t]*\".*\"[\ \t]*$ ]]
+}
+
+
+is_pragma_once_line()
+{
+	local line=$1
+
+	[[ $line =~ ^[\ \t]*\#[\ \t]*pragma[\ \t]*once[\ \t]*$ ]]
+}
+
+
+is_empty_line()
+{
+	local line=$1
+
+	[[ $line =~ ^[\ \t]*$ ]]
+}
+
+
+expand_dir_path()
+{
+	local path=$1
+
+	local absolute_dir_path="$(cd $(pwd)/$dir; pwd)"
+
+	printf '%s\n' "$absolute_dir_path"
+}
+
+
+expand_path()
+{
+	local path=$1
+
+	local dir=$(dirname $path)
+	local base_name=$(basename $path)
+	local absolute_dir_path=$(expand_dir_path "$dir")
+
+	printf '%s\n' "$absolute_dir_path/$base_name"
+}
+
+
+path_from_include_line()
+{
+	local line=$1
+
+	local file_path=${line#*\"}
+	local file_path=${file_path%\"*}
+
+	printf '%s\n' "$file_path"
+}
+
+
+absolute_path_from_include_line()
+{
+	local line=$1
+
+	local file_path=${line#*\"}
+	local file_path=${file_path%\"*}
+
+	expand_path "$file_path"
+}
+
+
+assert_path_readable()
+{
+	local path=$1
+
+	if [ ! -r "$path" ]
+	then
+		printf_error 'File %s does not exist or not readble.' "$path"
+
+		exit 1
+	fi
+}
+
+
+assert_path_writable()
+{
+	local path=$1
+
+	if [ ! -w "$path" ]
+	then
+		printf_error 'File %s does not exist or not readble.' "$path"
+
+		exit 1
+	fi
+}
+
+
+file_printf()
+{
+	local file_path=$1
+	local format=$2
+	local arguments=$3
+
+	printf "$format" "${@:3}" >> "$file_path"
+}
+
+
+make_header_string()
+{
+	local line=$1
+	local indent=$2
+
+	printf "$HEADER_STRING_TEMPLATE\n" "$indent" "$indent" "$line" '\n\n'
+}
+
+
+make_footer_string()
+{
+	local line=$1
+	local indent=$2
+
+	printf "$FOOTER_STRING_TEMPLATE\n" "$indent" "$line" "$indent" '\n\n'
+}
+
+
+declare -a included_files
+
+IFS=''
+expand_file()
+{
+	local file_relative_path=$1
+	local file_path=$2
+	local output_path=$3
+	local indent=$4
+
+	printf_verbose '%s\n' "$file_relative_path"
+
+	local header_string=$(make_header_string "$file_relative_path" "$indent")
+	file_printf "$output_path" "$header_string"
+
+	local file_dir=$(dirname "$file_path")
+	cd "$file_dir"
+
+	local file_name=$(basename "$file_path")
+
+	local line
+	while read -r line
+	do
+		if is_include_line "$line"
+		then
+			local include_path=$(path_from_include_line "$line")
+			local absolute_include_path=$(expand_path "$include_path")
+
+			if array_contains_item "$absolute_include_path" "${included_files[@]}"
+			then
+				file_printf "$output_path" '%s// %s    // amalgamate: file already expanded\n' "$indent" "$line"
+				continue
+			fi
+
+			included_files+=("$absolute_include_path")
+			local current_dir=$(pwd)
+			expand_file "$include_path" "$absolute_include_path" "$output_path" "$indent	"
+			cd "$current_dir"
+
+			continue
+		fi
+
+		if is_pragma_once_line "$line"
+		then
+			file_printf "$output_path" '%s// %s' "$indent" "$line"
+
+			continue
+		fi
+
+		if ! is_empty_line "$line"
+		then
+			file_printf "$output_path" '%s' "$indent"
+		fi
+
+		file_printf "$output_path" '%s\n' "$line"
+	done < "$file_name"
+
+	local footer_string=$(make_footer_string "$file_relative_path" "$indent")
+	file_printf "$output_path" "$footer_string"
+}
+
+
+merge_sources()
+{
+	local path=$1
+	local output_source_path=$2
+
+	local relative_output_dir_path="${output_dir_path#$(pwd)}"
+	local source_files=$(find "$path" -not -path ".$relative_output_dir_path*" -name '*.cpp')
+	local file_path
+	while read -r file_path
+	do
+		local absolute_file_path=$(expand_path "$file_path")
+
+		local current_dir=$(pwd)
+		expand_file "$file_path" "$absolute_file_path" "$output_source_path"
+		cd "$current_dir"
+	done <<< "$source_files"
+}
+
+
+find_main_header()
+{
+	local dir_path=$1
+
+	local absolute_dir_path=$(expand_dir_path "$dir_path")
+
+	local header_files=$(find "$dir_path" -name '*.h')
+	local include_records=$(grep --recursive '[\ \t]*\#[\ \t]*include[\ \t]*".*"[\ \t]*.*' \
+		--exclude "$output_dir_path" \
+		--include \*.h --include \*.hh --include \*.H --include \*.hxx --include \*.hpp --include \*.h++ \
+		--include \*.c --include \*.cc --include \*.C --include \*.cxx --include \*.cpp --include \*.c++ \
+		.)
+
+	local include_record
+	while read -r include_record
+	do
+		local include_line=${include_record#*:}
+		local include_path=$(path_from_include_line "$include_line")
+		local includer_dir=$(dirname ${include_record%:*})
+		local absolute_path=$(expand_path "$includer_dir/$include_path")
+		local relative_path=".${absolute_path#$absolute_dir_path}"
+
+		local header_files=$(grep --invert-match "$relative_path" <<< "$header_files")
+	done <<< "$include_records"
+
+	printf '%s\n' "$header_files"
+}
+
+
+count_headers()
+{
+	local headers=$1
+
+	wc -l <<< "$headers" | awk '{ print $1 }'
+}
+
+
+#
+# Main
+
+setup "$@"
+
+
+rm -rf "$output_dir_path"
+mkdir "$output_dir_path"
+
+
+if [ -z "$main_header_file" ]
+then
+	printf_verbose 'No main header file specified. Searching for one...\n'
+
+	headers=$(find_main_header .)
+	header_count=$(count_headers "$headers")
+	if [ "$header_count" -ne 1 ]
+	then
+		printf_error 'Several candidates for main header file found:\n%s\n\n' "$headers"
+		printf_error 'Specify one explicitly.\n\n'
+
+		exit 1
+	fi
+
+	main_header_file="$headers"
+
+	printf_verbose 'Main header file found: %s\n\n' "$main_header_file"
+fi
+
+
+main_header_file_name=$(basename "$main_header_file")
+main_source_file_name="${main_header_file_name%.*}.cpp"
+
+output_header_path="$output_dir_path$main_header_file_name"
+output_source_path="$output_dir_path$main_source_file_name"
+
+absolute_main_header_path=$(expand_path "$main_header_file")
+included_files+=("$absolute_main_header_path")
+
+
+printf_verbose 'Merging files...\n'
+
+expand_file "$main_header_file" "$main_header_file" "$output_header_path"
+
+file_printf "$output_source_path" '#include "%s"\n' "$(basename $output_header_path)"
+merge_sources . "$output_source_path"
+
