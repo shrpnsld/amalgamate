@@ -6,10 +6,10 @@
 HELP_MESSAGE='Usage:
   ./amalgamate [options]
 
-  -m, --main-header <main_header_path>    specify main header file explicitly
-  -o, --output <dir_path>                 specify output directory
-  -v, --verbose                           verbose mode
-  -h, --help                              show this message
+  -n, --name <base_name>     specify base name of the output files
+  -o, --output <dir_path>    specify output directory
+  -v, --verbose              verbose mode
+  -h, --help                 show this message
 
 '
 
@@ -18,6 +18,7 @@ FOOTER_STRING_TEMPLATE='\n%s// == %s ==\n%s// ==================================
 
 DEFAULT_OUTPUT_FOLDER='amalgamated'
 
+name=$(basename $(pwd))
 output_dir_path="$(pwd)/$DEFAULT_OUTPUT_FOLDER/"
 printf_verbose_function=do_nothing
 
@@ -28,9 +29,8 @@ printf_verbose_function=do_nothing
 printf_error()
 {
 	local format=$1
-	local arguments=${@:2}
 
-	printf "$format" $arguments >&2
+	printf "$format" "${@:2}" >&2
 }
 
 
@@ -44,9 +44,9 @@ setup()
 	do
 		local argument="${arguments[$index]}"
 		case "$argument" in
-			-m|--main-header)
+			-n|--name)
 				((++index))
-				main_header_file="${arguments[$index]}"
+				name="${arguments[$index]}"
 				;;
 
 			-o|--output)
@@ -78,9 +78,8 @@ do_nothing()
 printf_verbose()
 {
 	local format=$1
-	local arguments=${@:2}
 
-	"$printf_verbose_function" "$format" $arguments
+	"$printf_verbose_function" "$format" "${@:2}"
 }
 
 
@@ -286,6 +285,32 @@ expand_file()
 }
 
 
+merge_headers()
+{
+	local path=$1
+	local output_header_path=$2
+
+	local relative_output_dir_path="${output_dir_path#$(pwd)}"
+	local source_files=$(find "$path" -not -path ".$relative_output_dir_path*" -name '*.h')
+	local file_path
+	while read -r file_path
+	do
+		local absolute_file_path=$(expand_path "$file_path")
+
+		if array_contains_item "$absolute_file_path" "${included_files[@]}"
+		then
+			file_printf "$output_header_path" '%s// %s    // amalgamate: file already expanded\n' "$indent" "$line"
+			continue
+		fi
+
+		included_files+=("$absolute_file_path")
+		local current_dir=$(pwd)
+		expand_file "$file_path" "$absolute_file_path" "$output_header_path"
+		cd "$current_dir"
+	done <<< "$source_files"
+}
+
+
 merge_sources()
 {
 	local path=$1
@@ -305,87 +330,32 @@ merge_sources()
 }
 
 
-find_main_header()
-{
-	local dir_path=$1
-
-	local absolute_dir_path=$(expand_dir_path "$dir_path")
-
-	local header_files=$(find "$dir_path" -name '*.h')
-	local include_records=$(grep --recursive '[\ \t]*\#[\ \t]*include[\ \t]*".*"[\ \t]*.*' \
-		--exclude "$output_dir_path" \
-		--include \*.h --include \*.hh --include \*.H --include \*.hxx --include \*.hpp --include \*.h++ \
-		--include \*.c --include \*.cc --include \*.C --include \*.cxx --include \*.cpp --include \*.c++ \
-		.)
-
-	local include_record
-	while read -r include_record
-	do
-		local include_line=${include_record#*:}
-		local include_path=$(path_from_include_line "$include_line")
-		local includer_dir=$(dirname ${include_record%:*})
-		local absolute_path=$(expand_path "$includer_dir/$include_path")
-		local relative_path=".${absolute_path#$absolute_dir_path}"
-
-		local header_files=$(grep --invert-match "$relative_path" <<< "$header_files")
-	done <<< "$include_records"
-
-	printf '%s\n' "$header_files"
-}
-
-
-count_headers()
-{
-	local headers=$1
-
-	wc -l <<< "$headers" | awk '{ print $1 }'
-}
-
-
 #
 # Main
 
 setup "$@"
 
+printf_verbose 'Name: %s\nOutput dir: %s\n\n' "$name" "$output_dir_path"
 
 rm -rf "$output_dir_path"
 mkdir "$output_dir_path"
 
 
-if [ -z "$main_header_file" ]
-then
-	printf_verbose 'No main header file specified. Searching for one...\n'
+header_file_name="$name.h"
+source_file_name="$name.cpp"
 
-	headers=$(find_main_header .)
-	header_count=$(count_headers "$headers")
-	if [ "$header_count" -ne 1 ]
-	then
-		printf_error 'Several candidates for main header file found:\n%s\n\n' "$headers"
-		printf_error 'Specify one explicitly.\n\n'
+output_header_path="$output_dir_path$header_file_name"
+output_source_path="$output_dir_path$source_file_name"
 
-		exit 1
-	fi
-
-	main_header_file="$headers"
-
-	printf_verbose 'Main header file found: %s\n\n' "$main_header_file"
-fi
+included_files+=("$output_header_path")
 
 
-main_header_file_name=$(basename "$main_header_file")
-main_source_file_name="${main_header_file_name%.*}.cpp"
+printf_verbose 'Merging headers...\n'
+merge_headers . "$output_header_path"
 
-output_header_path="$output_dir_path$main_header_file_name"
-output_source_path="$output_dir_path$main_source_file_name"
-
-absolute_main_header_path=$(expand_path "$main_header_file")
-included_files+=("$absolute_main_header_path")
-
-
-printf_verbose 'Merging files...\n'
-
-expand_file "$main_header_file" "$main_header_file" "$output_header_path"
-
-file_printf "$output_source_path" '#include "%s"\n' "$(basename $output_header_path)"
+printf_verbose '\nMerging sources...\n'
+file_printf "$output_source_path" '#include "%s"\n' "$(basename $header_file_name)"
 merge_sources . "$output_source_path"
+
+printf_verbose '\nDone.\n\n'
 
