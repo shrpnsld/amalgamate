@@ -8,6 +8,7 @@ HELP_MESSAGE='Usage:
 
   -n, --name <base_name>     specify base name of the output files
   -o, --output <dir_path>    specify output directory
+  -a, --annotate             insert annotations
   -v, --verbose              verbose mode
   -h, --help                 show this message
 
@@ -20,6 +21,9 @@ DEFAULT_OUTPUT_FOLDER='amalgamated'
 
 name=$(basename $(pwd))
 output_dir_path="$(pwd)/$DEFAULT_OUTPUT_FOLDER/"
+file_printf_annotation_function=do_nothing
+file_print_header_annotation_function=do_nothing
+file_print_footer_annotation_function=do_nothing
 printf_verbose_function=do_nothing
 
 
@@ -54,6 +58,12 @@ setup()
 				output_dir_path=$(expand_path "${arguments[$index]}")/
 				;;
 
+			-a|--annotate)
+				file_printf_annotation_function=file_printf
+				file_print_header_annotation_function=do_file_print_header_annotation
+				file_print_footer_annotation_function=do_file_print_footer_annotation
+				;;
+
 			-v|--verbose)
 				printf_verbose_function=printf
 				;;
@@ -80,6 +90,57 @@ printf_verbose()
 	local format=$1
 
 	"$printf_verbose_function" "$format" "${@:2}"
+}
+
+
+file_printf_annotation()
+{
+	local output_path=$1
+	local format=$2
+
+	"$file_printf_annotation_function" "$output_path" "$format" "${@:3}"
+}
+
+
+file_print_header_annotation()
+{
+	local output_path=$1
+	local file_path=$2
+	local indent=$3
+
+	"$file_print_header_annotation_function" "$output_path" "$file_path" "$indent"
+}
+
+
+do_file_print_header_annotation()
+{
+	local output_path=$1
+	local file_path=$2
+	local indent=$3
+
+	local header_string=$(make_header_string "$file_path" "$indent")
+	file_printf "$output_path" "$header_string"
+}
+
+
+file_print_footer_annotation()
+{
+	local output_path=$1
+	local file_path=$2
+	local indent=$3
+
+	"$file_print_footer_annotation_function" "$output_path" "$file_path" "$indent"
+}
+
+
+do_file_print_footer_annotation()
+{
+	local output_path=$1
+	local file_path=$2
+	local indent=$3
+
+	local footer_string=$(make_footer_string "$file_path" "$indent")
+	file_printf "$output_path" "$footer_string"
 }
 
 
@@ -235,8 +296,7 @@ expand_file()
 
 	printf_verbose '%s\n' "$file_relative_path"
 
-	local header_string=$(make_header_string "$file_relative_path" "$indent")
-	file_printf "$output_path" "$header_string"
+	file_print_header_annotation "$output_path" "$file_relative_path" "$indent"
 
 	local file_dir=$(dirname "$file_path")
 	cd "$file_dir"
@@ -253,7 +313,7 @@ expand_file()
 
 			if array_contains_item "$absolute_include_path" "${included_files[@]}"
 			then
-				file_printf "$output_path" '%s// %s    // amalgamate: file already expanded\n' "$indent" "$line"
+				file_printf_annotation "$output_path" '%s// %s    // amalgamate: file already expanded\n' "$indent" "$line"
 				continue
 			fi
 
@@ -267,7 +327,7 @@ expand_file()
 
 		if is_pragma_once_line "$line"
 		then
-			file_printf "$output_path" '%s// %s' "$indent" "$line"
+			file_printf_annotation "$output_path" '%s// %s' "$indent" "$line"
 
 			continue
 		fi
@@ -280,8 +340,7 @@ expand_file()
 		file_printf "$output_path" '%s\n' "$line"
 	done < "$file_name"
 
-	local footer_string=$(make_footer_string "$file_relative_path" "$indent")
-	file_printf "$output_path" "$footer_string"
+	file_print_footer_annotation "$output_path" "$file_relative_path" "$indent"
 }
 
 
