@@ -30,11 +30,9 @@ printf_verbose_function=do_nothing
 #
 # Functions
 
-printf_error()
+do_nothing()
 {
-	local format=$1
-
-	printf "$format" "${@:2}" >&2
+	:
 }
 
 
@@ -76,12 +74,6 @@ setup()
 
 		((++index))
 	done
-}
-
-
-do_nothing()
-{
-	:
 }
 
 
@@ -141,6 +133,53 @@ do_file_print_footer_annotation()
 
 	local footer_string=$(make_footer_string "$file_path" "$indent")
 	file_printf "$output_path" "$footer_string"
+}
+
+
+printf_error()
+{
+	local format=$1
+
+	printf "Error: $format" "${@:2}" >&2
+}
+
+
+assert_dir_exists()
+{
+	local dir=$1
+	local format=$2
+
+	if [ -a "$dir" ]
+	then
+		printf_error "$format" "${@:3}"
+		exit 1
+	fi
+}
+
+
+assert_path_readable()
+{
+	local path=$1
+
+	if [ ! -r "$path" ]
+	then
+		printf_error 'file %s does not exist or not readble.' "$path"
+
+		exit 1
+	fi
+}
+
+
+assert_path_writable()
+{
+	local path=$1
+
+	if [ ! -w "$path" ]
+	then
+		printf_error 'file %s does not exist or not readble.' "$path"
+
+		exit 1
+	fi
 }
 
 
@@ -227,32 +266,6 @@ absolute_path_from_include_line()
 	local file_path=${file_path%\"*}
 
 	expand_path "$file_path"
-}
-
-
-assert_path_readable()
-{
-	local path=$1
-
-	if [ ! -r "$path" ]
-	then
-		printf_error 'File %s does not exist or not readble.' "$path"
-
-		exit 1
-	fi
-}
-
-
-assert_path_writable()
-{
-	local path=$1
-
-	if [ ! -w "$path" ]
-	then
-		printf_error 'File %s does not exist or not readble.' "$path"
-
-		exit 1
-	fi
 }
 
 
@@ -394,11 +407,10 @@ merge_sources()
 
 setup "$@"
 
-printf_verbose 'Name: %s\nOutput dir: %s\n\n' "$name" "$output_dir_path"
-
-rm -rf "$output_dir_path"
+assert_dir_exists "$output_dir_path" 'output directory already exists\n'
 mkdir "$output_dir_path"
 
+printf_verbose 'Name: %s\nOutput dir: %s\n\n' "$name" "$output_dir_path"
 
 header_file_name="$name.h"
 source_file_name="$name.cpp"
