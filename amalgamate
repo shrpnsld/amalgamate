@@ -410,6 +410,7 @@ included_files+=("$output_header_path")
 
 
 printf_verbose 'Merging headers...\n'
+file_printf "$output_header_path" '#pragma once\n'
 merge_headers . "$output_header_path"
 
 printf_verbose '\nMerging sources...\n'
