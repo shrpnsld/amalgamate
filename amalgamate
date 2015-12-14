@@ -163,21 +163,7 @@ assert_path_readable()
 
 	if [ ! -r "$path" ]
 	then
-		printf_error 'file %s does not exist or not readble.' "$path"
-
-		exit 1
-	fi
-}
-
-
-assert_path_writable()
-{
-	local path=$1
-
-	if [ ! -w "$path" ]
-	then
-		printf_error 'file %s does not exist or not readble.' "$path"
-
+		printf_error 'file %s does not exist or not readble.\n' "$path"
 		exit 1
 	fi
 }
@@ -308,6 +294,7 @@ expand_file()
 	local indent=$4
 
 	printf_verbose '%s\n' "$file_relative_path"
+	assert_path_readable "$file_relative_path"
 
 	file_print_header_annotation "$output_path" "$file_relative_path" "$indent"
 
