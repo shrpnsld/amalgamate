@@ -215,7 +215,7 @@ expand_dir_path()
 {
 	local path=$1
 
-	local absolute_dir_path="$(cd $(pwd)/$dir; pwd)"
+	local absolute_dir_path="$(cd $(pwd)/$path; pwd)"
 
 	printf '%s\n' "$absolute_dir_path"
 }
