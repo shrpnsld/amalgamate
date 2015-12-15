@@ -225,11 +225,20 @@ expand_path()
 {
 	local path=$1
 
-	local dir=$(dirname $path)
-	local base_name=$(basename $path)
+	local dir=$(dirname "$path")
+	local base_name=$(basename "$path")
 	local absolute_dir_path=$(expand_dir_path "$dir")
 
 	printf '%s\n' "$absolute_dir_path/$base_name"
+}
+
+
+relative_path()
+{
+	local path=$1
+	local base_path=$2
+
+	printf '%s\n' ".${path#$base_path}"
 }
 
 
@@ -288,13 +297,13 @@ declare -a included_files
 IFS=''
 expand_file()
 {
-	local file_relative_path=$1
-	local file_path=$2
-	local output_path=$3
-	local indent=$4
+	local file_path=$1
+	local output_path=$2
+	local indent=$3
 
+	local file_relative_path=$(relative_path "$file_path" "$(pwd)")
 	printf_verbose '%s\n' "$file_relative_path"
-	assert_path_readable "$file_relative_path"
+	assert_path_readable "$file_path"
 
 	file_print_header_annotation "$output_path" "$file_relative_path" "$indent"
 
@@ -318,9 +327,7 @@ expand_file()
 			fi
 
 			included_files+=("$absolute_include_path")
-			local current_dir=$(pwd)
-			expand_file "$include_path" "$absolute_include_path" "$output_path" "$indent	"
-			cd "$current_dir"
+			expand_file "$absolute_include_path" "$output_path" "$indent	"
 
 			continue
 		fi
@@ -349,7 +356,7 @@ merge_headers()
 	local path=$1
 	local output_header_path=$2
 
-	local relative_output_dir_path="${output_dir_path#$(pwd)}"
+	local relative_output_dir_path=$(relative_path "$output_dir_path" "$(pwd)")
 	local source_files=$(find "$path" -not -path ".$relative_output_dir_path*" -name '*.h')
 	local file_path
 	while read -r file_path
@@ -364,7 +371,7 @@ merge_headers()
 
 		included_files+=("$absolute_file_path")
 		local current_dir=$(pwd)
-		expand_file "$file_path" "$absolute_file_path" "$output_header_path"
+		expand_file "$absolute_file_path" "$output_header_path" ""
 		cd "$current_dir"
 	done <<< "$source_files"
 }
@@ -375,7 +382,7 @@ merge_sources()
 	local path=$1
 	local output_source_path=$2
 
-	local relative_output_dir_path="${output_dir_path#$(pwd)}"
+	local relative_output_dir_path=$(relative_path "$output_dir_path" "$(pwd)")
 	local source_files=$(find "$path" -not -path ".$relative_output_dir_path*" -name '*.cpp')
 	local file_path
 	while read -r file_path
@@ -383,7 +390,7 @@ merge_sources()
 		local absolute_file_path=$(expand_path "$file_path")
 
 		local current_dir=$(pwd)
-		expand_file "$file_path" "$absolute_file_path" "$output_source_path"
+		expand_file "$absolute_file_path" "$output_source_path" ""
 		cd "$current_dir"
 	done <<< "$source_files"
 }
