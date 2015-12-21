@@ -215,7 +215,7 @@ expand_dir_path()
 {
 	local path=$1
 
-	local absolute_dir_path="$(cd $(pwd)/$path; pwd)"
+	local absolute_dir_path="$(cd $path; pwd)"
 
 	printf '%s\n' "$absolute_dir_path"
 }
@@ -294,23 +294,19 @@ make_footer_string()
 
 declare -a included_files
 
-IFS=''
 expand_file()
 {
-	local file_path=$1
+	IFS=''
+	local absolute_file_path=$1
 	local output_path=$2
 	local indent=$3
 
-	local file_relative_path=$(relative_path "$file_path" "$(pwd)")
-	printf_verbose '%s\n' "$file_relative_path"
-	assert_path_readable "$file_path"
+	local expanded=$(expand_path "$absolute_file_path")
+	local relative_file_path=$(relative_path "$expanded" $(pwd))
+	printf_verbose '%s\n' "$relative_file_path"
+	assert_path_readable "$absolute_file_path"
 
-	file_print_header_annotation "$output_path" "$file_relative_path" "$indent"
-
-	local file_dir=$(dirname "$file_path")
-	cd "$file_dir"
-
-	local file_name=$(basename "$file_path")
+	file_print_header_annotation "$output_path" "$absolute_file_path" "$indent"
 
 	local line
 	while read -r line
@@ -318,7 +314,8 @@ expand_file()
 		if is_include_line "$line"
 		then
 			local include_path=$(path_from_include_line "$line")
-			local absolute_include_path=$(expand_path "$include_path")
+			local dir=$(dirname "$absolute_file_path")
+			local absolute_include_path="$dir/$include_path"
 
 			if array_contains_item "$absolute_include_path" "${included_files[@]}"
 			then
@@ -345,54 +342,47 @@ expand_file()
 		fi
 
 		file_printf "$output_path" '%s\n' "$line"
-	done < "$file_name"
+	done < "$absolute_file_path"
 
-	file_print_footer_annotation "$output_path" "$file_relative_path" "$indent"
+	file_print_footer_annotation "$output_path" "$absolute_file_path" "$indent"
 }
 
 
 merge_headers()
 {
-	local path=$1
-	local output_header_path=$2
+	local output_header_path=$1
+	shift
+	local paths=("$@")
 
-	local relative_output_dir_path=$(relative_path "$output_dir_path" "$(pwd)")
-	local source_files=$(find "$path" -not -path ".$relative_output_dir_path*" -name '*.h')
-	local file_path
-	while read -r file_path
+	local path
+	for path in "${paths[@]}"
 	do
-		local absolute_file_path=$(expand_path "$file_path")
+		local file_absolute_path=$(expand_path "$path")
 
-		if array_contains_item "$absolute_file_path" "${included_files[@]}"
+		if array_contains_item "$file_absolute_path" "${included_files[@]}"
 		then
-			file_printf "$output_header_path" '%s// %s    // amalgamate: file already expanded\n' "$indent" "$line"
 			continue
 		fi
 
-		included_files+=("$absolute_file_path")
-		local current_dir=$(pwd)
-		expand_file "$absolute_file_path" "$output_header_path" ""
-		cd "$current_dir"
-	done <<< "$source_files"
+		included_files+=("$file_absolute_path")
+		expand_file "$file_absolute_path" "$output_header_path" ""
+	done
 }
 
 
 merge_sources()
 {
-	local path=$1
-	local output_source_path=$2
+	local output_source_path=$1
+	shift
+	local paths=("$@")
 
-	local relative_output_dir_path=$(relative_path "$output_dir_path" "$(pwd)")
-	local source_files=$(find "$path" -not -path ".$relative_output_dir_path*" -name '*.cpp')
-	local file_path
-	while read -r file_path
+	local path
+	for path in "${paths[@]}"
 	do
-		local absolute_file_path=$(expand_path "$file_path")
+		local file_absolute_path=$(expand_path "$path")
 
-		local current_dir=$(pwd)
-		expand_file "$absolute_file_path" "$output_source_path" ""
-		cd "$current_dir"
-	done <<< "$source_files"
+		expand_file "$file_absolute_path" "$output_source_path" ""
+	done
 }
 
 
@@ -402,7 +392,6 @@ merge_sources()
 setup "$@"
 
 assert_dir_exists "$output_dir_path" 'output directory already exists\n'
-mkdir "$output_dir_path"
 
 printf_verbose 'Name: %s\nOutput dir: %s\n\n' "$name" "$output_dir_path"
 
@@ -414,14 +403,19 @@ output_source_path="$output_dir_path$source_file_name"
 
 included_files+=("$output_header_path")
 
+IFS=$'\n'
+header_files=($(find . -name '*.h'))
+source_files=($(find . -name '*.cpp'))
+
+mkdir "$output_dir_path"
 
 printf_verbose 'Merging headers...\n'
 file_printf "$output_header_path" '#pragma once\n'
-merge_headers . "$output_header_path"
+merge_headers "$output_header_path" "${header_files[@]}"
 
 printf_verbose '\nMerging sources...\n'
 file_printf "$output_source_path" '#include "%s"\n' "$(basename $header_file_name)"
-merge_sources . "$output_source_path"
+merge_sources "$output_source_path" "${source_files[@]}"
 
 printf_verbose '\nDone.\n\n'
 
