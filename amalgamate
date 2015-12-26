@@ -315,7 +315,8 @@ expand_file()
 		then
 			local include_path=$(path_from_include_line "$line")
 			local dir=$(dirname "$absolute_file_path")
-			local absolute_include_path="$dir/$include_path"
+			local non_expanded_path="$dir/$include_path"
+			local absolute_include_path=$(expand_path "$non_expanded_path")
 
 			if array_contains_item "$absolute_include_path" "${included_files[@]}"
 			then
