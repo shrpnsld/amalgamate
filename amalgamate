@@ -3,6 +3,9 @@
 #
 # Constants
 
+RED_TEXT='\e[0;31m'
+NO_COLOR_TEXT='\e[0m'
+
 HELP_MESSAGE='Usage:
   ./amalgamate [options]
 
@@ -154,24 +157,17 @@ do_file_print_footer_annotation()
 }
 
 
-printf_error()
+printf_stderr()
 {
-	local format=$1
-
-	printf "Error: $format" "${@:2}" >&2
+	printf "$@" >&2
 }
 
 
-assert_dir_exists()
+printf_error()
 {
-	local dir=$1
-	local format=$2
-
-	if [ -a "$dir" ]
-	then
-		printf_error "$format" "${@:3}"
-		exit 1
-	fi
+	printf_stderr "$RED_TEXT"'amalgamate error: '"$NO_COLOR_TEXT"
+	printf_stderr "$@"
+	printf_stderr '\n'
 }
 
 
@@ -243,7 +239,7 @@ expand_dir_path()
 {
 	local path=$1
 
-	local absolute_dir_path="$(cd $path; pwd)"
+	local absolute_dir_path=$(cd $path; pwd)
 
 	printf '%s\n' "$absolute_dir_path"
 }
@@ -420,7 +416,11 @@ merge_sources()
 
 setup "$@"
 
-assert_dir_exists "$output_dir_path" 'output directory already exists\n'
+if [ -a "$output_dir_path" ]
+then
+	printf_error 'output path already exists'
+	exit 1
+fi
 
 printf_verbose 'Name: %s\nOutput dir: %s\n\n' "$name" "$output_dir_path"
 
