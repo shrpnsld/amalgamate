@@ -7,19 +7,16 @@ RED_TEXT='\e[0;31m'
 NO_COLOR_TEXT='\e[0m'
 
 HELP_MESSAGE='Usage:
-  ./amalgamate [options]
+  amalgamate [options]
 
 Options:
-  -n, --name <base_name>       base name of the output files
-  -e, --headers ext,ens,ions   header extensions divided with ","
-  -s, --sources ext,ens,ions   source extensions divided with ","
-  -o, --output <dir_path>      output directory
-  -a, --annotate               insert annotations
-  -v, --verbose                verbose mode
-  -h, --help                   show this message
-
-Default value for -e, --headers is "h,hh,hpp,hxx,h++,tpp,txx,tpl,ii,ixx,ipp,inl"
-Default value for -s, --sources is "c,cc,cpp,cxx,c++"
+  -n, --name <base_name>         Base name of the output files.
+  -e, --headers <ext,ens,ions>   Header extensions [default: "h,hh,hpp,hxx,h++,tpp,txx,tpl,ii,ixx,ipp,inl"].
+  -s, --sources <ext,ens,ions>   Source extensions [default: "c,cc,cpp,cxx,c++"].
+  -o, --output <dir_path>        Output directory.
+  -a, --annotate                 Insert annotations.
+  -v, --verbose                  Verbose mode.
+  -h, --help                     Show this message.
 
 '
 
