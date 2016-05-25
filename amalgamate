@@ -6,11 +6,17 @@
 HELP_MESSAGE='Usage:
   ./amalgamate [options]
 
-  -n, --name <base_name>     specify base name of the output files
-  -o, --output <dir_path>    specify output directory
-  -a, --annotate             insert annotations
-  -v, --verbose              verbose mode
-  -h, --help                 show this message
+Options:
+  -n, --name <base_name>       base name of the output files
+  -e, --headers ext,ens,ions   header extensions divided with ","
+  -s, --sources ext,ens,ions   source extensions divided with ","
+  -o, --output <dir_path>      output directory
+  -a, --annotate               insert annotations
+  -v, --verbose                verbose mode
+  -h, --help                   show this message
+
+Default value for -e, --headers is "h,hh,hpp,hxx,h++,tpp,txx,tpl,ii,ixx,ipp,inl"
+Default value for -s, --sources is "c,cc,cpp,cxx,c++"
 
 '
 
@@ -20,6 +26,8 @@ FOOTER_STRING_TEMPLATE='\n%s// == %s ==\n%s// ==================================
 DEFAULT_OUTPUT_FOLDER='amalgamated'
 
 name=$(basename $(pwd))
+header_extensions='h,hh,hpp,hxx,h++,tpp,txx,tpl,ii,ixx,ipp,inl'
+source_extensions='c,cc,cpp,cxx,c++'
 output_dir_path="$(pwd)/$DEFAULT_OUTPUT_FOLDER/"
 file_printf_annotation_function=do_nothing
 file_print_header_annotation_function=do_nothing
@@ -49,6 +57,16 @@ setup()
 			-n|--name)
 				((++index))
 				name="${arguments[$index]}"
+				;;
+
+			-e|--headers)
+				((++index))
+				header_extensions="${arguments[$index]}"
+				;;
+
+			-s|--sources)
+				((++index))
+				source_extensions="${arguments[$index]}"
 				;;
 
 			-o|--output)
@@ -184,6 +202,16 @@ array_contains_item()
 	done
 
 	return 1
+}
+
+
+find_by_extensions()
+{
+	local path=$1
+	local extensions=$2
+
+	local arguments=$(sed -e "s/^\([^,]*\)/ -name '*.\1'/g" -e "s/,\([^,]*\)/ -or -name '*.\1'/g" <<< "$extensions")
+	eval 'find '"$path"' -type f '"$arguments"
 }
 
 
@@ -405,8 +433,8 @@ output_source_path="$output_dir_path$source_file_name"
 included_files+=("$output_header_path")
 
 IFS=$'\n'
-header_files=($(find . -name '*.h'))
-source_files=($(find . -name '*.cpp'))
+header_files=($(find_by_extensions . "$header_extensions"))
+source_files=($(find_by_extensions . "$source_extensions"))
 
 mkdir "$output_dir_path"
 

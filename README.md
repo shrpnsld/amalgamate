@@ -18,8 +18,10 @@ By default the script uses *ParentFolderName* as base name for generated header 
 
 #### Parameters:
 
-* `-n`, `--name` - change base name
-* `-o`, `--output` - specify destination folder
+* `-n`, `--name` - base name
+* `-e`, `--headers` `ext,ens,ions` - header extensions divided with ","
+* `-s`, `--sources` `ext,ens,ions` - source extensions divided with ","
+* `-o`, `--output` - destination folder
 * `-a`, `--annotate` - insert annotations
 * `-v`, `--verbose` - verbose mode
 * `-h`, `--help` - show help message
