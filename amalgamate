@@ -517,6 +517,12 @@ IFS=$'\n'
 header_files=($(find_by_extensions . "$header_extensions"))
 source_files=($(find_by_extensions . "$source_extensions"))
 
+if [ "${#header_files[@]}" == 0 ] && [ "${#source_files[@]}" == 0 ]
+then
+	printf_error 'no C/C++ files found'
+	exit 1
+fi
+
 mkdir "$output_dir_path"
 
 printf_verbose 'Merging headers...\n'
