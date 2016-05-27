@@ -411,7 +411,7 @@ expand_file()
 	printf_verbose '%s\n' "$relative_file_path"
 	assert_path_readable "$absolute_file_path"
 
-	file_print_header_annotation "$output_path" "$absolute_file_path" "$indent"
+	file_print_header_annotation "$output_path" "$relative_file_path" "$indent"
 
 	local line
 	while read -r line
@@ -450,7 +450,7 @@ expand_file()
 		file_printf "$output_path" '%s\n' "$line"
 	done < "$absolute_file_path"
 
-	file_print_footer_annotation "$output_path" "$absolute_file_path" "$indent"
+	file_print_footer_annotation "$output_path" "$relative_file_path" "$indent"
 }
 
 
