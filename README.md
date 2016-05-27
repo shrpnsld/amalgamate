@@ -18,13 +18,13 @@ By default the script uses *ParentFolderName* as base name for generated header 
 
 #### Options:
 
-* `-n`, `--name` `<base_name>` - base name
-* `-e`, `--headers` `<ext,ens,ions>` - header extensions
-* `-s`, `--sources` `<ext,ens,ions>` - source extensions
-* `-o`, `--output` `<dir_path>` - destination directory
-* `-a`, `--annotate` - insert annotations
-* `-v`, `--verbose` - verbose mode
-* `-h`, `--help` - show help message
+* `-n <base_name>` - base name of the output files
+* `-e <ext,ens,ions>` - header extensions
+* `-s <ext,ens,ions>` - source extensions
+* `-o <dir_path>` - output directory
+* `-a` - insert annotations
+* `-v` - verbose mode
+* `-h` - show help message
 
 
 #### Example with [pretty_output](https://github.com/shrpnsld/pretty_output) project

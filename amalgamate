@@ -10,13 +10,13 @@ HELP_MESSAGE='Usage:
   amalgamate [options]
 
 Options:
-  -n, --name <base_name>         Base name of the output files.
-  -e, --headers <ext,ens,ions>   Header extensions [default: "h,hh,hpp,hxx,h++,tpp,txx,tpl,ii,ixx,ipp,inl"].
-  -s, --sources <ext,ens,ions>   Source extensions [default: "c,cc,cpp,cxx,c++"].
-  -o, --output <dir_path>        Output directory.
-  -a, --annotate                 Insert annotations.
-  -v, --verbose                  Verbose mode.
-  -h, --help                     Show this message.
+  -n <base_name>     Base name of the output files.
+  -e <ext,ens,ions>  Header extensions [default: "h,hh,hpp,hxx,h++,tpp,txx,tpl,ii,ixx,ipp,inl"].
+  -s <ext,ens,ions>  Source extensions [default: "c,cc,cpp,cxx,c++"].
+  -o <dir_path>      Output directory.
+  -a                 Insert annotations.
+  -v                 Verbose mode.
+  -h                 Show this message.
 
 '
 
@@ -28,7 +28,7 @@ DEFAULT_OUTPUT_FOLDER='amalgamated'
 name=$(basename $(pwd))
 header_extensions='h,hh,hpp,hxx,h++,tpp,txx,tpl,ii,ixx,ipp,inl'
 source_extensions='c,cc,cpp,cxx,c++'
-output_dir_path="$(pwd)/$DEFAULT_OUTPUT_FOLDER/"
+output_dir_path="$(pwd)/$DEFAULT_OUTPUT_FOLDER"
 file_printf_annotation_function=do_nothing
 file_print_header_annotation_function=do_nothing
 file_print_footer_annotation_function=do_nothing
@@ -38,59 +38,157 @@ printf_verbose_function=do_nothing
 #
 # Functions
 
+printf_stderr()
+{
+	printf "$@" >&2
+}
+
+
+printf_error()
+{
+	printf_stderr "$RED_TEXT"'amalgamate error: '"$NO_COLOR_TEXT"
+	printf_stderr "$@"
+	printf_stderr '\n\n'
+}
+
+
 do_nothing()
 {
 	:
 }
 
 
-setup()
+valid_option_string()
 {
-	local arguments=("$@")
+	local string=$1
 
-	local index=( 0 )
-	local argument_count="${#arguments[@]}"
-	while [ $index -lt $argument_count ]
+	local first_character="${string:0:1}"
+	if [ "$first_character" != '-' ]
+	then
+		return 1
+	fi
+}
+
+
+parse_options()
+{
+	local argument_index=$1
+	local options=$2
+	local arguments=(${@:3})
+
+	local char_index=( 0 )
+	local char_count="${#options}"
+	while [ $char_index -lt $char_count ]
 	do
-		local argument="${arguments[$index]}"
-		case "$argument" in
-			-n|--name)
-				((++index))
-				name="${arguments[$index]}"
+		local option="${options:$char_index:1}"
+		case "$option" in
+			n)
+				((++char_index))
+				if [ $char_index == $char_count ]
+				then
+					((++argument_index))
+					name="${arguments[$argument_index]}"
+				else
+					name="${options:$char_index}"
+				fi
+
+				((++argument_index))
+				return $argument_index
 				;;
 
-			-e|--headers)
-				((++index))
-				header_extensions="${arguments[$index]}"
+			e)
+				((++char_index))
+				if [ $char_index == $char_count ]
+				then
+					((++argument_index))
+					header_extensions="${arguments[$argument_index]}"
+				else
+					header_extensions="${options:$char_index}"
+				fi
+
+				((++argument_index))
+				return $argument_index
 				;;
 
-			-s|--sources)
-				((++index))
-				source_extensions="${arguments[$index]}"
+			s)
+				((++char_index))
+				if [ $char_index == $char_count ]
+				then
+					((++argument_index))
+					source_extensions="${arguments[$argument_index]}"
+				else
+					source_extensions="${options:$char_index}"
+				fi
+
+				((++argument_index))
+				return $argument_index
 				;;
 
-			-o|--output)
-				((++index))
-				output_dir_path=$(expand_path "${arguments[$index]}")/
+			o)
+				((++char_index))
+				if [ $char_index == $char_count ]
+				then
+					((++argument_index))
+					output_dir_path="${arguments[$argument_index]}"
+				else
+					output_dir_path="${options:$char_index}"
+				fi
+
+				((++argument_index))
+				return $argument_index
 				;;
 
-			-a|--annotate)
+			a)
 				file_printf_annotation_function=file_printf
 				file_print_header_annotation_function=do_file_print_header_annotation
 				file_print_footer_annotation_function=do_file_print_footer_annotation
+				((++char_index))
 				;;
 
-			-v|--verbose)
+			v)
 				printf_verbose_function=printf
+				((++char_index))
 				;;
 
-			-h|--help)
-				printf "$HELP_MESSAGE"
+			h)
+				printf '%s' "$HELP_MESSAGE"
+				((++char_index))
 				exit
 				;;
-		esac
 
-		((++index))
+			*)
+				printf_error 'unknown option "%s"' "$option"
+				printf '%s' "$HELP_MESSAGE"
+				((++char_index))
+				exit 1
+				;;
+		esac
+	done
+
+	((++argument_index))
+	return $argument_index
+}
+
+
+setup()
+{
+	local arguments=("$@")
+	local argument_index=( 0 )
+	local argument_count=( ${#@} )
+
+	while [ $argument_index -lt $argument_count ]
+	do
+		local argument="${arguments[$argument_index]}"
+		if ! valid_option_string "$argument"
+		then
+			printf_error 'wrong arguments'
+			printf '%s' "$HELP_MESSAGE"
+			exit 1
+		fi
+
+		local options="${argument:1}"
+		parse_options $argument_index "$options" "${arguments[@]}"
+		argument_index=$?
 	done
 }
 
@@ -154,27 +252,13 @@ do_file_print_footer_annotation()
 }
 
 
-printf_stderr()
-{
-	printf "$@" >&2
-}
-
-
-printf_error()
-{
-	printf_stderr "$RED_TEXT"'amalgamate error: '"$NO_COLOR_TEXT"
-	printf_stderr "$@"
-	printf_stderr '\n'
-}
-
-
 assert_path_readable()
 {
 	local path=$1
 
 	if [ ! -r "$path" ]
 	then
-		printf_error 'file %s does not exist or not readble.\n' "$path"
+		printf_error 'file %s does not exist or not readble' "$path"
 		exit 1
 	fi
 }
@@ -424,8 +508,8 @@ printf_verbose 'Name: %s\nOutput dir: %s\n\n' "$name" "$output_dir_path"
 header_file_name="$name.h"
 source_file_name="$name.cpp"
 
-output_header_path="$output_dir_path$header_file_name"
-output_source_path="$output_dir_path$source_file_name"
+output_header_path="$output_dir_path/$header_file_name"
+output_source_path="$output_dir_path/$source_file_name"
 
 included_files+=("$output_header_path")
 
