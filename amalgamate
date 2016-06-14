@@ -38,6 +38,12 @@ printf_verbose_function=do_nothing
 #
 # Functions
 
+has_terminal()
+{
+	tty -s
+}
+
+
 printf_stderr()
 {
 	printf "$@" >&2
@@ -46,7 +52,12 @@ printf_stderr()
 
 printf_error()
 {
-	printf_stderr "$RED_TEXT"'amalgamate error: '"$NO_COLOR_TEXT"
+	if has_terminal
+	then
+		printf_stderr "$RED_TEXT"'amalgamate error: '"$NO_COLOR_TEXT"
+	else
+		printf_stderr 'amalgamate error: '
+	fi
 	printf_stderr "$@"
 	printf_stderr '\n\n'
 }
