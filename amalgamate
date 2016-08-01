@@ -14,6 +14,7 @@ Options:
   -e <ext,ens,ions>  Header extensions [default: "h,hh,hpp,hxx,h++,tpp,txx,tpl,ii,ixx,ipp,inl"].
   -s <ext,ens,ions>  Source extensions [default: "c,cc,cpp,cxx,c++"].
   -o <dir_path>      Output directory.
+  -x <hpp,cpp>     Header and source extensions for output files [default: "h,cpp"].
   -a                 Insert annotations.
   -v                 Verbose mode.
   -h                 Show this message.
@@ -24,11 +25,15 @@ HEADER_STRING_TEMPLATE='%s// ===================================================
 FOOTER_STRING_TEMPLATE='\n%s// == %s ==\n%s// ============================================================================%s'
 
 DEFAULT_OUTPUT_FOLDER='amalgamated'
+DEFAULT_OUTPUT_HEADER_EXTENSION='h'
+DEFAULT_OUTPUT_SOURCE_EXTENSION='cpp'
 
 name=$(basename $(pwd))
 header_extensions='h,hh,hpp,hxx,h++,tpp,txx,tpl,ii,ixx,ipp,inl'
 source_extensions='c,cc,cpp,cxx,c++'
 output_dir_path="$(pwd)/$DEFAULT_OUTPUT_FOLDER"
+output_header_extension=''
+output_source_extension=''
 file_printf_annotation_function=do_nothing
 file_print_header_annotation_function=do_nothing
 file_print_footer_annotation_function=do_nothing
@@ -144,6 +149,23 @@ parse_options()
 				else
 					output_dir_path="${options:$char_index}"
 				fi
+
+				((++argument_index))
+				return $argument_index
+				;;
+
+			x)
+				((++char_index))
+				if [ $char_index == $char_count ]
+				then
+					((++argument_index))
+					output_extensions="${arguments[$argument_index]}"
+				else
+					output_extensions="${options:$char_index}"
+				fi
+
+				output_header_extension="${output_extensions%,*}"
+				output_source_extension="${output_extensions#*,}"
 
 				((++argument_index))
 				return $argument_index
@@ -324,6 +346,36 @@ is_empty_line()
 	local line=$1
 
 	[[ $line =~ ^[\ \t]*$ ]]
+}
+
+
+path_extension()
+{
+	local path=$1
+
+	printf '%s\n' "${path##*.}"
+}
+
+
+detect_extension()
+{
+	local default_extension=$1
+	local paths=("${@:2}")
+
+	local first_extension=$(path_extension "${paths[0]}")
+	local path
+	for path in "${paths[@]:1}"
+	do
+		local extension=$(path_extension "$path")
+		if [ "$first_extension" != "$extension" ]
+		then
+			printf '%s\n' "$default_extension"
+			return 0
+		fi
+	done
+
+	printf '%s\n' "$first_extension"
+	return 0
 }
 
 
@@ -508,21 +560,6 @@ merge_sources()
 
 setup "$@"
 
-if [ -a "$output_dir_path" ]
-then
-	printf_error 'output path already exists'
-	exit 1
-fi
-
-printf_verbose 'Name: %s\nOutput dir: %s\n\n' "$name" "$output_dir_path"
-
-header_file_name="$name.h"
-source_file_name="$name.cpp"
-
-output_header_path="$output_dir_path/$header_file_name"
-output_source_path="$output_dir_path/$source_file_name"
-
-included_files+=("$output_header_path")
 
 IFS=$'\n'
 header_files=($(find_by_extensions . "$header_extensions"))
@@ -533,6 +570,32 @@ then
 	printf_error 'no C/C++ files found'
 	exit 1
 fi
+
+if [ -a "$output_dir_path" ]
+then
+	printf_error 'output path already exists'
+	exit 1
+fi
+
+printf_verbose 'Name: %s\nOutput dir: %s\n\n' "$name" "$output_dir_path"
+
+if [ -z "$output_header_extension" ]
+then
+	output_header_extension=$(detect_extension "$DEFAULT_OUTPUT_HEADER_EXTENSION" "${header_files[@]}")
+fi
+
+if [ -z "$output_source_extension" ]
+then
+	output_source_extension=$(detect_extension "$DEFAULT_OUTPUT_SOURCE_EXTENSION" "${source_files[@]}")
+fi
+
+header_file_name="$name.$output_header_extension"
+source_file_name="$name.$output_source_extension"
+
+output_header_path="$output_dir_path/$header_file_name"
+output_source_path="$output_dir_path/$source_file_name"
+
+included_files+=("$output_header_path")
 
 mkdir "$output_dir_path"
 
