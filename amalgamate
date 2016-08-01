@@ -228,9 +228,7 @@ setup()
 
 printf_verbose()
 {
-	local format=$1
-
-	"$printf_verbose_function" "$format" "${@:2}"
+	"$printf_verbose_function" "$@"
 }
 
 
@@ -571,13 +569,16 @@ then
 	exit 1
 fi
 
-if [ -a "$output_dir_path" ]
+
+mkdir -p "$output_dir_path"
+if [ $? != 0 ]
 then
-	printf_error 'output path already exists'
+	printf_error 'can'"'"'t write path "%s"' "$output_dir_path"
 	exit 1
 fi
 
-printf_verbose 'Name: %s\nOutput dir: %s\n\n' "$name" "$output_dir_path"
+output_dir_path=$(expand_dir_path "$output_dir_path")
+
 
 if [ -z "$output_header_extension" ]
 then
@@ -595,9 +596,11 @@ source_file_name="$name.$output_source_extension"
 output_header_path="$output_dir_path/$header_file_name"
 output_source_path="$output_dir_path/$source_file_name"
 
-included_files+=("$output_header_path")
+printf_verbose 'Output to:\n%s/\n ├── %s\n └── %s\n\n' "$output_dir_path" "$header_file_name" "$source_file_name"
 
-mkdir "$output_dir_path"
+rm -f "$output_header_path" "$output_source_path"
+
+included_files+=("$output_header_path")
 
 printf_verbose 'Merging headers...\n'
 file_printf "$output_header_path" '#pragma once\n'
