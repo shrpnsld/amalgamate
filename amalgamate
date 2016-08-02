@@ -358,11 +358,15 @@ path_extension()
 detect_extension()
 {
 	local default_extension=$1
-	local paths=("${@:2}")
+	local first_path=$2
+	shift
+	shift
+	local paths=("$@")
 
-	local first_extension=$(path_extension "${paths[0]}")
+	local first_extension=$(path_extension "$first_path")
+
 	local path
-	for path in "${paths[@]:1}"
+	for path in "${paths[@]}"
 	do
 		local extension=$(path_extension "$path")
 		if [ "$first_extension" != "$extension" ]
