@@ -165,7 +165,25 @@ parse_options()
 				fi
 
 				output_header_extension="${output_extensions%,*}"
-				output_source_extension="${output_extensions#*,}"
+				output_source_extension="${output_extensions:${#output_header_extension}+1}"
+
+				if [ -z "$output_header_extension" ]
+				then
+					printf_error 'output header extension is empty'
+					exit 1
+				fi
+
+				if [ -z "$output_source_extension" ]
+				then
+					printf_error 'output source extension is empty'
+					exit 1
+				fi
+
+				if [ "$output_header_extension" == "$output_source_extension" ]
+				then
+					printf_error 'extensions for output files can'"'"'t be the same'
+					exit 1
+				fi
 
 				((++argument_index))
 				return $argument_index
