@@ -45,16 +45,16 @@ trace-out/
 
 ### Options:
 
-* `-n <base-name>` – base name for output files
 * `-e <ext,ens,ions...>` – input header extensions
 * `-s <ext,ens,ions...>` – input source extensions
-* `-o <dir-path>` – output directory
-* `-x <hpp,cpp>` – output header and source extensions
+* `-n <base-name>` – base name for output files
+* `-o <dir-path>` – output path for `<base-name>-amalgamated/` directory
+* `-x <hpp,cpp>` – extensions for output header and source files
 * `-a` – insert annotations
 * `-v` – verbose mode
 * `-h` – show help message
 
 
-By default the script uses parent folder name as base name for output header and source files and stores them in the `./amalgamated/` folder.
+By default the script uses parent directory name as base name for output header and source files. Output files are stored in `<base-name>-amalgamated/` directory in output path.
 
 Default extensions for output files are inferred from header and source files – if all extensions for headers/sources are the same then their extensions are used, otherwise `.h` and `.cpp` are used.

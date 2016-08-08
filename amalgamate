@@ -16,11 +16,11 @@ HELP_MESSAGE='Usage:
   amalgamate [options]
 
 Options:
-  -n <base-name>        Base name for output files [default: parent folder name].
   -e <ext,ens,ions...>  Input header extensions [default: "'"$DEFAULT_INPUT_HEADER_EXTENSIONS"'"].
   -s <ext,ens,ions...>  Input source extensions [default: "'"$DEFAULT_INPUT_SOURCE_EXTENSIONS"'"].
-  -o <dir-path>         Output directory [default: ./amalgamated/].
-  -x <hpp,cpp>          Output header and source extensions [default: inferred from input files; if can'"'"'t, then "'"$DEFAULT_OUTPUT_HEADER_EXTENSION"','"$DEFAULT_OUTPUT_SOURCE_EXTENSION"'"].
+  -o <dir-path>         Output directory [default: "./"].
+  -n <base-name>        Base name for output files [default: parent directory name].
+  -x <hpp,cpp>          Extensions for output header and source files [default: inferred from input files; if can'"'"'t, then "'"$DEFAULT_OUTPUT_HEADER_EXTENSION"','"$DEFAULT_OUTPUT_SOURCE_EXTENSION"'"].
   -a                    Insert annotations.
   -v                    Verbose mode.
   -h                    Show this message.
@@ -100,20 +100,6 @@ parse_options()
 	do
 		local option="${options:$char_index:1}"
 		case "$option" in
-			n)
-				((++char_index))
-				if [ $char_index == $char_count ]
-				then
-					((++argument_index))
-					name="${arguments[$argument_index]}"
-				else
-					name="${options:$char_index}"
-				fi
-
-				((++argument_index))
-				return $argument_index
-				;;
-
 			e)
 				((++char_index))
 				if [ $char_index == $char_count ]
@@ -150,6 +136,20 @@ parse_options()
 					output_dir_path="${arguments[$argument_index]}"
 				else
 					output_dir_path="${options:$char_index}"
+				fi
+
+				((++argument_index))
+				return $argument_index
+				;;
+
+			n)
+				((++char_index))
+				if [ $char_index == $char_count ]
+				then
+					((++argument_index))
+					name="${arguments[$argument_index]}"
+				else
+					name="${options:$char_index}"
 				fi
 
 				((++argument_index))
