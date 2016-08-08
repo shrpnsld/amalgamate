@@ -491,8 +491,7 @@ expand_file()
 	local output_path=$2
 	local indent=$3
 
-	local expanded=$(expand_path "$absolute_file_path")
-	local relative_file_path=$(relative_path "$expanded" $(pwd))
+	local relative_file_path=$(relative_path "$absolute_file_path" $(pwd))
 	printf_verbose '%s\n' "$relative_file_path"
 	assert_path_readable "$absolute_file_path"
 
