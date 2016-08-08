@@ -6,32 +6,34 @@
 RED_TEXT='\e[0;31m'
 NO_COLOR_TEXT='\e[0m'
 
+OUTPUT_FOLDER_SUFFIX='amalgamated'
+DEFAULT_INPUT_HEADER_EXTENSIONS='h,hh,hpp,hxx,h++,tpp,txx,tpl,ii,ixx,ipp,inl'
+DEFAULT_INPUT_SOURCE_EXTENSIONS='c,cc,cpp,cxx,c++'
+DEFAULT_OUTPUT_HEADER_EXTENSION='h'
+DEFAULT_OUTPUT_SOURCE_EXTENSION='cpp'
+
 HELP_MESSAGE='Usage:
   amalgamate [options]
 
 Options:
-  -n <base_name>     Base name of the output files.
-  -e <ext,ens,ions>  Header extensions [default: "h,hh,hpp,hxx,h++,tpp,txx,tpl,ii,ixx,ipp,inl"].
-  -s <ext,ens,ions>  Source extensions [default: "c,cc,cpp,cxx,c++"].
-  -o <dir_path>      Output directory.
-  -x <hpp,cpp>     Header and source extensions for output files [default: "h,cpp"].
-  -a                 Insert annotations.
-  -v                 Verbose mode.
-  -h                 Show this message.
+  -n <base-name>        Base name for output files [default: parent folder name].
+  -e <ext,ens,ions...>  Input header extensions [default: "'"$DEFAULT_INPUT_HEADER_EXTENSIONS"'"].
+  -s <ext,ens,ions...>  Input source extensions [default: "'"$DEFAULT_INPUT_SOURCE_EXTENSIONS"'"].
+  -o <dir-path>         Output directory [default: ./amalgamated/].
+  -x <hpp,cpp>          Output header and source extensions [default: inferred from input files; if can'"'"'t, then "'"$DEFAULT_OUTPUT_HEADER_EXTENSION"','"$DEFAULT_OUTPUT_SOURCE_EXTENSION"'"].
+  -a                    Insert annotations.
+  -v                    Verbose mode.
+  -h                    Show this message.
 
 '
 
 HEADER_STRING_TEMPLATE='%s// ============================================================================\n%s// == %s ==%s'
 FOOTER_STRING_TEMPLATE='\n%s// == %s ==\n%s// ============================================================================%s'
 
-DEFAULT_OUTPUT_FOLDER='amalgamated'
-DEFAULT_OUTPUT_HEADER_EXTENSION='h'
-DEFAULT_OUTPUT_SOURCE_EXTENSION='cpp'
-
 name=$(basename $(pwd))
-header_extensions='h,hh,hpp,hxx,h++,tpp,txx,tpl,ii,ixx,ipp,inl'
-source_extensions='c,cc,cpp,cxx,c++'
-output_dir_path="$(pwd)/$DEFAULT_OUTPUT_FOLDER"
+header_extensions="$DEFAULT_INPUT_HEADER_EXTENSIONS"
+source_extensions="$DEFAULT_INPUT_SOURCE_EXTENSIONS"
+output_dir_path="$(pwd)"
 output_header_extension=''
 output_source_extension=''
 file_printf_annotation_function=do_nothing
@@ -581,16 +583,8 @@ merge_sources()
 setup "$@"
 
 
-IFS=$'\n'
-header_files=($(find_by_extensions . "$header_extensions"))
-source_files=($(find_by_extensions . "$source_extensions"))
-
-if [ "${#header_files[@]}" == 0 ] && [ "${#source_files[@]}" == 0 ]
-then
-	printf_error 'no C/C++ files found'
-	exit 1
-fi
-
+output_dir_path="$output_dir_path/$name-amalgamated"
+rm -rf "$output_dir_path"
 
 mkdir -p "$output_dir_path"
 if [ $? != 0 ]
@@ -600,6 +594,17 @@ then
 fi
 
 output_dir_path=$(expand_dir_path "$output_dir_path")
+
+
+IFS=$'\n'
+header_files=($(find_by_extensions . "$header_extensions"))
+source_files=($(find_by_extensions . "$source_extensions"))
+
+if [ "${#header_files[@]}" == 0 ] && [ "${#source_files[@]}" == 0 ]
+then
+	printf_error 'no C/C++ files found'
+	exit 1
+fi
 
 
 if [ -z "$output_header_extension" ]
@@ -618,7 +623,7 @@ source_file_name="$name.$output_source_extension"
 output_header_path="$output_dir_path/$header_file_name"
 output_source_path="$output_dir_path/$source_file_name"
 
-printf_verbose 'Output to:\n%s/\n ├── %s\n └── %s\n\n' "$output_dir_path" "$header_file_name" "$source_file_name"
+printf_verbose 'Saving amalgamated files to:\n  %s/\n  ├── %s\n  └── %s\n\n' "$output_dir_path" "$header_file_name" "$source_file_name"
 
 rm -f "$output_header_path" "$output_source_path"
 

@@ -14,27 +14,27 @@ $ cd Source/Path/
 $ Path/To/amalgamate [options] # Use it
 ```
 
-Project tree before `amalgamate`:
+Project tree [before](https://github.com/shrpnsld/trace-out/tree/master) `amalgamate`:
 
 ```bash
 trace-out/
 ├── trace-out.hpp
-└── detail
+└── detail/
     ├── constants.hpp
     ├── function_printer.cpp
     ├── ... # 29 more file
-    ├── posix
+    ├── posix/
     │   ├── platform_specific.cpp
     │   ├── stdlib_specific.cpp
     │   └── ... # 5 more file
-    └── windows
+    └── windows/
         ├── platform_specific.cpp
         ├── stdlib_specific.cpp
         └── ... # 5 more file
 ```
 
 
-Project tree after `amalgamate`:
+Project tree [after](https://github.com/shrpnsld/trace-out/tree/dist) `amalgamate`:
 
 ```bash
 trace-out/
@@ -45,13 +45,16 @@ trace-out/
 
 ### Options:
 
-* `-n <base_name>` – base name of the output files
-* `-e <ext,ens,ions>` – header extensions
-* `-s <ext,ens,ions>` – source extensions
-* `-o <dir_path>` – output directory
+* `-n <base-name>` – base name for output files
+* `-e <ext,ens,ions...>` – input header extensions
+* `-s <ext,ens,ions...>` – input source extensions
+* `-o <dir-path>` – output directory
+* `-x <hpp,cpp>` – output header and source extensions
 * `-a` – insert annotations
 * `-v` – verbose mode
 * `-h` – show help message
 
 
-By default the script uses *ParentFolderName* as base name for generated header and source files and stores them in the `./amalgamated/` folder.
+By default the script uses parent folder name as base name for output header and source files and stores them in the `./amalgamated/` folder.
+
+Default extensions for output files are inferred from header and source files – if all extensions for headers/sources are the same then their extensions are used, otherwise `.h` and `.cpp` are used.
