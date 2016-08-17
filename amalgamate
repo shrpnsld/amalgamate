@@ -359,7 +359,7 @@ is_include_line()
 {
 	local line=$1
 
-	[[ $line =~ ^[\ \t]*\#[\ \t]*include[\ \t]*\".*\"[\ \t]*$ ]]
+	[[ $line =~ ^[\ \t]*\#[\ \t]*include[\ \t]*\".*\".* ]]
 }
 
 
@@ -367,7 +367,7 @@ is_pragma_once_line()
 {
 	local line=$1
 
-	[[ $line =~ ^[\ \t]*\#[\ \t]*pragma[\ \t]*once[\ \t]*$ ]]
+	[[ $line =~ ^[\ \t]*\#[\ \t]*pragma[\ \t]*once.* ]]
 }
 
 
