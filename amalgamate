@@ -5,23 +5,32 @@
 
 RED_TEXT='\e[0;31m'
 NO_COLOR_TEXT='\e[0m'
+AMALGAMATE_ERROR='amalgamate error: '
 
-OUTPUT_FOLDER_SUFFIX='amalgamated'
+colors=$(tput colors)
+if [ "$colors" != "0" ]
+then
+	AMALGAMATE_ERROR="$RED_TEXT$AMALGAMATE_ERROR$NO_COLOR_TEXT"
+fi
+
+
+OUTPUT_DIRECTORY_SUFFIX='amalgamated'
 DEFAULT_INPUT_HEADER_EXTENSIONS='h,hh,hpp,hxx,h++,tpp,txx,tpl,ii,ixx,ipp,inl'
 DEFAULT_INPUT_SOURCE_EXTENSIONS='c,cc,cpp,cxx,c++'
 DEFAULT_OUTPUT_HEADER_EXTENSION='h'
 DEFAULT_OUTPUT_SOURCE_EXTENSION='cpp'
 
-HELP_MESSAGE='Usage:
+HELP_MESSAGE=\
+'Usage:
   amalgamate [options]
 
 Options:
-  -I <path>             Path where header files can be found [default: parent to current working directory]
+  -I <header-path>      Path where header files can be found [default: current working directory'"'"'s parent]
   -e <ext,ens,ions...>  Input header extensions [default: "'"$DEFAULT_INPUT_HEADER_EXTENSIONS"'"].
   -s <ext,ens,ions...>  Input source extensions [default: "'"$DEFAULT_INPUT_SOURCE_EXTENSIONS"'"].
-  -o <dir-path>         Output directory [default: "./"].
+  -o <output-dir-path>  Output directory [default: "../"].
   -n <base-name>        Base name for output files [default: parent directory name].
-  -x <hpp,cpp>          Extensions for output header and source files [default: inferred from input files; if can'"'"'t, then "'"$DEFAULT_OUTPUT_HEADER_EXTENSION"','"$DEFAULT_OUTPUT_SOURCE_EXTENSION"'"].
+  -x <hpp,cpp>          Extensions for output header and source files [default: inferred from input files; if cannot, then "'"$DEFAULT_OUTPUT_HEADER_EXTENSION"','"$DEFAULT_OUTPUT_SOURCE_EXTENSION"'"].
   -a                    Insert annotations.
   -v                    Verbose mode.
   -h                    Show this message.
@@ -32,10 +41,10 @@ HEADER_STRING_TEMPLATE='%s// ===================================================
 FOOTER_STRING_TEMPLATE='\n%s// == %s ==\n%s// ============================================================================%s'
 
 header_search_path=$(dirname $(pwd))
-name=$(basename $(pwd))
 header_extensions="$DEFAULT_INPUT_HEADER_EXTENSIONS"
 source_extensions="$DEFAULT_INPUT_SOURCE_EXTENSIONS"
-output_dir_path="$(pwd)"
+output_dir_path="$(pwd)/.."
+name=$(basename $(pwd))
 output_header_extension=''
 output_source_extension=''
 file_printf_annotation_function=do_nothing
@@ -47,12 +56,6 @@ printf_verbose_function=do_nothing
 #
 # Functions
 
-has_terminal()
-{
-	tty -s
-}
-
-
 printf_stderr()
 {
 	printf "$@" >&2
@@ -61,12 +64,7 @@ printf_stderr()
 
 printf_error()
 {
-	if has_terminal
-	then
-		printf_stderr "$RED_TEXT"'amalgamate error: '"$NO_COLOR_TEXT"
-	else
-		printf_stderr 'amalgamate error: '
-	fi
+	printf_stderr "$AMALGAMATE_ERROR"
 	printf_stderr "$@"
 	printf_stderr '\n\n'
 }
@@ -207,7 +205,7 @@ parse_options()
 
 				if [ "$output_header_extension" == "$output_source_extension" ]
 				then
-					printf_error 'extensions for output files can'"'"'t be the same'
+					printf_error 'extensions for output files cannot be the same'
 					exit 1
 				fi
 
@@ -440,7 +438,13 @@ relative_path()
 	local path=$1
 	local base_path=$2
 
-	printf '%s\n' ".${path#$base_path}"
+	local relative_path="${path#$base_path}"
+	if [ "$relative_path" != "$path" ]
+	then
+		relative_path=".$relative_path"
+	fi
+
+	printf '%s\n' "$relative_path"
 }
 
 
@@ -620,13 +624,18 @@ merge_sources()
 setup "$@"
 
 
-output_dir_path="$output_dir_path/$name-amalgamated"
-rm -rf "$output_dir_path"
+output_dir_path="$output_dir_path/$name-$OUTPUT_DIRECTORY_SUFFIX"
+rm -rf "$output_dir_path" &> /dev/null
+if [ $? != 0 ]
+then
+	printf_error 'cannot remove output directory "%s"' "$output_dir_path"
+	exit 1
+fi
 
 mkdir -p "$output_dir_path"
 if [ $? != 0 ]
 then
-	printf_error 'can'"'"'t write path "%s"' "$output_dir_path"
+	printf_error 'cannot write path "%s"' "$output_dir_path"
 	exit 1
 fi
 
@@ -660,17 +669,17 @@ source_file_name="$name.$output_source_extension"
 output_header_path="$output_dir_path/$header_file_name"
 output_source_path="$output_dir_path/$source_file_name"
 
-printf_verbose 'Saving amalgamated files to:\n  %s/\n  ├── %s\n  └── %s\n\n' "$output_dir_path" "$header_file_name" "$source_file_name"
+printf_verbose 'Saving amalgamated files to:\n%s/\n├── %s\n└── %s\n\n' "$output_dir_path" "$header_file_name" "$source_file_name"
 
 rm -f "$output_header_path" "$output_source_path"
 
 included_files+=("$output_header_path")
 
-printf_verbose 'Merging headers...\n'
+printf_verbose 'Amalgamating headers...\n'
 file_printf "$output_header_path" '#pragma once\n'
 merge_headers "$output_header_path" "${header_files[@]}"
 
-printf_verbose '\nMerging sources...\n'
+printf_verbose '\nAmalgamating sources...\n'
 file_printf "$output_source_path" '#include "%s"\n' "$(basename $header_file_name)"
 merge_sources "$output_source_path" "${source_files[@]}"
 
