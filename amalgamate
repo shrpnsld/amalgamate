@@ -16,6 +16,7 @@ HELP_MESSAGE='Usage:
   amalgamate [options]
 
 Options:
+  -I <path>             Path where header files can be found [default: parent to current working directory]
   -e <ext,ens,ions...>  Input header extensions [default: "'"$DEFAULT_INPUT_HEADER_EXTENSIONS"'"].
   -s <ext,ens,ions...>  Input source extensions [default: "'"$DEFAULT_INPUT_SOURCE_EXTENSIONS"'"].
   -o <dir-path>         Output directory [default: "./"].
@@ -30,6 +31,7 @@ Options:
 HEADER_STRING_TEMPLATE='%s// ============================================================================\n%s// == %s ==%s'
 FOOTER_STRING_TEMPLATE='\n%s// == %s ==\n%s// ============================================================================%s'
 
+header_search_path=$(dirname $(pwd))
 name=$(basename $(pwd))
 header_extensions="$DEFAULT_INPUT_HEADER_EXTENSIONS"
 source_extensions="$DEFAULT_INPUT_SOURCE_EXTENSIONS"
@@ -100,6 +102,28 @@ parse_options()
 	do
 		local option="${options:$char_index:1}"
 		case "$option" in
+			I)
+				((++char_index))
+				if [ $char_index == $char_count ]
+				then
+					((++argument_index))
+					header_search_path="${arguments[$argument_index]}"
+				else
+					header_search_path="${options:$char_index}"
+				fi
+
+				if [ ! -d "$header_search_path" ]
+				then
+					printf_error 'bad header search path "%s"' "$header_search_path"
+					exit 1
+				fi
+
+				header_search_path=$(expand_dir_path "$header_search_path")
+
+				((++argument_index))
+				return $argument_index
+				;;
+
 			e)
 				((++char_index))
 				if [ $char_index == $char_count ]
@@ -303,18 +327,6 @@ do_file_print_footer_annotation()
 }
 
 
-assert_path_readable()
-{
-	local path=$1
-
-	if [ ! -r "$path" ]
-	then
-		printf_error 'file %s does not exist or not readble' "$path"
-		exit 1
-	fi
-}
-
-
 array_contains_item()
 {
 	local item=$1
@@ -482,6 +494,30 @@ make_footer_string()
 }
 
 
+resolve_include_path()
+{
+	local include_path=$1
+	local absolute_file_path=$2
+
+	local dir=$(dirname "$absolute_file_path")
+	local non_expanded_path="$dir/$include_path"
+
+	if [ -f "$non_expanded_path" ]
+	then
+		expand_path "$non_expanded_path"
+		return
+	fi
+
+	local absolute_include_path="$header_search_path/$include_path"
+	if [ ! -f "$absolute_include_path" ]
+	then
+		return 1
+	fi
+
+	printf '%s\n' "$absolute_include_path"
+}
+
+
 declare -a included_files
 
 expand_file()
@@ -493,7 +529,6 @@ expand_file()
 
 	local relative_file_path=$(relative_path "$absolute_file_path" $(pwd))
 	printf_verbose '%s\n' "$relative_file_path"
-	assert_path_readable "$absolute_file_path"
 
 	file_print_header_annotation "$output_path" "$relative_file_path" "$indent"
 
@@ -503,9 +538,12 @@ expand_file()
 		if is_include_line "$line"
 		then
 			local include_path=$(path_from_include_line "$line")
-			local dir=$(dirname "$absolute_file_path")
-			local non_expanded_path="$dir/$include_path"
-			local absolute_include_path=$(expand_path "$non_expanded_path")
+			local absolute_include_path=$(resolve_include_path "$include_path" "$absolute_file_path")
+			if [ -z "$absolute_include_path" ]
+			then
+				printf_error 'cannot find include file "%s" required in "%s"' "$include_path" "$absolute_file_path"
+				exit 1
+			fi
 
 			if array_contains_item "$absolute_include_path" "${included_files[@]}"
 			then
