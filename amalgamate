@@ -29,6 +29,8 @@ Options:
   -e <ext,ens,ions...>  Input header extensions [default: "'"$DEFAULT_INPUT_HEADER_EXTENSIONS"'"].
   -s <ext,ens,ions...>  Input source extensions [default: "'"$DEFAULT_INPUT_SOURCE_EXTENSIONS"'"].
   -o <output-dir-path>  Output directory [default: "../"].
+  -H                    Amalgamate all files to single header file.
+  -S                    Amalgamate all files to single source file.
   -n <base-name>        Base name for output files [default: parent directory name].
   -x <hpp,cpp>          Extensions for output header and source files [default: inferred from input files; if cannot, then "'"$DEFAULT_OUTPUT_HEADER_EXTENSION"','"$DEFAULT_OUTPUT_SOURCE_EXTENSION"'"].
   -a                    Insert annotations.
@@ -44,6 +46,8 @@ header_search_path=$(dirname $(pwd))
 header_extensions="$DEFAULT_INPUT_HEADER_EXTENSIONS"
 source_extensions="$DEFAULT_INPUT_SOURCE_EXTENSIONS"
 output_dir_path="$(pwd)/.."
+header_only=false
+source_only=false
 name=$(basename $(pwd))
 output_header_extension=''
 output_source_extension=''
@@ -162,6 +166,16 @@ parse_options()
 
 				((++argument_index))
 				return $argument_index
+				;;
+
+			H)
+				header_only=true
+				((++char_index))
+				;;
+
+			S)
+				source_only=true
+				((++char_index))
 				;;
 
 			n)
@@ -669,6 +683,14 @@ source_file_name="$name.$output_source_extension"
 output_header_path="$output_dir_path/$header_file_name"
 output_source_path="$output_dir_path/$source_file_name"
 
+if [ "$header_only" == true ]
+then
+	output_source_path="$output_header_path"
+elif [ "$source_only" == true ]
+then
+	output_header_path="$output_source_path"
+fi
+
 printf_verbose 'Saving amalgamated files to:\n%s/\n├── %s\n└── %s\n\n' "$output_dir_path" "$header_file_name" "$source_file_name"
 
 rm -f "$output_header_path" "$output_source_path"
@@ -676,11 +698,19 @@ rm -f "$output_header_path" "$output_source_path"
 included_files+=("$output_header_path")
 
 printf_verbose 'Amalgamating headers...\n'
-file_printf "$output_header_path" '#pragma once\n'
+if [ "$source_only" != true ]
+then
+	file_printf "$output_header_path" '#pragma once\n'
+fi
+
 merge_headers "$output_header_path" "${header_files[@]}"
 
 printf_verbose '\nAmalgamating sources...\n'
-file_printf "$output_source_path" '#include "%s"\n' "$(basename $header_file_name)"
+if [ "$source_only" != true ]
+then
+	file_printf "$output_source_path" '#include "%s"\n' "$(basename $header_file_name)"
+fi
+
 merge_sources "$output_source_path" "${source_files[@]}"
 
 printf_verbose '\nDone.\n\n'
