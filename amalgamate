@@ -7,8 +7,7 @@ RED_TEXT='\e[0;31m'
 NO_COLOR_TEXT='\e[0m'
 AMALGAMATE_ERROR='amalgamate error: '
 
-colors=$(tput colors)
-if [ "$colors" != "0" ]
+if [ -t 1 ] && [ $(tput colors) \> 0 ]
 then
 	AMALGAMATE_ERROR="$RED_TEXT$AMALGAMATE_ERROR$NO_COLOR_TEXT"
 fi
