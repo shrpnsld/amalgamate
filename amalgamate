@@ -554,6 +554,27 @@ resolve_include_path()
 }
 
 
+get_meta_tag()
+{
+	local line=$1
+
+	if ! [[ "$line" =~ ^.*\/\/[\ \t]*\[[\ \t]*amalgamate:[\ \t]*[-a-z][-a-z]*[\ \t]*\][\ \t]*$ ]]
+	then
+		return
+	fi
+
+	sed -e 's/^.*\/\/[\ \t]*\[[\ \t]*amalgamate:[\ \t]*//' -e 's/[\ \t]*\].*$//' <<< "$line"
+}
+
+
+get_clean_line()
+{
+	local line=$1
+
+	sed -e 's/[\ \t]*\/\/[\ \t]*\[amalgamate:[\ \t]*[-a-z][-a-z]*[\ \t]*\][\ \t]*$//' <<< "$line"
+}
+
+
 declare -a included_files
 declare -a included_standard_files
 
@@ -572,6 +593,17 @@ expand_file()
 	local line
 	while read -r line
 	do
+		local meta_tag=$(get_meta_tag "$line")
+		if [ "$meta_tag" == 'leave' ]
+		then
+			local clean_line=$(get_clean_line "$line")
+			file_printf "$output_path" '%s%s\n' "$indent" "$clean_line"
+			continue
+		elif [ "$meta_tag" == 'remove' ]
+		then
+			continue
+		fi
+
 		if is_include_line "$line"
 		then
 			local include_path=$(path_from_include_line "$line")

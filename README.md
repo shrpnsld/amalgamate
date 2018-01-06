@@ -45,7 +45,7 @@ trace-out/
 ```
 
 
-### Options:
+### Options
 
 * `-I <header-path>` – path where header files can be found
 * `-e <ext,ens,ions...>` – input header extensions
@@ -56,6 +56,24 @@ trace-out/
 * `-a` – insert annotations
 * `-v` – verbose mode
 * `-h` – show help message
+
+### Meta tags
+
+Some lines in source code may need additional rules for processing, which you can mark with meta tags in the comments `[amalgamate:<tag>]`:
+
+* `leave` – leave line
+* `remove` – remove line
+
+
+#### Example:
+
+```c++
+#include <cassert> // [amalgamate:leave]
+```
+
+
+
+# Notes
 
 While processing files, if script can't find header at path in `#include` directive, it searches header relative to the path passed to `-I` option. Default value for this option is current working directory's parent.
 
