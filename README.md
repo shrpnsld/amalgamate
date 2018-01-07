@@ -50,8 +50,10 @@ trace-out/
 * `-I <header-path>` – path where header files can be found
 * `-e <ext,ens,ions...>` – input header extensions
 * `-s <ext,ens,ions...>` – input source extensions
-* `-n <base-name>` – base name for output files
 * `-o <output-dir-path>` – output path for `<base-name>-amalgamated/` directory
+* `-H` – amalgamate all files to a single header file
+* `-S` – amalgamate all files to a single source file
+* `-n <base-name>` – base name for output files
 * `-x <hpp,cpp>` – extensions for output header and source files
 * `-a` – insert annotations
 * `-v` – verbose mode
