@@ -746,15 +746,19 @@ source_file_name="$name.$output_source_extension"
 output_header_path="$output_dir_path/$header_file_name"
 output_source_path="$output_dir_path/$source_file_name"
 
+printf_verbose 'Saving amalgamated files to:\n%s/\n' "$output_dir_path"
 if [ "$header_only" == true ]
 then
 	output_source_path="$output_header_path"
+	printf_verbose '└── %s\n\n' "$header_file_name"
 elif [ "$source_only" == true ]
 then
 	output_header_path="$output_source_path"
+	printf_verbose '└── %s\n\n' "$source_file_name"
+else
+	printf_verbose '├── %s\n└── %s\n\n' "$header_file_name" "$source_file_name"
 fi
 
-printf_verbose 'Saving amalgamated files to:\n%s/\n├── %s\n└── %s\n\n' "$output_dir_path" "$header_file_name" "$source_file_name"
 
 rm -f "$output_header_path" "$output_source_path"
 

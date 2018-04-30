@@ -77,7 +77,7 @@ Some lines in source code may need additional rules for processing, which you ca
 
 # Notes
 
-While processing files, if script can't find header at path in `#include` directive, it searches header relative to the path passed to `-I` option. Default value for this option is current working directory's parent.
+While processing files, if script can't find header at path in `#include` directive, it searches header that is relative to the path passed to `-I` option. Default value for this option is current working directory's parent.
 
 By default script uses parent directory name as base name for output header and source files. Output files are stored in `<base-name>-amalgamated/` directory at output path.
 
