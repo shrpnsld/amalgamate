@@ -72,8 +72,8 @@ Some lines in source code may need additional rules for processing, which you ca
 
 ```c++
 //#if defined(__unix__) // [amalgamate:uncomment]
-	#include <cassert> // [amalgamate:leave]
-	#include "some-debug-stuff.hpp" // [amalgamate:remove]
+    #include <cassert> // [amalgamate:leave]
+    #include "some-debug-stuff.hpp" // [amalgamate:remove]
 //#endif // [amalgamate:uncomment]
 ```
 
