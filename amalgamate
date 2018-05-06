@@ -53,6 +53,7 @@ output_source_extension=''
 file_printf_annotation_function=do_nothing
 file_print_header_annotation_function=do_nothing
 file_print_footer_annotation_function=do_nothing
+indent_shift_function=do_nothing
 printf_verbose_function=do_nothing
 
 
@@ -230,6 +231,7 @@ parse_options()
 				file_printf_annotation_function=file_printf
 				file_print_header_annotation_function=do_file_print_header_annotation
 				file_print_footer_annotation_function=do_file_print_footer_annotation
+				indent_shift_function=do_indent_shift
 				((++char_index))
 				;;
 
@@ -335,6 +337,22 @@ do_file_print_footer_annotation()
 
 	local footer_string=$(make_footer_string "$file_path" "$indent")
 	file_printf "$output_path" "$footer_string"
+}
+
+
+indent_shift()
+{
+	local indent=$1
+
+	"$indent_shift_function" "$indent"
+}
+
+
+do_indent_shift()
+{
+	local indent=$1
+
+	printf '%s	' "$indent"
 }
 
 
@@ -625,7 +643,7 @@ expand_file()
 			fi
 
 			included_files+=("$absolute_include_path")
-			expand_file "$absolute_include_path" "$output_path" "$indent	"
+			expand_file "$absolute_include_path" "$output_path" $(indent_shift "$indent") #"$indent	"
 
 			continue
 		fi
