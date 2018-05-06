@@ -65,12 +65,16 @@ Some lines in source code may need additional rules for processing, which you ca
 
 * `leave` – leave line
 * `remove` – remove line
+* `uncomment` – uncomment line
 
 
 #### Example:
 
 ```c++
-#include <cassert> // [amalgamate:leave]
+//#if defined(__unix__) // [amalgamate:uncomment]
+	#include <cassert> // [amalgamate:leave]
+	#include "some-debug-stuff.hpp" // [amalgamate:remove]
+//#endif // [amalgamate:uncomment]
 ```
 
 
