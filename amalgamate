@@ -558,12 +558,12 @@ get_meta_tag()
 {
 	local line=$1
 
-	if ! [[ "$line" =~ ^.*\/\/[\ \t]*\[[\ \t]*amalgamate:[\ \t]*[-a-z][-a-z]*[\ \t]*\][\ \t]*$ ]]
+	if ! [[ "$line" =~ ^.*\/\/[\ \	]*\[[\ \	]*amalgamate:[\ \	]*[-a-z][-a-z]*[\ \	]*\][\ \	]*$ ]]
 	then
 		return
 	fi
 
-	sed -e 's/^.*\/\/[\ \t]*\[[\ \t]*amalgamate:[\ \t]*//' -e 's/[\ \t]*\].*$//' <<< "$line"
+	sed -e 's/^.*\/\/[\ \	]*\[[\ \	]*amalgamate:[\ \	]*//' -e 's/[\ \	]*\].*$//' <<< "$line"
 }
 
 
@@ -602,6 +602,10 @@ expand_file()
 		elif [ "$meta_tag" == 'remove' ]
 		then
 			continue
+		elif [ "$meta_tag" == 'uncomment' ]
+		then
+			local clean_line=$(get_clean_line "$line")
+			line="${clean_line#*//}"
 		fi
 
 		if is_include_line "$line"
