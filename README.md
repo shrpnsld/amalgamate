@@ -55,6 +55,7 @@ trace-out/
 * `-S` – amalgamate all files to a single source file
 * `-n <base-name>` – base name for output files
 * `-x <hpp,cpp>` – extensions for output header and source files
+* `-E <count>` – do not allow no more than `<count>` empty lines in a row (default: `2`)
 * `-a` – insert annotations
 * `-v` – verbose mode
 * `-h` – show help message

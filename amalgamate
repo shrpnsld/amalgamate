@@ -32,6 +32,7 @@ Options:
   -S                    Amalgamate all files to single source file.
   -n <base-name>        Base name for output files [default: parent directory name].
   -x <hpp,cpp>          Extensions for output header and source files [default: inferred from input files; if cannot, then "'"$DEFAULT_OUTPUT_HEADER_EXTENSION"','"$DEFAULT_OUTPUT_SOURCE_EXTENSION"'"].
+  -E <count>            do not allow more than <count> empty lines in a row [default: 2].
   -a                    Insert annotations.
   -v                    Verbose mode.
   -h                    Show this message.
@@ -50,6 +51,7 @@ source_only=false
 name=$(basename $(pwd))
 output_header_extension=''
 output_source_extension=''
+empty_line_count_limit=( 2 )
 file_printf_annotation_function=do_nothing
 file_print_header_annotation_function=do_nothing
 file_print_footer_annotation_function=do_nothing
@@ -221,6 +223,20 @@ parse_options()
 				then
 					printf_error 'extensions for output files cannot be the same'
 					exit 1
+				fi
+
+				((++argument_index))
+				return $argument_index
+				;;
+
+			E)
+				((++char_index))
+				if [ $char_index == $char_count ]
+				then
+					((++argument_index))
+					empty_line_count_limit="${arguments[$argument_index]}"
+				else
+					empty_line_count_limit="${options:$char_index}"
 				fi
 
 				((++argument_index))
@@ -601,7 +617,8 @@ expand_file()
 	IFS=''
 	local absolute_file_path=$1
 	local output_path=$2
-	local indent=$3
+	local empty_line_count=$3
+	local indent=$4
 
 	local relative_file_path=$(relative_path "$absolute_file_path" $(pwd))
 	printf_verbose '%s\n' "$relative_file_path"
@@ -616,6 +633,7 @@ expand_file()
 		then
 			local clean_line=$(get_clean_line "$line")
 			file_printf "$output_path" '%s%s\n' "$indent" "$clean_line"
+			empty_line_count=0
 			continue
 		elif [ "$meta_tag" == 'remove' ]
 		then
@@ -643,7 +661,8 @@ expand_file()
 			fi
 
 			included_files+=("$absolute_include_path")
-			expand_file "$absolute_include_path" "$output_path" $(indent_shift "$indent") #"$indent	"
+			expand_file "$absolute_include_path" "$output_path" $empty_line_count $(indent_shift "$indent")
+			empty_line_count=$?
 
 			continue
 		fi
@@ -658,6 +677,15 @@ expand_file()
 		if ! is_empty_line "$line"
 		then
 			file_printf "$output_path" '%s' "$indent"
+		else
+			if [[ $empty_line_count == $empty_line_count_limit ]]
+			then
+				continue
+			fi
+
+			file_printf "$output_path" "%s\n" "$line"
+			((++empty_line_count))
+			continue
 		fi
 
 		if is_standard_include_line "$line"
@@ -673,9 +701,11 @@ expand_file()
 		fi
 
 		file_printf "$output_path" '%s\n' "$line"
+		empty_line_count=0
 	done < "$absolute_file_path"
 
 	file_print_footer_annotation "$output_path" "$relative_file_path" "$indent"
+	return $empty_line_count
 }
 
 
@@ -685,6 +715,7 @@ merge_headers()
 	shift
 	local paths=("$@")
 
+	local empty_line_count=0
 	local path
 	for path in "${paths[@]}"
 	do
@@ -696,7 +727,8 @@ merge_headers()
 		fi
 
 		included_files+=("$file_absolute_path")
-		expand_file "$file_absolute_path" "$output_header_path" ""
+		expand_file "$file_absolute_path" "$output_header_path" $empty_line_count ""
+		empty_line_count=$?
 	done
 }
 
@@ -707,12 +739,14 @@ merge_sources()
 	shift
 	local paths=("$@")
 
+	local empty_line_count=0
 	local path
 	for path in "${paths[@]}"
 	do
 		local file_absolute_path=$(expand_path "$path")
 
-		expand_file "$file_absolute_path" "$output_source_path" ""
+		expand_file "$file_absolute_path" "$output_source_path" $empty_line_count ""
+		empty_line_count=$?
 	done
 }
 
