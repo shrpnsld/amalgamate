@@ -404,7 +404,7 @@ is_include_line()
 {
 	local line=$1
 
-	[[ $line =~ ^[\ \t]*\#[\ \t]*include[\ \t]*\".*\".* ]]
+	[[ $line =~ ^[\ \	]*\#[\ \t]*include[\ \t]*\".*\".* ]]
 }
 
 
@@ -412,7 +412,7 @@ is_standard_include_line()
 {
 	local line=$1
 
-	[[ $line =~ ^[\ \t]*\#[\ \t]*include[\ \t]*\<.*\>.* ]]
+	[[ $line =~ ^[\ \	]*\#[\ \t]*include[\ \t]*\<.*\>.* ]]
 }
 
 
@@ -420,7 +420,7 @@ is_pragma_once_line()
 {
 	local line=$1
 
-	[[ $line =~ ^[\ \t]*\#[\ \t]*pragma[\ \t]*once.* ]]
+	[[ $line =~ ^[\ \	]*\#[\ \t]*pragma[\ \t]*once.* ]]
 }
 
 
@@ -428,7 +428,7 @@ is_empty_line()
 {
 	local line=$1
 
-	[[ $line =~ ^[\ \t]*$ ]]
+	[[ $line =~ ^[\ \	]*$ ]]
 }
 
 
