@@ -33,6 +33,7 @@ Options:
   -n <base-name>        Base name for output files [default: parent directory name].
   -x <hpp,cpp>          Extensions for output header and source files [default: inferred from input files; if cannot, then "'"$DEFAULT_OUTPUT_HEADER_EXTENSION"','"$DEFAULT_OUTPUT_SOURCE_EXTENSION"'"].
   -B <count>            Do not allow more than <count> consecutive blank lines.
+  -G <id> | -G '"''"'       Use include guard in header file instead of `#pragma once`. Use `<id>` for `#define` directive or generate it from header name if empty string was passed.
   -a                    Insert annotations.
   -v                    Verbose mode.
   -h                    Show this message.
@@ -52,7 +53,10 @@ name=$(basename $(pwd))
 output_header_extension=''
 output_source_extension=''
 blank_line_count_limit=''
+include_guard_id=''
 
+make_include_guard_header_function=do_make_include_guard_pragma_once
+make_include_guard_footer_function=do_nothing
 file_printf_annotation_function=do_nothing
 file_print_header_annotation_function=do_nothing
 file_print_footer_annotation_function=do_nothing
@@ -244,6 +248,27 @@ parse_options()
 				return $argument_index
 				;;
 
+			G)
+				((++char_index))
+				if [ $char_index == $char_count ]
+				then
+					((++argument_index))
+					include_guard_id="${arguments[$argument_index]}"
+				else
+					include_guard_id="${options:$char_index}"
+				fi
+
+				make_include_guard_header_function=do_make_include_guard_ifdef
+				make_include_guard_footer_function=do_make_include_guard_endif
+
+				if [ -n "$inlude_guard_id" ]
+				then
+					((++argument_index))
+				fi
+
+				return $argument_index
+				;;
+
 			a)
 				file_printf_annotation_function=file_printf
 				file_print_header_annotation_function=do_file_print_header_annotation
@@ -303,6 +328,48 @@ setup()
 printf_verbose()
 {
 	"$printf_verbose_function" "$@"
+}
+
+
+make_include_guard_id()
+{
+	local file_name=$1
+
+	sed -e 's/-/_/g' -e 's/\./_/g' <<< "$file_name" | tr '[a-z]' '[A-Z]'
+}
+
+
+make_include_guard_header()
+{
+	"$make_include_guard_header_function" "$@"
+}
+
+
+make_include_guard_footer()
+{
+	"$make_include_guard_footer_function" "$@"
+}
+
+
+do_make_include_guard_pragma_once()
+{
+	printf '#pragma once'
+}
+
+
+do_make_include_guard_ifdef()
+{
+	local id=$1
+
+	printf '#ifndef %s\n#define %s' "$id" "$id"
+}
+
+
+do_make_include_guard_endif()
+{
+	local id=$1
+
+	printf '#endif // %s' "$id"
 }
 
 
@@ -545,6 +612,16 @@ file_printf()
 	local arguments=("${@:3}")
 
 	printf "$format" "${arguments[@]}" >> "$file_path"
+}
+
+
+file_printf_prepend()
+{
+	local file_path=$1
+	local format=$2
+	local arguments=("${@:3}")
+
+	printf '%s' "$(printf "$format" "${arguments[@]}"; printf '%s' $(cat "$file_path"))" > "$file_path"
 }
 
 
@@ -862,15 +939,22 @@ rm -f "$output_header_path" "$output_source_path"
 included_files+=("$output_header_path")
 
 printf_verbose 'Amalgamating headers...\n'
-if [ "$source_only" != true ]
-then
-	file_printf "$output_header_path" '#pragma once\n'
-fi
 
 merge_headers "$output_header_path" "${header_files[@]}"
 
+if ! $source_only
+then
+	include_guard_id=$(make_include_guard_id "$header_file_name")
+
+	include_guard_header=$(make_include_guard_header "$include_guard_id")
+	file_printf_prepend "$output_header_path" '%s\n\n' "${include_guard_header}"
+
+	include_guard_footer=$(make_include_guard_footer "$include_guard_id")
+	file_printf "$output_header_path" '\n\n%s' "$include_guard_footer"
+fi
+
 printf_verbose '\nAmalgamating sources...\n'
-if [ "$source_only" != true ]
+if ! $source_only
 then
 	file_printf "$output_source_path" '#include "%s"\n' "$(basename $header_file_name)"
 fi
