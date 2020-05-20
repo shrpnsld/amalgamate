@@ -98,7 +98,7 @@ parse_options()
 {
 	local argument_index=$1
 	local options=$2
-	local arguments=(${@:3})
+	local arguments=("${@:3}")
 
 	local char_index=( 0 )
 	local char_count="${#options}"
@@ -309,8 +309,9 @@ file_printf_annotation()
 {
 	local output_path=$1
 	local format=$2
+	local arguments=("${@:3}")
 
-	"$file_printf_annotation_function" "$output_path" "$format\n" "${@:3}"
+	"$file_printf_annotation_function" "$output_path" "$format" "${arguments[@]}"
 }
 
 
@@ -540,9 +541,9 @@ file_printf()
 {
 	local file_path=$1
 	local format=$2
-	local arguments=$3
+	local arguments=("${@:3}")
 
-	printf "$format" "${@:3}" >> "$file_path"
+	printf "$format" "${arguments[@]}" >> "$file_path"
 }
 
 
