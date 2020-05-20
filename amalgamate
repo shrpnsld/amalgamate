@@ -34,6 +34,7 @@ Options:
   -x <hpp,cpp>          Extensions for output header and source files [default: inferred from input files; if cannot, then "'"$DEFAULT_OUTPUT_HEADER_EXTENSION"','"$DEFAULT_OUTPUT_SOURCE_EXTENSION"'"].
   -B <count>            Do not allow more than <count> consecutive blank lines.
   -G <id> | -G '"''"'       Use include guard in header file instead of `#pragma once`. Use `<id>` for `#define` directive or generate it from header name if empty string was passed.
+  -t                    Trim trailing whitespace.
   -a                    Insert annotations.
   -v                    Verbose mode.
   -h                    Show this message.
@@ -53,6 +54,7 @@ name=$(basename $(pwd))
 output_header_extension=''
 output_source_extension=''
 blank_line_count_limit=''
+trim_trailing_whitespace=false
 include_guard_id=''
 
 make_include_guard_header_function=do_make_include_guard_pragma_once
@@ -267,6 +269,11 @@ parse_options()
 				fi
 
 				return $argument_index
+				;;
+
+			t)
+				((++char_index))
+				trim_trailing_whitespace=true
 				;;
 
 			a)
@@ -842,6 +849,14 @@ reduce_blank_lines()
 }
 
 
+trim_trailing_whitespace()
+{
+	local file_path=$1
+
+	sed -i .bak 's/[	 ][	 ]*$//g' "$file_path"
+}
+
+
 #
 # Main
 
@@ -912,6 +927,13 @@ fi
 
 printf_verbose 'Reduce consecutive blank lines to: %s\n' "$blank_line_count_limit"
 
+if $trim_trailing_whitespace
+then
+	printf_verbose 'Trim trailing whitespace: yes\n'
+else
+	printf_verbose 'Trim trailing whitespace: no\n'
+fi
+
 if [ "$file_printf_annotation_function" != 'do_nothing' ]
 then
 	printf_verbose 'Insert annotations: yes\n'
@@ -965,6 +987,13 @@ then
 	printf_verbose '\nReducing blank lines...\n'
 	reduce_blank_lines "$output_header_path" $blank_line_count_limit
 	reduce_blank_lines "$output_source_path" $blank_line_count_limit
+fi
+
+if $trim_trailing_whitespace
+then
+	printf_verbose 'Trimming trailing whitespace...\n'
+	trim_trailing_whitespace "$output_header_path"
+	trim_trailing_whitespace "$output_source_path"
 fi
 
 printf_verbose '\nDone.\n\n'
