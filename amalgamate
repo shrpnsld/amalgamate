@@ -32,7 +32,7 @@ Options:
   -S                    Amalgamate all files to single source file.
   -n <base-name>        Base name for output files [default: parent directory name].
   -x <hpp,cpp>          Extensions for output header and source files [default: inferred from input files; if cannot, then "'"$DEFAULT_OUTPUT_HEADER_EXTENSION"','"$DEFAULT_OUTPUT_SOURCE_EXTENSION"'"].
-  -E <count>            do not allow more than <count> empty lines in a row [default: 2].
+  -B <count>            Do not allow more than <count> consecutive blank lines.
   -a                    Insert annotations.
   -v                    Verbose mode.
   -h                    Show this message.
@@ -51,7 +51,8 @@ source_only=false
 name=$(basename $(pwd))
 output_header_extension=''
 output_source_extension=''
-empty_line_count_limit=( 2 )
+blank_line_count_limit=''
+
 file_printf_annotation_function=do_nothing
 file_print_header_annotation_function=do_nothing
 file_print_footer_annotation_function=do_nothing
@@ -229,14 +230,14 @@ parse_options()
 				return $argument_index
 				;;
 
-			E)
+			B)
 				((++char_index))
 				if [ $char_index == $char_count ]
 				then
 					((++argument_index))
-					empty_line_count_limit="${arguments[$argument_index]}"
+					blank_line_count_limit="${arguments[$argument_index]}"
 				else
-					empty_line_count_limit="${options:$char_index}"
+					blank_line_count_limit="${options:$char_index}"
 				fi
 
 				((++argument_index))
@@ -618,8 +619,7 @@ expand_file()
 	IFS=''
 	local absolute_file_path=$1
 	local output_path=$2
-	local empty_line_count=$3
-	local indent=$4
+	local indent=$3
 
 	local relative_file_path=$(relative_path "$absolute_file_path" $(pwd))
 	printf_verbose '%s\n' "$relative_file_path"
@@ -634,7 +634,6 @@ expand_file()
 		then
 			local clean_line=$(get_clean_line "$line")
 			file_printf "$output_path" '%s%s\n' "$indent" "$clean_line"
-			empty_line_count=0
 			continue
 		elif [ "$meta_tag" == 'remove' ]
 		then
@@ -663,7 +662,6 @@ expand_file()
 
 			included_files+=("$absolute_include_path")
 			expand_file "$absolute_include_path" "$output_path" $empty_line_count $(indent_shift "$indent")
-			empty_line_count=$?
 
 			continue
 		fi
@@ -675,17 +673,9 @@ expand_file()
 			continue
 		fi
 
-		if ! is_empty_line "$line"
+		if is_empty_line "$line"
 		then
-			file_printf "$output_path" '%s' "$indent"
-		else
-			if [[ $empty_line_count == $empty_line_count_limit ]]
-			then
-				continue
-			fi
-
 			file_printf "$output_path" "%s\n" "$line"
-			((++empty_line_count))
 			continue
 		fi
 
@@ -701,12 +691,10 @@ expand_file()
 			included_standard_files+=("$standard_include_path")
 		fi
 
-		file_printf "$output_path" '%s\n' "$line"
-		empty_line_count=0
+		file_printf "$output_path" '%s%s\n' "$indent" "$line"
 	done < "$absolute_file_path"
 
 	file_print_footer_annotation "$output_path" "$relative_file_path" "$indent"
-	return $empty_line_count
 }
 
 
@@ -716,7 +704,6 @@ merge_headers()
 	shift
 	local paths=("$@")
 
-	local empty_line_count=0
 	local path
 	for path in "${paths[@]}"
 	do
@@ -728,8 +715,7 @@ merge_headers()
 		fi
 
 		included_files+=("$file_absolute_path")
-		expand_file "$file_absolute_path" "$output_header_path" $empty_line_count ""
-		empty_line_count=$?
+		expand_file "$file_absolute_path" "$output_header_path" ''
 	done
 }
 
@@ -740,15 +726,43 @@ merge_sources()
 	shift
 	local paths=("$@")
 
-	local empty_line_count=0
 	local path
 	for path in "${paths[@]}"
 	do
 		local file_absolute_path=$(expand_path "$path")
 
-		expand_file "$file_absolute_path" "$output_source_path" $empty_line_count ""
-		empty_line_count=$?
+		expand_file "$file_absolute_path" "$output_source_path" ''
 	done
+}
+
+
+reduce_blank_lines()
+{
+	local file_path=$1
+	local empty_line_limit=$2
+
+	local temp="$file_path.tmp"
+	mktemp "$temp" &> /dev/null
+
+	local empty_line_count=0
+	local line
+	while read -r line || [ -n "$line" ]
+	do
+		if [ -z "$line" ]
+		then
+			((++empty_line_count))
+			if (( empty_line_count > empty_line_limit ))
+			then
+				continue
+			fi
+		else
+			empty_line_count=0
+		fi
+
+		printf '%s\n' "$line" >> "$temp"
+	done < "$file_path"
+
+	mv -f "$temp" "$file_path"
 }
 
 
@@ -820,7 +834,7 @@ else
 	printf_verbose 'Output source extension: %s\n' "$output_source_extension"
 fi
 
-printf_verbose 'Empty line count limit: %s\n' "$empty_line_count_limit"
+printf_verbose 'Reduce consecutive blank lines to: %s\n' "$blank_line_count_limit"
 
 if [ "$file_printf_annotation_function" != 'do_nothing' ]
 then
@@ -862,6 +876,13 @@ then
 fi
 
 merge_sources "$output_source_path" "${source_files[@]}"
+
+if [ -n "$blank_line_count_limit" ]
+then
+	printf_verbose '\nReducing blank lines...\n'
+	reduce_blank_lines "$output_header_path" $blank_line_count_limit
+	reduce_blank_lines "$output_source_path" $blank_line_count_limit
+fi
 
 printf_verbose '\nDone.\n\n'
 
