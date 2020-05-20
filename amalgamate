@@ -704,7 +704,7 @@ expand_file()
 	file_print_header_annotation "$output_path" "$relative_file_path" "$indent"
 
 	local line
-	while read -r line
+	while read -r line || [ -n "$line" ]
 	do
 		local meta_tag=$(get_meta_tag "$line")
 		if [ "$meta_tag" == 'leave' ]
@@ -746,7 +746,6 @@ expand_file()
 		if is_pragma_once_line "$line"
 		then
 			file_printf_annotation "$output_path" '%s// %s' "$indent" "$line"
-
 			continue
 		fi
 
