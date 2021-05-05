@@ -779,12 +779,12 @@ expand_file()
 
 			if array_contains_item "$absolute_include_path" "${included_files[@]}"
 			then
-				file_printf_annotation "$output_path" '%s// %s    // amalgamate: file already expanded' "$indent" "$line"
+				file_printf_annotation "$output_path" '%s// %s    // amalgamate: file already expanded\n' "$indent" "$line"
 				continue
 			fi
 
 			included_files+=("$absolute_include_path")
-			expand_file "$absolute_include_path" "$output_path" $empty_line_count $(indent_shift "$indent")
+			expand_file "$absolute_include_path" "$output_path" "$(indent_shift "$indent")"
 
 			continue
 		fi
@@ -806,7 +806,7 @@ expand_file()
 			local standard_include_path=$(path_from_standard_include_line "$line")
 			if array_contains_item "$standard_include_path" "${globally_included_standard_files[@]}"
 			then
-				file_printf_annotation "$output_path" '%s// %s    // amalgamate: file already included' "$indent" "$line"
+				file_printf_annotation "$output_path" '%s// %s    // amalgamate: file already included\n' "$indent" "$line"
 				continue
 			fi
 
@@ -911,6 +911,12 @@ trim_trailing_whitespace()
 	local file_path=$1
 
 	sed -i .bak 's/[	 ][	 ]*$//g' "$file_path"
+	if [ $? != 0 ]
+	then
+		exit 1
+	fi
+
+	rm "$file_path.bak"
 }
 
 
@@ -964,6 +970,9 @@ source_file_name="$name.$output_source_extension"
 
 output_header_path="$output_dir_path/$header_file_name"
 output_source_path="$output_dir_path/$source_file_name"
+
+
+# Printing options
 
 printf_verbose 'Header search path: %s\n' "$header_search_path"
 printf_verbose 'Input header extensions: %s\n' "$header_extensions"
