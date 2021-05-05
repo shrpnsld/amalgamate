@@ -32,8 +32,8 @@ Options:
   -S                    Amalgamate all files to single source file.
   -n <base-name>        Base name for output files [default: parent directory name].
   -x <hpp,cpp>          Extensions for output header and source files [default: inferred from input files; if cannot, then "'"$DEFAULT_OUTPUT_HEADER_EXTENSION"','"$DEFAULT_OUTPUT_SOURCE_EXTENSION"'"].
-  -B <count>            Do not allow more than <count> consecutive blank lines.
   -G <id> | -G '"''"'       Use include guard in header file instead of `#pragma once`. Use `<id>` for `#define` directive or generate it from header name if empty string was passed.
+  -E <count>            Do not allow more than <count> consecutive empty lines.
   -t                    Trim trailing whitespace.
   -a                    Insert annotations.
   -v                    Verbose mode.
@@ -53,7 +53,7 @@ source_only=false
 name=$(basename $(pwd))
 output_header_extension=''
 output_source_extension=''
-blank_line_count_limit=''
+empty_line_count_limit=''
 trim_trailing_whitespace=false
 include_guard_id=''
 
@@ -236,14 +236,14 @@ parse_options()
 				return $argument_index
 				;;
 
-			B)
+			E)
 				((++char_index))
 				if [ $char_index == $char_count ]
 				then
 					((++argument_index))
-					blank_line_count_limit="${arguments[$argument_index]}"
+					empty_line_count_limit="${arguments[$argument_index]}"
 				else
-					blank_line_count_limit="${options:$char_index}"
+					empty_line_count_limit="${options:$char_index}"
 				fi
 
 				((++argument_index))
@@ -819,7 +819,7 @@ merge_sources()
 }
 
 
-reduce_blank_lines()
+reduce_empty_lines()
 {
 	local file_path=$1
 	local empty_line_limit=$2
@@ -925,7 +925,7 @@ else
 	printf_verbose 'Output source extension: %s\n' "$output_source_extension"
 fi
 
-printf_verbose 'Reduce consecutive blank lines to: %s\n' "$blank_line_count_limit"
+printf_verbose 'Reduce consecutive empty lines to: %s\n' "$empty_line_count_limit"
 
 if $trim_trailing_whitespace
 then
@@ -982,11 +982,11 @@ fi
 
 merge_sources "$output_source_path" "${source_files[@]}"
 
-if [ -n "$blank_line_count_limit" ]
+if [ -n "$empty_line_count_limit" ]
 then
-	printf_verbose '\nReducing blank lines...\n'
-	reduce_blank_lines "$output_header_path" $blank_line_count_limit
-	reduce_blank_lines "$output_source_path" $blank_line_count_limit
+	printf_verbose '\nReducing empty lines...\n'
+	reduce_empty_lines "$output_header_path" $empty_line_count_limit
+	reduce_empty_lines "$output_source_path" $empty_line_count_limit
 fi
 
 if $trim_trailing_whitespace
