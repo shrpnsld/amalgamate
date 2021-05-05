@@ -1048,18 +1048,18 @@ fi
 
 merge_sources "$output_source_path" "${source_files[@]}"
 
-if [ -n "$empty_line_count_limit" ]
-then
-	printf_verbose '\nReducing empty lines...\n'
-	reduce_empty_lines "$output_header_path" $empty_line_count_limit
-	reduce_empty_lines "$output_source_path" $empty_line_count_limit
-fi
-
 if $trim_trailing_whitespace
 then
 	printf_verbose 'Trimming trailing whitespace...\n'
 	trim_trailing_whitespace "$output_header_path"
 	trim_trailing_whitespace "$output_source_path"
+fi
+
+if [ -n "$empty_line_count_limit" ]
+then
+	printf_verbose '\nReducing empty lines...\n'
+	reduce_empty_lines "$output_header_path" $empty_line_count_limit
+	reduce_empty_lines "$output_source_path" $empty_line_count_limit
 fi
 
 printf_verbose '\nDone.\n\n'
