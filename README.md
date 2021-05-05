@@ -55,14 +55,17 @@ trace-out/
 * `-S` – amalgamate all files to a single source file
 * `-n <base-name>` – base name for output files
 * `-x <hpp,cpp>` – extensions for output header and source files
-* `-E <count>` – do not allow no more than `<count>` empty lines in a row (default: `2`)
+* `-g` – group unexpanded headers on top
+* `-E <count>` – do not allow more than <count> consecutive empty lines (default: 2)
+* `-G <id> | -G''` – use include guard in header instead of `#pragma once`. Use `<id>` as header id or generate it from header name if empty string was passed
+* `-t` – trim trailing whitespace
 * `-a` – insert annotations
 * `-v` – verbose mode
 * `-h` – show help message
 
-### Meta tags
+### Tags
 
-Some lines in source code may need additional rules for processing, which you can mark with meta tags in the comments `[amalgamate:<tag>]`:
+Some lines in source code may need additional rules for processing, which you can mark with tags in the comments `[amalgamate:<tag>]`:
 
 * `leave` – leave line
 * `remove` – remove line
