@@ -32,8 +32,8 @@ Options:
   -S                    Amalgamate all files to single source file.
   -n <base-name>        Base name for output files [default: parent directory name].
   -x <hpp,cpp>          Extensions for output header and source files [default: inferred from input files; if cannot, then "'"$DEFAULT_OUTPUT_HEADER_EXTENSION"','"$DEFAULT_OUTPUT_SOURCE_EXTENSION"'"].
-  -G <id> | -G '"''"'       Use include guard in header file instead of `#pragma once`. Use `<id>` for `#define` directive or generate it from header name if empty string was passed.
   -E <count>            Do not allow more than <count> consecutive empty lines.
+  -G <id> | -G'"''"'       Use include guard in header instead of `#pragma once`. Use `<id>` for `#define` directive or generate it from header name if empty string was passed.
   -t                    Trim trailing whitespace.
   -a                    Insert annotations.
   -v                    Verbose mode.
