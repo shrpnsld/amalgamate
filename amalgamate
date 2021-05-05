@@ -32,6 +32,7 @@ Options:
   -S                    Amalgamate all files to single source file.
   -n <base-name>        Base name for output files [default: parent directory name].
   -x <hpp,cpp>          Extensions for output header and source files [default: inferred from input files; if cannot, then "'"$DEFAULT_OUTPUT_HEADER_EXTENSION"','"$DEFAULT_OUTPUT_SOURCE_EXTENSION"'"].
+  -g                    Group unexpanded headers on top.
   -E <count>            Do not allow more than <count> consecutive empty lines.
   -G <id> | -G'"''"'       Use include guard in header instead of `#pragma once`. Use `<id>` for `#define` directive or generate it from header name if empty string was passed.
   -t                    Trim trailing whitespace.
@@ -64,6 +65,9 @@ file_print_header_annotation_function=do_nothing
 file_print_footer_annotation_function=do_nothing
 indent_shift_function=do_nothing
 printf_verbose_function=do_nothing
+process_standard_header_function=file_printf
+prepend_with_standard_includes_function=do_nothing
+
 
 
 #
@@ -236,6 +240,12 @@ parse_options()
 				return $argument_index
 				;;
 
+			g)
+				((++char_index))
+				process_standard_header_function=add_standard_include_line
+				prepend_with_standard_includes_function=do_prepend_with_standard_includes
+				;;
+
 			E)
 				((++char_index))
 				if [ $char_index == $char_count ]
@@ -377,6 +387,34 @@ do_make_include_guard_endif()
 	local id=$1
 
 	printf '#endif // %s' "$id"
+}
+
+
+process_standard_header()
+{
+	"$process_standard_header_function" "$@"
+}
+
+
+add_standard_include_line()
+{
+	local include_line=$4
+	printf '%s' $(trim_string "$include_line")
+}
+
+
+prepend_with_standard_includes()
+{
+	"$prepend_with_standard_includes_function" "$@"
+}
+
+
+do_prepend_with_standard_includes()
+{
+	local output_header_path=$1
+	local standard_include_list=("${@:2}")
+
+	file_printf_prepend "$output_header_path" '%s\n\n' "$(IFS=$'\n' sort <<< "${standard_include_list[*]}")"
 }
 
 
@@ -696,7 +734,8 @@ get_clean_line()
 
 
 declare -a included_files
-declare -a included_standard_files
+declare -a globally_included_standard_files
+declare -a locally_included_standard_files
 
 expand_file()
 {
@@ -765,13 +804,15 @@ expand_file()
 		if is_standard_include_line "$line"
 		then
 			local standard_include_path=$(path_from_standard_include_line "$line")
-			if array_contains_item "$standard_include_path" "${included_standard_files[@]}"
+			if array_contains_item "$standard_include_path" "${globally_included_standard_files[@]}"
 			then
 				file_printf_annotation "$output_path" '%s// %s    // amalgamate: file already included' "$indent" "$line"
 				continue
 			fi
 
-			included_standard_files+=("$standard_include_path")
+			globally_included_standard_files+=("$standard_include_path")
+			locally_included_standard_files+=($(process_standard_header "$output_path" '%s%s\n' "$indent" "$line"))
+			continue
 		fi
 
 		file_printf "$output_path" '%s%s\n' "$indent" "$line"
@@ -787,6 +828,8 @@ merge_headers()
 	shift
 	local paths=("$@")
 
+	locally_included_standard_files=()
+
 	local path
 	for path in "${paths[@]}"
 	do
@@ -800,6 +843,8 @@ merge_headers()
 		included_files+=("$file_absolute_path")
 		expand_file "$file_absolute_path" "$output_header_path" ''
 	done
+
+	prepend_with_standard_includes "$output_header_path" "${locally_included_standard_files[@]}"
 }
 
 
@@ -809,6 +854,8 @@ merge_sources()
 	shift
 	local paths=("$@")
 
+	locally_included_standard_files=()
+
 	local path
 	for path in "${paths[@]}"
 	do
@@ -816,6 +863,8 @@ merge_sources()
 
 		expand_file "$file_absolute_path" "$output_source_path" ''
 	done
+
+	prepend_with_standard_includes "$output_source_path" "${locally_included_standard_files[@]}"
 }
 
 
@@ -846,6 +895,14 @@ reduce_empty_lines()
 	done < "$file_path"
 
 	mv -f "$temp" "$file_path"
+}
+
+
+trim_string()
+{
+	local string=$1
+
+	sed -e 's/^[	 ][	 ]*//g' -e 's/[	 ][	 ]*$//g' <<< "$string"
 }
 
 
