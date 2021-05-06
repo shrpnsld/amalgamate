@@ -12,8 +12,7 @@ $ git clone https://github.com/shrpnsld/amalgamate.git
 ```
 ```bash
 $ # Use it
-$ cd Source/Path/
-$ Path/To/amalgamate [options]
+$ amalgamate [options]
 ```
 
 Project tree [before](https://github.com/shrpnsld/trace-out/tree/master) `amalgamate`:
@@ -56,7 +55,7 @@ trace-out/
 * `-n <base-name>` – base name for output files
 * `-x <hpp,cpp>` – extensions for output header and source files
 * `-g` – group unexpanded headers on top
-* `-E <count>` – do not allow more than <count> consecutive empty lines (default: 2)
+* `-E <count>` – do not allow more than `<count>` consecutive empty lines (default: 2)
 * `-G <id> | -G''` – use include guard in header instead of `#pragma once`. Use `<id>` as header id or generate it from header name if empty string was passed
 * `-t` – trim trailing whitespace
 * `-a` – insert annotations
