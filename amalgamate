@@ -58,42 +58,42 @@ empty_line_count_limit=''
 trim_trailing_whitespace=false
 include_guard_id=''
 
-make_include_guard_header_function=do_make_include_guard_pragma_once
-make_include_guard_footer_function=do_nothing
-file_printf_annotation_function=do_nothing
-file_print_header_annotation_function=do_nothing
-file_print_footer_annotation_function=do_nothing
-indent_shift_function=do_nothing
-printf_verbose_function=do_nothing
-process_standard_header_function=file_printf
-prepend_with_standard_includes_function=do_nothing
+make_include_guard_header_function=do-make-include-guard-pragma-once
+make_include_guard_footer_function=do-nothing
+file_printf_annotation_function=do-nothing
+file_print_header_annotation_function=do-nothing
+file_print_footer_annotation_function=do-nothing
+indent_shift_function=do-nothing
+printf_verbose_function=do-nothing
+process_standard_header_function=file-printf
+prepend_with_standard_includes_function=do-nothing
 
 
 
 #
 # Functions
 
-printf_stderr()
+printf-stderr()
 {
 	printf "$@" >&2
 }
 
 
-printf_error()
+printf-error()
 {
-	printf_stderr "$AMALGAMATE_ERROR"
-	printf_stderr "$@"
-	printf_stderr '\n\n'
+	printf-stderr "$AMALGAMATE_ERROR"
+	printf-stderr "$@"
+	printf-stderr '\n\n'
 }
 
 
-do_nothing()
+do-nothing()
 {
 	:
 }
 
 
-valid_option_string()
+valid-option-string()
 {
 	local string=$1
 
@@ -105,7 +105,7 @@ valid_option_string()
 }
 
 
-parse_options()
+parse-options()
 {
 	local argument_index=$1
 	local options=$2
@@ -129,11 +129,11 @@ parse_options()
 
 				if [ ! -d "$header_search_path" ]
 				then
-					printf_error 'bad header search path "%s"' "$header_search_path"
+					printf-error 'bad header search path "%s"' "$header_search_path"
 					exit 1
 				fi
 
-				header_search_path=$(expand_dir_path "$header_search_path")
+				header_search_path=$(expand-dir-path "$header_search_path")
 
 				((++argument_index))
 				return $argument_index
@@ -220,19 +220,19 @@ parse_options()
 
 				if [ -z "$output_header_extension" ]
 				then
-					printf_error 'output header extension is empty'
+					printf-error 'output header extension is empty'
 					exit 1
 				fi
 
 				if [ -z "$output_source_extension" ]
 				then
-					printf_error 'output source extension is empty'
+					printf-error 'output source extension is empty'
 					exit 1
 				fi
 
 				if [ "$output_header_extension" == "$output_source_extension" ]
 				then
-					printf_error 'extensions for output files cannot be the same'
+					printf-error 'extensions for output files cannot be the same'
 					exit 1
 				fi
 
@@ -242,8 +242,8 @@ parse_options()
 
 			g)
 				((++char_index))
-				process_standard_header_function=add_standard_include_line
-				prepend_with_standard_includes_function=do_prepend_with_standard_includes
+				process_standard_header_function=add-standard-include-line
+				prepend_with_standard_includes_function=do-prepend-with-standard-includes
 				;;
 
 			E)
@@ -270,8 +270,8 @@ parse_options()
 					include_guard_id="${options:$char_index}"
 				fi
 
-				make_include_guard_header_function=do_make_include_guard_ifdef
-				make_include_guard_footer_function=do_make_include_guard_endif
+				make_include_guard_header_function=do-make-include-guard-ifdef
+				make_include_guard_footer_function=do-make-include-guard-endif
 
 				if [ -n "$inlude_guard_id" ]
 				then
@@ -287,10 +287,10 @@ parse_options()
 				;;
 
 			a)
-				file_printf_annotation_function=file_printf
-				file_print_header_annotation_function=do_file_print_header_annotation
-				file_print_footer_annotation_function=do_file_print_footer_annotation
-				indent_shift_function=do_indent_shift
+				file_printf_annotation_function=file-printf
+				file_print_header_annotation_function=do-file-print-header-annotation
+				file_print_footer_annotation_function=do-file-print-footer-annotation
+				indent_shift_function=do-indent-shift
 				((++char_index))
 				;;
 
@@ -306,7 +306,7 @@ parse_options()
 				;;
 
 			*)
-				printf_error 'unknown option "%s"' "$option"
+				printf-error 'unknown option "%s"' "$option"
 				printf '%s' "$HELP_MESSAGE"
 				((++char_index))
 				exit 1
@@ -328,27 +328,27 @@ setup()
 	while [ $argument_index -lt $argument_count ]
 	do
 		local argument="${arguments[$argument_index]}"
-		if ! valid_option_string "$argument"
+		if ! valid-option-string "$argument"
 		then
-			printf_error 'wrong arguments'
+			printf-error 'wrong arguments'
 			printf '%s' "$HELP_MESSAGE"
 			exit 1
 		fi
 
 		local options="${argument:1}"
-		parse_options $argument_index "$options" "${arguments[@]}"
+		parse-options $argument_index "$options" "${arguments[@]}"
 		argument_index=$?
 	done
 }
 
 
-printf_verbose()
+printf-verbose()
 {
 	"$printf_verbose_function" "$@"
 }
 
 
-make_include_guard_id()
+make-include-guard-id()
 {
 	local file_name=$1
 
@@ -356,25 +356,25 @@ make_include_guard_id()
 }
 
 
-make_include_guard_header()
+make-include-guard-header()
 {
 	"$make_include_guard_header_function" "$@"
 }
 
 
-make_include_guard_footer()
+make-include-guard-footer()
 {
 	"$make_include_guard_footer_function" "$@"
 }
 
 
-do_make_include_guard_pragma_once()
+do-make-include-guard-pragma-once()
 {
 	printf '#pragma once'
 }
 
 
-do_make_include_guard_ifdef()
+do-make-include-guard-ifdef()
 {
 	local id=$1
 
@@ -382,7 +382,7 @@ do_make_include_guard_ifdef()
 }
 
 
-do_make_include_guard_endif()
+do-make-include-guard-endif()
 {
 	local id=$1
 
@@ -390,35 +390,35 @@ do_make_include_guard_endif()
 }
 
 
-process_standard_header()
+process-standard-header()
 {
 	"$process_standard_header_function" "$@"
 }
 
 
-add_standard_include_line()
+add-standard-include-line()
 {
 	local include_line=$4
-	printf '%s' $(trim_string "$include_line")
+	printf '%s' $(trim-string "$include_line")
 }
 
 
-prepend_with_standard_includes()
+prepend-with-standard-includes()
 {
 	"$prepend_with_standard_includes_function" "$@"
 }
 
 
-do_prepend_with_standard_includes()
+do-prepend-with-standard-includes()
 {
 	local output_header_path=$1
 	local standard_include_list=("${@:2}")
 
-	file_printf_prepend "$output_header_path" '%s\n\n' "$(IFS=$'\n' sort <<< "${standard_include_list[*]}")"
+	file-printf-prepend "$output_header_path" '%s\n\n' "$(IFS=$'\n' sort <<< "${standard_include_list[*]}")"
 }
 
 
-file_printf_annotation()
+file-printf-annotation()
 {
 	local output_path=$1
 	local format=$2
@@ -428,7 +428,7 @@ file_printf_annotation()
 }
 
 
-file_print_header_annotation()
+file-print-header-annotation()
 {
 	local output_path=$1
 	local file_path=$2
@@ -438,18 +438,18 @@ file_print_header_annotation()
 }
 
 
-do_file_print_header_annotation()
+do-file-print-header-annotation()
 {
 	local output_path=$1
 	local file_path=$2
 	local indent=$3
 
-	local header_string=$(make_header_string "$file_path" "$indent")
-	file_printf "$output_path" '%s\n' "$header_string"
+	local header_string=$(make-header-string "$file_path" "$indent")
+	file-printf "$output_path" '%s\n' "$header_string"
 }
 
 
-file_print_footer_annotation()
+file-print-footer-annotation()
 {
 	local output_path=$1
 	local file_path=$2
@@ -459,18 +459,18 @@ file_print_footer_annotation()
 }
 
 
-do_file_print_footer_annotation()
+do-file-print-footer-annotation()
 {
 	local output_path=$1
 	local file_path=$2
 	local indent=$3
 
-	local footer_string=$(make_footer_string "$file_path" "$indent")
-	file_printf "$output_path" '%s\n\n' "$footer_string"
+	local footer_string=$(make-footer-string "$file_path" "$indent")
+	file-printf "$output_path" '%s\n\n' "$footer_string"
 }
 
 
-indent_shift()
+indent-shift()
 {
 	local indent=$1
 
@@ -478,7 +478,7 @@ indent_shift()
 }
 
 
-do_indent_shift()
+do-indent-shift()
 {
 	local indent=$1
 
@@ -486,7 +486,7 @@ do_indent_shift()
 }
 
 
-array_contains_item()
+array-contains-item()
 {
 	local item=$1
 	local array=("${@:2}")
@@ -504,7 +504,7 @@ array_contains_item()
 }
 
 
-find_by_extensions()
+find-by-extensions()
 {
 	local path=$1
 	local extensions=$2
@@ -514,7 +514,7 @@ find_by_extensions()
 }
 
 
-is_include_line()
+is-include-line()
 {
 	local line=$1
 
@@ -522,7 +522,7 @@ is_include_line()
 }
 
 
-is_standard_include_line()
+is-standard-include-line()
 {
 	local line=$1
 
@@ -530,7 +530,7 @@ is_standard_include_line()
 }
 
 
-is_pragma_once_line()
+is-pragma-once-line()
 {
 	local line=$1
 
@@ -538,7 +538,7 @@ is_pragma_once_line()
 }
 
 
-is_empty_line()
+is-empty-line()
 {
 	local line=$1
 
@@ -546,7 +546,7 @@ is_empty_line()
 }
 
 
-path_extension()
+path-extension()
 {
 	local path=$1
 
@@ -554,7 +554,7 @@ path_extension()
 }
 
 
-detect_extension()
+detect-extension()
 {
 	local default_extension=$1
 	local first_path=$2
@@ -562,12 +562,12 @@ detect_extension()
 	shift
 	local paths=("$@")
 
-	local first_extension=$(path_extension "$first_path")
+	local first_extension=$(path-extension "$first_path")
 
 	local path
 	for path in "${paths[@]}"
 	do
-		local extension=$(path_extension "$path")
+		local extension=$(path-extension "$path")
 		if [ "$first_extension" != "$extension" ]
 		then
 			printf '%s\n' "$default_extension"
@@ -580,7 +580,7 @@ detect_extension()
 }
 
 
-expand_dir_path()
+expand-dir-path()
 {
 	local path=$1
 
@@ -590,19 +590,19 @@ expand_dir_path()
 }
 
 
-expand_path()
+expand-path()
 {
 	local path=$1
 
 	local dir=$(dirname "$path")
 	local base_name=$(basename "$path")
-	local absolute_dir_path=$(expand_dir_path "$dir")
+	local absolute_dir_path=$(expand-dir-path "$dir")
 
 	printf '%s\n' "$absolute_dir_path/$base_name"
 }
 
 
-relative_path()
+relative-path()
 {
 	local path=$1
 	local base_path=$2
@@ -617,7 +617,7 @@ relative_path()
 }
 
 
-path_from_include_line()
+path-from-include-line()
 {
 	local line=$1
 
@@ -628,7 +628,7 @@ path_from_include_line()
 }
 
 
-path_from_standard_include_line()
+path-from-standard-include-line()
 {
 	local line=$1
 
@@ -639,18 +639,18 @@ path_from_standard_include_line()
 }
 
 
-absolute_path_from_include_line()
+absolute-path-from-include-line()
 {
 	local line=$1
 
 	local file_path=${line#*\"}
 	local file_path=${file_path%\"*}
 
-	expand_path "$file_path"
+	expand-path "$file_path"
 }
 
 
-file_printf()
+file-printf()
 {
 	local file_path=$1
 	local format=$2
@@ -660,7 +660,7 @@ file_printf()
 }
 
 
-file_printf_prepend()
+file-printf-prepend()
 {
 	local file_path=$1
 	local format=$2
@@ -670,7 +670,7 @@ file_printf_prepend()
 }
 
 
-make_header_string()
+make-header-string()
 {
 	local line=$1
 	local indent=$2
@@ -679,7 +679,7 @@ make_header_string()
 }
 
 
-make_footer_string()
+make-footer-string()
 {
 	local line=$1
 	local indent=$2
@@ -688,7 +688,7 @@ make_footer_string()
 }
 
 
-resolve_include_path()
+resolve-include-path()
 {
 	local include_path=$1
 	local absolute_file_path=$2
@@ -698,7 +698,7 @@ resolve_include_path()
 
 	if [ -f "$non_expanded_path" ]
 	then
-		expand_path "$non_expanded_path"
+		expand-path "$non_expanded_path"
 		return
 	fi
 
@@ -712,7 +712,7 @@ resolve_include_path()
 }
 
 
-get_meta_tag()
+get-meta-tag()
 {
 	local line=$1
 
@@ -725,7 +725,7 @@ get_meta_tag()
 }
 
 
-get_clean_line()
+get-clean-line()
 {
 	local line=$1
 
@@ -737,92 +737,92 @@ declare -a included_files
 declare -a globally_included_standard_files
 declare -a locally_included_standard_files
 
-expand_file()
+expand-file()
 {
 	IFS=''
 	local absolute_file_path=$1
 	local output_path=$2
 	local indent=$3
 
-	local relative_file_path=$(relative_path "$absolute_file_path" $(pwd))
-	printf_verbose '%s\n' "$relative_file_path"
+	local relative_file_path=$(relative-path "$absolute_file_path" $(pwd))
+	printf-verbose '%s\n' "$relative_file_path"
 
-	file_print_header_annotation "$output_path" "$relative_file_path" "$indent"
+	file-print-header-annotation "$output_path" "$relative_file_path" "$indent"
 
 	local line
 	while read -r line || [ -n "$line" ]
 	do
-		local meta_tag=$(get_meta_tag "$line")
+		local meta_tag=$(get-meta-tag "$line")
 		if [ "$meta_tag" == 'leave' ]
 		then
-			local clean_line=$(get_clean_line "$line")
-			file_printf "$output_path" '%s%s\n' "$indent" "$clean_line"
+			local clean_line=$(get-clean-line "$line")
+			file-printf "$output_path" '%s%s\n' "$indent" "$clean_line"
 			continue
 		elif [ "$meta_tag" == 'remove' ]
 		then
 			continue
 		elif [ "$meta_tag" == 'uncomment' ]
 		then
-			local clean_line=$(get_clean_line "$line")
+			local clean_line=$(get-clean-line "$line")
 			line="${clean_line#*//}"
 		fi
 
-		if is_include_line "$line"
+		if is-include-line "$line"
 		then
-			local include_path=$(path_from_include_line "$line")
-			local absolute_include_path=$(resolve_include_path "$include_path" "$absolute_file_path")
+			local include_path=$(path-from-include-line "$line")
+			local absolute_include_path=$(resolve-include-path "$include_path" "$absolute_file_path")
 			if [ -z "$absolute_include_path" ]
 			then
-				printf_error 'cannot find include file "%s" required in "%s"' "$include_path" "$absolute_file_path"
+				printf-error 'cannot find include file "%s" required in "%s"' "$include_path" "$absolute_file_path"
 				exit 1
 			fi
 
-			if array_contains_item "$absolute_include_path" "${included_files[@]}"
+			if array-contains-item "$absolute_include_path" "${included_files[@]}"
 			then
-				file_printf_annotation "$output_path" '%s// %s    // amalgamate: file already expanded\n' "$indent" "$line"
+				file-printf-annotation "$output_path" '%s// %s    // amalgamate: file already expanded\n' "$indent" "$line"
 				continue
 			fi
 
 			included_files+=("$absolute_include_path")
-			expand_file "$absolute_include_path" "$output_path" "$(indent_shift "$indent")"
+			expand-file "$absolute_include_path" "$output_path" "$(indent-shift "$indent")"
 
 			continue
 		fi
 
-		if is_pragma_once_line "$line"
+		if is-pragma-once-line "$line"
 		then
-			file_printf_annotation "$output_path" '%s// %s' "$indent" "$line"
+			file-printf-annotation "$output_path" '%s// %s' "$indent" "$line"
 			continue
 		fi
 
-		if is_empty_line "$line"
+		if is-empty-line "$line"
 		then
-			file_printf "$output_path" "%s\n" "$line"
+			file-printf "$output_path" "%s\n" "$line"
 			continue
 		fi
 
-		if is_standard_include_line "$line"
+		if is-standard-include-line "$line"
 		then
-			local standard_include_path=$(path_from_standard_include_line "$line")
-			if array_contains_item "$standard_include_path" "${globally_included_standard_files[@]}"
+			local standard_include_path=$(path-from-standard-include-line "$line")
+			if array-contains-item "$standard_include_path" "${globally_included_standard_files[@]}"
 			then
-				file_printf_annotation "$output_path" '%s// %s    // amalgamate: file already included\n' "$indent" "$line"
+				file-printf-annotation "$output_path" '%s// %s    // amalgamate: file already included\n' "$indent" "$line"
 				continue
 			fi
 
 			globally_included_standard_files+=("$standard_include_path")
-			locally_included_standard_files+=($(process_standard_header "$output_path" '%s%s\n' "$indent" "$line"))
+			locally_included_standard_files+=($(process-standard-header "$output_path" '%s%s\n' "$indent" "$line"))
 			continue
 		fi
 
-		file_printf "$output_path" '%s%s\n' "$indent" "$line"
+		file-printf "$output_path" '%s%s\n' "$indent" "$line"
 	done < "$absolute_file_path"
 
-	file_print_footer_annotation "$output_path" "$relative_file_path" "$indent"
+	file-print-footer-annotation "$output_path" "$relative_file_path" "$indent"
 }
 
 
-merge_headers()
+merge-headers()
 {
 	local output_header_path=$1
 	shift
@@ -833,22 +833,22 @@ merge_headers()
 	local path
 	for path in "${paths[@]}"
 	do
-		local file_absolute_path=$(expand_path "$path")
+		local file_absolute_path=$(expand-path "$path")
 
-		if array_contains_item "$file_absolute_path" "${included_files[@]}"
+		if array-contains-item "$file_absolute_path" "${included_files[@]}"
 		then
 			continue
 		fi
 
 		included_files+=("$file_absolute_path")
-		expand_file "$file_absolute_path" "$output_header_path" ''
+		expand-file "$file_absolute_path" "$output_header_path" ''
 	done
 
-	prepend_with_standard_includes "$output_header_path" "${locally_included_standard_files[@]}"
+	prepend-with-standard-includes "$output_header_path" "${locally_included_standard_files[@]}"
 }
 
 
-merge_sources()
+merge-sources()
 {
 	local output_source_path=$1
 	shift
@@ -859,16 +859,16 @@ merge_sources()
 	local path
 	for path in "${paths[@]}"
 	do
-		local file_absolute_path=$(expand_path "$path")
+		local file_absolute_path=$(expand-path "$path")
 
-		expand_file "$file_absolute_path" "$output_source_path" ''
+		expand-file "$file_absolute_path" "$output_source_path" ''
 	done
 
-	prepend_with_standard_includes "$output_source_path" "${locally_included_standard_files[@]}"
+	prepend-with-standard-includes "$output_source_path" "${locally_included_standard_files[@]}"
 }
 
 
-reduce_empty_lines()
+reduce-empty-lines()
 {
 	local file_path=$1
 	local empty_line_limit=$2
@@ -898,7 +898,7 @@ reduce_empty_lines()
 }
 
 
-trim_string()
+trim-string()
 {
 	local string=$1
 
@@ -906,7 +906,7 @@ trim_string()
 }
 
 
-trim_trailing_whitespace()
+trim-trailing-whitespace()
 {
 	local file_path=$1
 
@@ -930,39 +930,39 @@ output_dir_path="$output_dir_path/$name-$OUTPUT_DIRECTORY_SUFFIX"
 rm -rf "$output_dir_path" &> /dev/null
 if [ $? != 0 ]
 then
-	printf_error 'cannot remove output directory "%s"' "$output_dir_path"
+	printf-error 'cannot remove output directory "%s"' "$output_dir_path"
 	exit 1
 fi
 
 mkdir -p "$output_dir_path"
 if [ $? != 0 ]
 then
-	printf_error 'cannot write path "%s"' "$output_dir_path"
+	printf-error 'cannot write path "%s"' "$output_dir_path"
 	exit 1
 fi
 
-output_dir_path=$(expand_dir_path "$output_dir_path")
+output_dir_path=$(expand-dir-path "$output_dir_path")
 
 
 IFS=$'\n'
-header_files=($(find_by_extensions . "$header_extensions"))
-source_files=($(find_by_extensions . "$source_extensions"))
+header_files=($(find-by-extensions . "$header_extensions"))
+source_files=($(find-by-extensions . "$source_extensions"))
 
 if [ "${#header_files[@]}" == 0 ] && [ "${#source_files[@]}" == 0 ]
 then
-	printf_error 'no C/C++ files found'
+	printf-error 'no C/C++ files found'
 	exit 1
 fi
 
 
 if [ -z "$output_header_extension" ]
 then
-	output_header_extension=$(detect_extension "$DEFAULT_OUTPUT_HEADER_EXTENSION" "${header_files[@]}")
+	output_header_extension=$(detect-extension "$DEFAULT_OUTPUT_HEADER_EXTENSION" "${header_files[@]}")
 fi
 
 if [ -z "$output_source_extension" ]
 then
-	output_source_extension=$(detect_extension "$DEFAULT_OUTPUT_SOURCE_EXTENSION" "${source_files[@]}")
+	output_source_extension=$(detect-extension "$DEFAULT_OUTPUT_SOURCE_EXTENSION" "${source_files[@]}")
 fi
 
 header_file_name="$name.$output_header_extension"
@@ -974,50 +974,50 @@ output_source_path="$output_dir_path/$source_file_name"
 
 # Printing options
 
-printf_verbose 'Header search path: %s\n' "$header_search_path"
-printf_verbose 'Input header extensions: %s\n' "$header_extensions"
-printf_verbose 'Input source extensions: %s\n' "$source_extensions"
-printf_verbose 'Base name: %s\n' "$name"
+printf-verbose 'Header search path: %s\n' "$header_search_path"
+printf-verbose 'Input header extensions: %s\n' "$header_extensions"
+printf-verbose 'Input source extensions: %s\n' "$source_extensions"
+printf-verbose 'Base name: %s\n' "$name"
 if $header_only
 then
-	printf_verbose 'Header only\n'
-	printf_verbose 'Output header extension: %s\n' "$output_header_extension"
+	printf-verbose 'Header only\n'
+	printf-verbose 'Output header extension: %s\n' "$output_header_extension"
 elif $source_only
 then
-	printf_verbose 'Source only'
-	printf_verbose 'Output source extension: %s\n' "$output_source_extension"
+	printf-verbose 'Source only'
+	printf-verbose 'Output source extension: %s\n' "$output_source_extension"
 else
-	printf_verbose 'Output header extension: %s\n' "$output_header_extension"
-	printf_verbose 'Output source extension: %s\n' "$output_source_extension"
+	printf-verbose 'Output header extension: %s\n' "$output_header_extension"
+	printf-verbose 'Output source extension: %s\n' "$output_source_extension"
 fi
 
-printf_verbose 'Reduce consecutive empty lines to: %s\n' "$empty_line_count_limit"
+printf-verbose 'Reduce consecutive empty lines to: %s\n' "$empty_line_count_limit"
 
 if $trim_trailing_whitespace
 then
-	printf_verbose 'Trim trailing whitespace: yes\n'
+	printf-verbose 'Trim trailing whitespace: yes\n'
 else
-	printf_verbose 'Trim trailing whitespace: no\n'
+	printf-verbose 'Trim trailing whitespace: no\n'
 fi
 
-if [ "$file_printf_annotation_function" != 'do_nothing' ]
+if [ "$file_printf_annotation_function" != 'do-nothing' ]
 then
-	printf_verbose 'Insert annotations: yes\n'
+	printf-verbose 'Insert annotations: yes\n'
 else
-	printf_verbose 'Insert annotations: no\n'
+	printf-verbose 'Insert annotations: no\n'
 fi
 
-printf_verbose '\nSaving amalgamated files to:\n%s/\n' "$output_dir_path"
+printf-verbose '\nSaving amalgamated files to:\n%s/\n' "$output_dir_path"
 if $header_only
 then
 	output_source_path="$output_header_path"
-	printf_verbose '└── %s\n\n' "$header_file_name"
+	printf-verbose '└── %s\n\n' "$header_file_name"
 elif $source_only
 then
 	output_header_path="$output_source_path"
-	printf_verbose '└── %s\n\n' "$source_file_name"
+	printf-verbose '└── %s\n\n' "$source_file_name"
 else
-	printf_verbose '├── %s\n└── %s\n\n' "$header_file_name" "$source_file_name"
+	printf-verbose '├── %s\n└── %s\n\n' "$header_file_name" "$source_file_name"
 fi
 
 
@@ -1025,42 +1025,42 @@ rm -f "$output_header_path" "$output_source_path"
 
 included_files+=("$output_header_path")
 
-printf_verbose 'Amalgamating headers...\n'
+printf-verbose 'Amalgamating headers...\n'
 
-merge_headers "$output_header_path" "${header_files[@]}"
+merge-headers "$output_header_path" "${header_files[@]}"
 
 if ! $source_only
 then
-	include_guard_id=$(make_include_guard_id "$header_file_name")
+	include_guard_id=$(make-include-guard-id "$header_file_name")
 
-	include_guard_header=$(make_include_guard_header "$include_guard_id")
-	file_printf_prepend "$output_header_path" '%s\n\n' "${include_guard_header}"
+	include_guard_header=$(make-include-guard-header "$include_guard_id")
+	file-printf-prepend "$output_header_path" '%s\n\n' "${include_guard_header}"
 
-	include_guard_footer=$(make_include_guard_footer "$include_guard_id")
-	file_printf "$output_header_path" '\n\n%s' "$include_guard_footer"
+	include_guard_footer=$(make-include-guard-footer "$include_guard_id")
+	file-printf "$output_header_path" '\n\n%s' "$include_guard_footer"
 fi
 
-printf_verbose '\nAmalgamating sources...\n'
+printf-verbose '\nAmalgamating sources...\n'
 if ! $source_only
 then
-	file_printf "$output_source_path" '#include "%s"\n' "$(basename $header_file_name)"
+	file-printf "$output_source_path" '#include "%s"\n' "$(basename $header_file_name)"
 fi
 
-merge_sources "$output_source_path" "${source_files[@]}"
+merge-sources "$output_source_path" "${source_files[@]}"
 
 if $trim_trailing_whitespace
 then
-	printf_verbose 'Trimming trailing whitespace...\n'
-	trim_trailing_whitespace "$output_header_path"
-	trim_trailing_whitespace "$output_source_path"
+	printf-verbose 'Trimming trailing whitespace...\n'
+	trim-trailing-whitespace "$output_header_path"
+	trim-trailing-whitespace "$output_source_path"
 fi
 
 if [ -n "$empty_line_count_limit" ]
 then
-	printf_verbose '\nReducing empty lines...\n'
-	reduce_empty_lines "$output_header_path" $empty_line_count_limit
-	reduce_empty_lines "$output_source_path" $empty_line_count_limit
+	printf-verbose '\nReducing empty lines...\n'
+	reduce-empty-lines "$output_header_path" $empty_line_count_limit
+	reduce-empty-lines "$output_source_path" $empty_line_count_limit
 fi
 
-printf_verbose '\nDone.\n\n'
+printf-verbose '\nDone.\n\n'
 
