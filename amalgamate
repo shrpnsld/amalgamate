@@ -712,7 +712,7 @@ resolve-include-path()
 }
 
 
-get-meta-tag()
+get-tag()
 {
 	local line=$1
 
@@ -752,16 +752,16 @@ expand-file()
 	local line
 	while read -r line || [ -n "$line" ]
 	do
-		local meta_tag=$(get-meta-tag "$line")
-		if [ "$meta_tag" == 'leave' ]
+		local tag=$(get-tag "$line")
+		if [ "$tag" == 'leave' ]
 		then
 			local clean_line=$(get-clean-line "$line")
 			file-printf "$output_path" '%s%s\n' "$indent" "$clean_line"
 			continue
-		elif [ "$meta_tag" == 'remove' ]
+		elif [ "$tag" == 'remove' ]
 		then
 			continue
-		elif [ "$meta_tag" == 'uncomment' ]
+		elif [ "$tag" == 'uncomment' ]
 		then
 			local clean_line=$(get-clean-line "$line")
 			line="${clean_line#*//}"
