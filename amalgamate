@@ -343,7 +343,7 @@ setup()
 }
 
 
-printf-verbose()
+printf-message()
 {
 	"$PRINTF_VERBOSE_FUNCTION" "$@"
 }
@@ -746,7 +746,7 @@ expand-file()
 	local indent=$3
 
 	local relative_file_path=$(relative-path "$absolute_file_path" $(pwd))
-	printf-verbose '%s\n' "$relative_file_path"
+	printf-message '%s\n' "$relative_file_path"
 
 	file-print-header-annotation "$output_path" "$relative_file_path" "$indent"
 
@@ -975,50 +975,50 @@ output_source_path="$OUTPUT_DIR_PATH/$source_file_name"
 
 # Printing options
 
-printf-verbose 'Header search path: %s\n' "$HEADER_SEARCH_PATH"
-printf-verbose 'Input header extensions: %s\n' "$HEADER_EXTENSIONS"
-printf-verbose 'Input source extensions: %s\n' "$SOURCE_EXTENSIONS"
-printf-verbose 'Base name: %s\n' "$NAME"
+printf-message 'Header search path: %s\n' "$HEADER_SEARCH_PATH"
+printf-message 'Input header extensions: %s\n' "$HEADER_EXTENSIONS"
+printf-message 'Input source extensions: %s\n' "$SOURCE_EXTENSIONS"
+printf-message 'Base name: %s\n' "$NAME"
 if $HEADER_ONLY
 then
-	printf-verbose 'Header only\n'
-	printf-verbose 'Output header extension: %s\n' "$OUTPUT_HEADER_EXTENSION"
+	printf-message 'Header only\n'
+	printf-message 'Output header extension: %s\n' "$OUTPUT_HEADER_EXTENSION"
 elif $SOURCE_ONLY
 then
-	printf-verbose 'Source only'
-	printf-verbose 'Output source extension: %s\n' "$OUTPUT_SOURCE_EXTENSION"
+	printf-message 'Source only'
+	printf-message 'Output source extension: %s\n' "$OUTPUT_SOURCE_EXTENSION"
 else
-	printf-verbose 'Output header extension: %s\n' "$OUTPUT_HEADER_EXTENSION"
-	printf-verbose 'Output source extension: %s\n' "$OUTPUT_SOURCE_EXTENSION"
+	printf-message 'Output header extension: %s\n' "$OUTPUT_HEADER_EXTENSION"
+	printf-message 'Output source extension: %s\n' "$OUTPUT_SOURCE_EXTENSION"
 fi
 
-printf-verbose 'Reduce consecutive empty lines to: %s\n' "$EMPTY_LINE_COUNT_LIMIT"
+printf-message 'Reduce consecutive empty lines to: %s\n' "$EMPTY_LINE_COUNT_LIMIT"
 
 if $TRIM_TRAILING_WHITESPACE
 then
-	printf-verbose 'Trim trailing whitespace: yes\n'
+	printf-message 'Trim trailing whitespace: yes\n'
 else
-	printf-verbose 'Trim trailing whitespace: no\n'
+	printf-message 'Trim trailing whitespace: no\n'
 fi
 
 if [ "$FILE_PRINTF_ANNOTATION_FUNCTION" != 'do-nothing' ]
 then
-	printf-verbose 'Insert annotations: yes\n'
+	printf-message 'Insert annotations: yes\n'
 else
-	printf-verbose 'Insert annotations: no\n'
+	printf-message 'Insert annotations: no\n'
 fi
 
-printf-verbose '\nSaving amalgamated files to:\n%s/\n' "$OUTPUT_DIR_PATH"
+printf-message '\nSaving amalgamated files to:\n%s/\n' "$OUTPUT_DIR_PATH"
 if $HEADER_ONLY
 then
 	output_source_path="$output_header_path"
-	printf-verbose '└── %s\n\n' "$header_file_name"
+	printf-message '└── %s\n\n' "$header_file_name"
 elif $SOURCE_ONLY
 then
 	output_header_path="$output_source_path"
-	printf-verbose '└── %s\n\n' "$source_file_name"
+	printf-message '└── %s\n\n' "$source_file_name"
 else
-	printf-verbose '├── %s\n└── %s\n\n' "$header_file_name" "$source_file_name"
+	printf-message '├── %s\n└── %s\n\n' "$header_file_name" "$source_file_name"
 fi
 
 
@@ -1026,7 +1026,7 @@ rm -f "$output_header_path" "$output_source_path"
 
 included_files+=("$output_header_path")
 
-printf-verbose 'Amalgamating headers...\n'
+printf-message 'Amalgamating headers...\n'
 
 merge-headers "$output_header_path" "${header_files[@]}"
 
@@ -1041,7 +1041,7 @@ then
 	file-printf "$output_header_path" '\n\n%s' "$include_guard_footer"
 fi
 
-printf-verbose '\nAmalgamating sources...\n'
+printf-message '\nAmalgamating sources...\n'
 if ! $SOURCE_ONLY
 then
 	file-printf "$output_source_path" '#include "%s"\n' "$(basename $header_file_name)"
@@ -1051,17 +1051,17 @@ merge-sources "$output_source_path" "${source_files[@]}"
 
 if $TRIM_TRAILING_WHITESPACE
 then
-	printf-verbose 'Trimming trailing whitespace...\n'
+	printf-message 'Trimming trailing whitespace...\n'
 	trim-trailing-whitespace "$output_header_path"
 	trim-trailing-whitespace "$output_source_path"
 fi
 
 if [ -n "$EMPTY_LINE_COUNT_LIMIT" ]
 then
-	printf-verbose '\nReducing empty lines...\n'
+	printf-message '\nReducing empty lines...\n'
 	reduce-empty-lines "$output_header_path" $EMPTY_LINE_COUNT_LIMIT
 	reduce-empty-lines "$output_source_path" $EMPTY_LINE_COUNT_LIMIT
 fi
 
-printf-verbose '\nDone.\n\n'
+printf-message '\nDone.\n\n'
 
