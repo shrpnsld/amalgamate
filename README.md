@@ -56,7 +56,7 @@ trace-out/
 * `-x <hpp,cpp>` – extensions for output header and source files
 * `-g` – group unexpanded headers on top
 * `-E <count>` – do not allow more than `<count>` consecutive empty lines (default: 2)
-* `-G <id> | -G''` – use include guard in header instead of `#pragma once`. Use `<id>` as header id or generate it from header name if empty string was passed
+* `-G <id> | -G ''` – use include guard in header instead of `#pragma once`. Use `<id>` as header id or generate it from header name if empty string was passed
 * `-t` – trim trailing whitespace
 * `-a` – insert annotations
 * `-v` – verbose mode
