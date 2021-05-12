@@ -67,8 +67,8 @@ OUTPUT_DIR_PATH="$(pwd)/.."
 HEADER_ONLY=false
 SOURCE_ONLY=false
 NAME=$(basename $(pwd))
-OUTPUT_HEADER_EXTENSION=''
-OUTPUT_SOURCE_EXTENSION=''
+OUTPUT_HEADER_EXTENSION=-1
+OUTPUT_SOURCE_EXTENSION=-1
 EMPTY_LINE_COUNT_LIMIT=''
 TRIM_TRAILING_WHITESPACE=false
 INCLUDE_GUARD_ID=''
@@ -94,251 +94,202 @@ do-nothing()
 }
 
 
-valid-option-string()
+check-parameter()
 {
 	local string=$1
 
 	local first_character="${string:0:1}"
-	if [ "$first_character" != '-' ]
+	printf '%s\n' "${string#-}"
+	[ "$first_character" == '-' ]
+}
+
+
+PARSE_OPTION_UNKNOWN_OPTION=255
+
+parse-option()
+{
+	local option=$1
+	local value=$2
+
+	case "$option" in
+		I)
+			HEADER_SEARCH_PATH="$value"
+			return 1
+			;;
+
+		e)
+			HEADER_EXTENSIONS="$value"
+			return 1
+			;;
+
+		s)
+			SOURCE_EXTENSIONS="$value"
+			return 1
+			;;
+
+		o)
+			OUTPUT_DIR_PATH="$value"
+			return 1
+			;;
+
+		H)
+			HEADER_ONLY=true
+			;;
+
+		S)
+			SOURCE_ONLY=true
+			;;
+
+		n)
+			NAME="$value"
+			return 1
+			;;
+
+		x)
+			OUTPUT_HEADER_EXTENSION="${value%,*}"
+			OUTPUT_SOURCE_EXTENSION="${value#*,}"
+			return 1
+			;;
+
+		g)
+			PROCESS_STANDARD_HEADER_FUNCTION=add-standard-include-line
+			PREPEND_WITH_STANDARD_INCLUDES_FUNCTION=do-prepend-with-standard-includes
+			;;
+
+		E)
+			EMPTY_LINE_COUNT_LIMIT="$value"
+			return 1
+			;;
+
+		G)
+			INCLUDE_GUARD_ID="$value"
+			MAKE_INCLUDE_GUARD_HEADER_FUNCTION=do-make-include-guard-ifdef
+			MAKE_INCLUDE_GUARD_FOOTER_FUNCTION=do-make-include-guard-endif
+			return 1
+			;;
+
+		t)
+			TRIM_TRAILING_WHITESPACE=true
+			;;
+
+		a)
+			FILE_PRINTF_ANNOTATION_FUNCTION=file-printf
+			FILE_PRINT_HEADER_ANNOTATION_FUNCTION=do-file-print-header-annotation
+			FILE_PRINT_FOOTER_ANNOTATION_FUNCTION=do-file-print-footer-annotation
+			INDENT_SHIFT_FUNCTION=do-indent-shift
+			;;
+
+		v)
+			PRINTF_VERBOSE_FUNCTION=printf
+			;;
+
+		h)
+			printf '%s' "$HELP_MESSAGE"
+			exit
+			;;
+
+		*)
+			return $PARSE_OPTION_UNKNOWN_OPTION
+			;;
+	esac
+}
+
+
+validate-options()
+{
+	if [ ! -d "$HEADER_SEARCH_PATH" ]
 	then
+		printf-error 'bad header search path "%s"' "$HEADER_SEARCH_PATH"
+		return 1
+	fi
+
+	HEADER_SEARCH_PATH=$(expand-dir-path "$HEADER_SEARCH_PATH")
+
+
+	if [ ! -d "$OUTPUT_DIR_PATH" ]
+	then
+		printf-error 'bad output directory path "%s"' "$OUTPUT_DIR_PATH"
+		return 1
+	fi
+
+	OUTPUT_DIR_PATH=$(expand-dir-path "$OUTPUT_DIR_PATH")
+
+
+	if [ -z "$HEADER_EXTENSIONS" ]
+	then
+		printf-error 'input header extensions is empty'
+		return 1
+	fi
+
+	if [ -z "$SOURCE_EXTENSIONS" ]
+	then
+		printf-error 'input source extensions is empty'
+		return 1
+	fi
+
+
+	if [ -z "$OUTPUT_HEADER_EXTENSION" ]
+	then
+		printf-error 'output header extension is empty'
+		return 1
+	fi
+
+	if [ -z "$OUTPUT_SOURCE_EXTENSION" ]
+	then
+		printf-error 'output source extension is empty'
+		return 1
+	fi
+
+	if [ "$OUTPUT_HEADER_EXTENSION" != -1 ] && [ "$OUTPUT_SOURCE_EXTENSION" != -1 ] && [ "$OUTPUT_HEADER_EXTENSION" == "$OUTPUT_SOURCE_EXTENSION" ]
+	then
+		printf-error 'extensions for output files cannot be the same'
+		return 1
+	fi
+
+	if [ -n "$EMPTY_LINE_COUNT_LIMIT" ] && ! [[ $EMPTY_LINE_COUNT_LIMIT =~ ^[1-9][0-9]*$ ]]
+	then
+		printf-error 'empty line count is not a positive integer'
 		return 1
 	fi
 }
 
 
-parse-options()
+parse-parameters()
 {
-	local argument_index=$1
-	local options=$2
-	local arguments=("${@:3}")
+	local parameters=("$@")
 
-	local char_index=( 0 )
-	local char_count="${#options}"
-	while [ $char_index -lt $char_count ]
+	local parameter_index
+	for (( parameter_index = 0; parameter_index < ${#parameters[@]}; ++parameter_index ))
 	do
-		local option="${options:$char_index:1}"
-		case "$option" in
-			I)
-				((++char_index))
-				if [ $char_index == $char_count ]
-				then
-					((++argument_index))
-					HEADER_SEARCH_PATH="${arguments[$argument_index]}"
-				else
-					HEADER_SEARCH_PATH="${options:$char_index}"
-				fi
-
-				if [ ! -d "$HEADER_SEARCH_PATH" ]
-				then
-					printf-error 'bad header search path "%s"' "$HEADER_SEARCH_PATH"
-					exit 1
-				fi
-
-				HEADER_SEARCH_PATH=$(expand-dir-path "$HEADER_SEARCH_PATH")
-
-				((++argument_index))
-				return $argument_index
-				;;
-
-			e)
-				((++char_index))
-				if [ $char_index == $char_count ]
-				then
-					((++argument_index))
-					HEADER_EXTENSIONS="${arguments[$argument_index]}"
-				else
-					HEADER_EXTENSIONS="${options:$char_index}"
-				fi
-
-				((++argument_index))
-				return $argument_index
-				;;
-
-			s)
-				((++char_index))
-				if [ $char_index == $char_count ]
-				then
-					((++argument_index))
-					SOURCE_EXTENSIONS="${arguments[$argument_index]}"
-				else
-					SOURCE_EXTENSIONS="${options:$char_index}"
-				fi
-
-				((++argument_index))
-				return $argument_index
-				;;
-
-			o)
-				((++char_index))
-				if [ $char_index == $char_count ]
-				then
-					((++argument_index))
-					OUTPUT_DIR_PATH="${arguments[$argument_index]}"
-				else
-					OUTPUT_DIR_PATH="${options:$char_index}"
-				fi
-
-				((++argument_index))
-				return $argument_index
-				;;
-
-			H)
-				HEADER_ONLY=true
-				((++char_index))
-				;;
-
-			S)
-				SOURCE_ONLY=true
-				((++char_index))
-				;;
-
-			n)
-				((++char_index))
-				if [ $char_index == $char_count ]
-				then
-					((++argument_index))
-					NAME="${arguments[$argument_index]}"
-				else
-					NAME="${options:$char_index}"
-				fi
-
-				((++argument_index))
-				return $argument_index
-				;;
-
-			x)
-				((++char_index))
-				if [ $char_index == $char_count ]
-				then
-					((++argument_index))
-					output_extensions="${arguments[$argument_index]}"
-				else
-					output_extensions="${options:$char_index}"
-				fi
-
-				OUTPUT_HEADER_EXTENSION="${output_extensions%,*}"
-				OUTPUT_SOURCE_EXTENSION="${output_extensions:${#OUTPUT_HEADER_EXTENSION}+1}"
-
-				if [ -z "$OUTPUT_HEADER_EXTENSION" ]
-				then
-					printf-error 'output header extension is empty'
-					exit 1
-				fi
-
-				if [ -z "$OUTPUT_SOURCE_EXTENSION" ]
-				then
-					printf-error 'output source extension is empty'
-					exit 1
-				fi
-
-				if [ "$OUTPUT_HEADER_EXTENSION" == "$OUTPUT_SOURCE_EXTENSION" ]
-				then
-					printf-error 'extensions for output files cannot be the same'
-					exit 1
-				fi
-
-				((++argument_index))
-				return $argument_index
-				;;
-
-			g)
-				((++char_index))
-				PROCESS_STANDARD_HEADER_FUNCTION=add-standard-include-line
-				PREPEND_WITH_STANDARD_INCLUDES_FUNCTION=do-prepend-with-standard-includes
-				;;
-
-			E)
-				((++char_index))
-				if [ $char_index == $char_count ]
-				then
-					((++argument_index))
-					EMPTY_LINE_COUNT_LIMIT="${arguments[$argument_index]}"
-				else
-					EMPTY_LINE_COUNT_LIMIT="${options:$char_index}"
-				fi
-
-				((++argument_index))
-				return $argument_index
-				;;
-
-			G)
-				((++char_index))
-				if [ $char_index == $char_count ]
-				then
-					((++argument_index))
-					INCLUDE_GUARD_ID="${arguments[$argument_index]}"
-				else
-					INCLUDE_GUARD_ID="${options:$char_index}"
-				fi
-
-				MAKE_INCLUDE_GUARD_HEADER_FUNCTION=do-make-include-guard-ifdef
-				MAKE_INCLUDE_GUARD_FOOTER_FUNCTION=do-make-include-guard-endif
-
-				if [ -n "$inlude_guard_id" ]
-				then
-					((++argument_index))
-				fi
-
-				return $argument_index
-				;;
-
-			t)
-				((++char_index))
-				TRIM_TRAILING_WHITESPACE=true
-				;;
-
-			a)
-				FILE_PRINTF_ANNOTATION_FUNCTION=file-printf
-				FILE_PRINT_HEADER_ANNOTATION_FUNCTION=do-file-print-header-annotation
-				FILE_PRINT_FOOTER_ANNOTATION_FUNCTION=do-file-print-footer-annotation
-				INDENT_SHIFT_FUNCTION=do-indent-shift
-				((++char_index))
-				;;
-
-			v)
-				PRINTF_VERBOSE_FUNCTION=printf
-				((++char_index))
-				;;
-
-			h)
-				printf '%s' "$HELP_MESSAGE"
-				((++char_index))
-				exit
-				;;
-
-			*)
-				printf-error 'unknown option "%s"' "$option"
-				printf '%s' "$HELP_MESSAGE"
-				((++char_index))
-				exit 1
-				;;
-		esac
-	done
-
-	((++argument_index))
-	return $argument_index
-}
-
-
-setup()
-{
-	local arguments=("$@")
-	local argument_index=( 0 )
-	local argument_count=( ${#@} )
-
-	while [ $argument_index -lt $argument_count ]
-	do
-		local argument="${arguments[$argument_index]}"
-		if ! valid-option-string "$argument"
+		local parameter
+		parameter=$(check-parameter "${parameters[$parameter_index]}")
+		if [ $? != 0 ]
 		then
-			printf-error 'wrong arguments'
-			printf '%s' "$HELP_MESSAGE"
-			exit 1
+			printf-error 'bad parameter format "%s"' "$parameter"
+			return 1
 		fi
 
-		local options="${argument:1}"
-		parse-options $argument_index "$options" "${arguments[@]}"
-		argument_index=$?
+		local value="${parameters[$parameter_index + 1]}"
+
+		local option_index
+		for (( option_index = 0; option_index < ${#parameter}; ++option_index ))
+		do
+			local option="${parameter:$option_index:1}"
+			parse-option "$option" "$value"
+			local retval=$?
+			case $retval in
+				$PARSE_OPTION_UNKNOWN_OPTION)
+					printf-error 'unknown option "%s"' "$option"
+					echo "error $?"
+					return 1
+					;;
+
+				*)
+					(( parameter_index += retval ))
+					: # so the result of arithmetic above does not considered as a result of case-clause execution
+					;;
+			esac
+		done
 	done
 }
 
@@ -924,7 +875,11 @@ trim-trailing-whitespace()
 #
 # Main
 
-setup "$@"
+parse-parameters "$@" && validate-options
+if [ $? != 0 ]
+then
+	exit 1
+fi
 
 
 OUTPUT_DIR_PATH="$OUTPUT_DIR_PATH/$NAME-$OUTPUT_DIRECTORY_SUFFIX"
@@ -942,8 +897,6 @@ then
 	exit 1
 fi
 
-OUTPUT_DIR_PATH=$(expand-dir-path "$OUTPUT_DIR_PATH")
-
 
 IFS=$'\n'
 header_files=($(find-by-extensions . "$HEADER_EXTENSIONS"))
@@ -956,12 +909,12 @@ then
 fi
 
 
-if [ -z "$OUTPUT_HEADER_EXTENSION" ]
+if [ "$OUTPUT_HEADER_EXTENSION" == -1 ]
 then
 	OUTPUT_HEADER_EXTENSION=$(detect-extension "$DEFAULT_OUTPUT_HEADER_EXTENSION" "${header_files[@]}")
 fi
 
-if [ -z "$OUTPUT_SOURCE_EXTENSION" ]
+if [ "$OUTPUT_SOURCE_EXTENSION" == -1 ]
 then
 	OUTPUT_SOURCE_EXTENSION=$(detect-extension "$DEFAULT_OUTPUT_SOURCE_EXTENSION" "${source_files[@]}")
 fi
