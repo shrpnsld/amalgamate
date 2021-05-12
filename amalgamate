@@ -510,9 +510,7 @@ detect-extension()
 {
 	local default_extension=$1
 	local first_path=$2
-	shift
-	shift
-	local paths=("$@")
+	local paths=("${@:3}")
 
 	local first_extension=$(path-extension "$first_path")
 
@@ -777,8 +775,7 @@ expand-file()
 merge-headers()
 {
 	local output_header_path=$1
-	shift
-	local paths=("$@")
+	local paths=("${@:2}")
 
 	locally_included_standard_files=()
 
@@ -803,8 +800,7 @@ merge-headers()
 merge-sources()
 {
 	local output_source_path=$1
-	shift
-	local paths=("$@")
+	local paths=("${@:2}")
 
 	locally_included_standard_files=()
 
@@ -898,7 +894,6 @@ then
 fi
 
 
-IFS=$'\n'
 header_files=($(find-by-extensions . "$HEADER_EXTENSIONS"))
 source_files=($(find-by-extensions . "$SOURCE_EXTENSIONS"))
 
