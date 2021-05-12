@@ -246,7 +246,7 @@ validate-options()
 		return 1
 	fi
 
-	if [ -n "$EMPTY_LINE_COUNT_LIMIT" ] && ! [[ $EMPTY_LINE_COUNT_LIMIT =~ ^[1-9][0-9]*$ ]]
+	if [ -n "$EMPTY_LINE_COUNT_LIMIT" ] && ! [[ $EMPTY_LINE_COUNT_LIMIT =~ ^([0-9]|[1-9][0-9]+)$ ]]
 	then
 		printf-error 'empty line count is not a positive integer'
 		return 1
