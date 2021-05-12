@@ -1,17 +1,32 @@
 #!/bin/bash
 
 #
-# Constants
+# Essentials
 
-RED_TEXT='\e[0;31m'
-NO_COLOR_TEXT='\e[0m'
-AMALGAMATE_ERROR='amalgamate error: '
+SCRIPT_NAME=$(basename $0)
+
+TEXT_STYLE_NORMAL='\e[0m'
+TEXT_STYLE_ERROR='\e[0;31m'
+
+ERROR_STYLE_BEGIN=''
+ERROR_STYLE_END=''
 
 if [ -t 1 ] && [ $(tput colors) \> 0 ]
 then
-	AMALGAMATE_ERROR="$RED_TEXT$AMALGAMATE_ERROR$NO_COLOR_TEXT"
+	ERROR_STYLE_BEGIN="$TEXT_STYLE_ERROR"
+	ERROR_STYLE_END="$TEXT_STYLE_NORMAL"
 fi
 
+printf-error()
+{
+	printf "$ERROR_STYLE_BEGIN$SCRIPT_NAME error:$ERROR_STYLE_END " >&2
+	printf "$@" >&2
+	printf '%s\n\n' >&2
+}
+
+
+#
+# Optionals
 
 OUTPUT_DIRECTORY_SUFFIX='amalgamated'
 DEFAULT_INPUT_HEADER_EXTENSIONS='h,hh,hpp,hxx,h++,tpp,txx,tpl,ii,ixx,ipp,inl'
@@ -72,20 +87,6 @@ PREPEND_WITH_STANDARD_INCLUDES_FUNCTION=do-nothing
 
 #
 # Functions
-
-printf-stderr()
-{
-	printf "$@" >&2
-}
-
-
-printf-error()
-{
-	printf-stderr "$AMALGAMATE_ERROR"
-	printf-stderr "$@"
-	printf-stderr '\n\n'
-}
-
 
 do-nothing()
 {
