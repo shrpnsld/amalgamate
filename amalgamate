@@ -1042,41 +1042,67 @@ rm -f "$output_header_path" "$output_source_path"
 
 included_files+=("$output_header_path")
 
-printf-message 'Amalgamating headers...\n'
-
-merge-headers "$output_header_path" "${header_files[@]}"
-
-if ! $SOURCE_ONLY
+if [ ${#header_files[@]} != 0 ]
 then
-	INCLUDE_GUARD_ID=$(make-include-guard-id "$header_file_name")
+	printf-message 'Amalgamating headers...\n'
 
-	include_guard_header=$(make-include-guard-header "$INCLUDE_GUARD_ID")
-	file-printf-prepend "$output_header_path" '%s\n\n' "${include_guard_header}"
+	merge-headers "$output_header_path" "${header_files[@]}"
 
-	include_guard_footer=$(make-include-guard-footer "$INCLUDE_GUARD_ID")
-	file-printf "$output_header_path" '\n\n%s' "$include_guard_footer"
+	if ! $SOURCE_ONLY
+	then
+		INCLUDE_GUARD_ID=$(make-include-guard-id "$header_file_name")
+
+		include_guard_header=$(make-include-guard-header "$INCLUDE_GUARD_ID")
+		file-printf-prepend "$output_header_path" '%s\n\n' "${include_guard_header}"
+
+		include_guard_footer=$(make-include-guard-footer "$INCLUDE_GUARD_ID")
+		file-printf "$output_header_path" '\n\n%s' "$include_guard_footer"
+	fi
+
+	printf-message '\n'
 fi
 
-printf-message '\nAmalgamating sources...\n'
-if ! $SOURCE_ONLY
+if [ ${#source_files[@]} != 0 ]
 then
-	file-printf "$output_source_path" '#include "%s"\n' "$(basename $header_file_name)"
-fi
+	printf-message 'Amalgamating sources...\n'
+	if [ ${#header_files[@]} != 0 ] && ! $SOURCE_ONLY
+	then
+		file-printf "$output_source_path" '#include "%s"\n' "$(basename $header_file_name)"
+	fi
 
-merge-sources "$output_source_path" "${source_files[@]}"
+	merge-sources "$output_source_path" "${source_files[@]}"
+
+	printf-message '\n'
+fi
 
 if $TRIM_TRAILING_WHITESPACE
 then
 	printf-message 'Trimming trailing whitespace...\n'
-	trim-trailing-whitespace "$output_header_path"
-	trim-trailing-whitespace "$output_source_path"
+
+	if [ -r "$output_header_path" ]
+	then
+		trim-trailing-whitespace "$output_header_path"
+	fi
+
+	if [ -r "$output_source_path" ]
+	then
+		trim-trailing-whitespace "$output_source_path"
+	fi
 fi
 
 if [ -n "$EMPTY_LINE_COUNT_LIMIT" ]
 then
-	printf-message '\nReducing empty lines...\n'
-	reduce-empty-lines "$output_header_path" $EMPTY_LINE_COUNT_LIMIT
-	reduce-empty-lines "$output_source_path" $EMPTY_LINE_COUNT_LIMIT
+	printf-message 'Reducing empty lines...\n'
+
+	if [ -r "$output_header_path" ]
+	then
+		reduce-empty-lines "$output_header_path" $EMPTY_LINE_COUNT_LIMIT
+	fi
+
+	if [ -r "$output_source_path" ]
+	then
+		reduce-empty-lines "$output_source_path" $EMPTY_LINE_COUNT_LIMIT
+	fi
 fi
 
 printf-message '\nDone.\n\n'
