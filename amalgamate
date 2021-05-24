@@ -94,13 +94,26 @@ do-nothing()
 }
 
 
+PARAM_TYPE_OPTION=1
+PARAM_TYPE_DELIMITER=2
+PARAM_TYPE_BAD=255
+
 check-parameter()
 {
 	local string=$1
 
-	local first_character="${string:0:1}"
-	printf '%s\n' "${string#-}"
-	[ "$first_character" == '-' ]
+	if [ "${string:0:3}" == '--' ] && [ "${#string}" == 2 ]
+	then
+		return $PARAM_TYPE_DELIMITER
+	fi
+
+	if [ "${string:0:1}" == '-' ]
+	then
+		printf '%s\n' "${string#-}"
+		return $PARAM_TYPE_OPTION
+	fi
+
+	return $PARAM_TYPE_BAD
 }
 
 
@@ -263,33 +276,67 @@ parse-parameters()
 	do
 		local parameter
 		parameter=$(check-parameter "${parameters[$parameter_index]}")
-		if [ $? != 0 ]
-		then
-			printf-error 'bad parameter format "%s"' "$parameter"
-			return 1
-		fi
+		local parameter_type=$?
+		case $parameter_type in
+			$PARAM_TYPE_OPTION)
+				local value="${parameters[$parameter_index + 1]}"
+				local option_index
+				for (( option_index = 0; option_index < ${#parameter}; ++option_index ))
+				do
+					local option="${parameter:$option_index:1}"
+					parse-option "$option" "$value"
+					local retval=$?
+					case $retval in
+						$PARSE_OPTION_UNKNOWN_OPTION)
+							printf-error 'unknown option "%s"' "$option"
+							return 1
+							;;
 
-		local value="${parameters[$parameter_index + 1]}"
+						*)
+							(( parameter_index += retval ))
+							: # so the result of arithmetic above does not considered as a result of case-clause execution
+							;;
+					esac
+				done
 
-		local option_index
-		for (( option_index = 0; option_index < ${#parameter}; ++option_index ))
-		do
-			local option="${parameter:$option_index:1}"
-			parse-option "$option" "$value"
-			local retval=$?
-			case $retval in
-				$PARSE_OPTION_UNKNOWN_OPTION)
-					printf-error 'unknown option "%s"' "$option"
-					return 1
-					;;
+				continue
+				;;
 
-				*)
-					(( parameter_index += retval ))
-					: # so the result of arithmetic above does not considered as a result of case-clause execution
-					;;
-			esac
-		done
+			$PARAM_TYPE_DELIMITER)
+				(( ++parameter_index ))
+				break
+				;;
+
+			$PARAM_TYPE_BAD)
+				printf-error 'bad parameter format "%s"' "$parameter"
+				return 1
+				;;
+		esac
 	done
+
+	if [ $parameter_index == ${#parameters[@]} ]
+	then
+		return
+	fi
+
+	if [ $parameter_type == $PARAM_TYPE_DELIMITER ]
+	then
+		for (( ; parameter_index < ${#parameters[@]}; ++parameter_index ))
+		do
+			local path="${parameters[$parameter_index]}"
+			local extension=$(path-extension "$path")
+			if array-contains-item "$extension" "${HEADER_EXTENSIONS[@]}"
+			then
+				header_files+=("$path")
+			elif array-contains-item "$extension" "${SOURCE_EXTENSIONS[@]}"
+			then
+				source_files+=("$path")
+			else
+				printf-error 'unknown file extension "%s"' "$path"
+				return 1
+			fi
+		done
+	fi
 }
 
 
@@ -912,8 +959,11 @@ then
 fi
 
 
-header_files=($(find-by-extensions . "${HEADER_EXTENSIONS[@]}"))
-source_files=($(find-by-extensions . "${SOURCE_EXTENSIONS[@]}"))
+if [ -z "$header_files" ] && [ -z "$source_files" ]
+then
+	header_files=($(find-by-extensions . "${HEADER_EXTENSIONS[@]}"))
+	source_files=($(find-by-extensions . "${SOURCE_EXTENSIONS[@]}"))
+fi
 
 if [ "${#header_files[@]}" == 0 ] && [ "${#source_files[@]}" == 0 ]
 then
