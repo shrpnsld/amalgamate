@@ -29,8 +29,8 @@ printf-error()
 # Optionals
 
 OUTPUT_DIRECTORY_SUFFIX='amalgamated'
-DEFAULT_INPUT_HEADER_EXTENSIONS='h,hh,hpp,hxx,h++,tpp,txx,tpl,ii,ixx,ipp,inl'
-DEFAULT_INPUT_SOURCE_EXTENSIONS='c,cc,cpp,cxx,c++'
+DEFAULT_INPUT_HEADER_EXTENSIONS=(h hh hpp hxx h++ tpp txx tpl ii ixx ipp inl)
+DEFAULT_INPUT_SOURCE_EXTENSIONS=(c cc cpp cxx c++)
 DEFAULT_OUTPUT_HEADER_EXTENSION='h'
 DEFAULT_OUTPUT_SOURCE_EXTENSION='cpp'
 
@@ -61,8 +61,8 @@ HEADER_STRING_TEMPLATE='%s// ===================================================
 FOOTER_STRING_TEMPLATE='%s// ==\n%s// == %s ==\n%s// ============================================================================'
 
 HEADER_SEARCH_PATH=$(dirname $(pwd))
-HEADER_EXTENSIONS="$DEFAULT_INPUT_HEADER_EXTENSIONS"
-SOURCE_EXTENSIONS="$DEFAULT_INPUT_SOURCE_EXTENSIONS"
+HEADER_EXTENSIONS=("${DEFAULT_INPUT_HEADER_EXTENSIONS[@]}")
+SOURCE_EXTENSIONS=("${DEFAULT_INPUT_SOURCE_EXTENSIONS[@]}")
 OUTPUT_DIR_PATH="$(pwd)/.."
 HEADER_ONLY=false
 SOURCE_ONLY=false
@@ -118,12 +118,12 @@ parse-option()
 			;;
 
 		e)
-			HEADER_EXTENSIONS="$value"
+			HEADER_EXTENSIONS=($(split-string "$value" ','))
 			return 1
 			;;
 
 		s)
-			SOURCE_EXTENSIONS="$value"
+			SOURCE_EXTENSIONS=($(split-string "$value" ','))
 			return 1
 			;;
 
@@ -215,13 +215,13 @@ validate-options()
 	OUTPUT_DIR_PATH=$(expand-dir-path "$OUTPUT_DIR_PATH")
 
 
-	if [ -z "$HEADER_EXTENSIONS" ]
+	if [ "${#HEADER_EXTENSIONS[@]}" == 0 ]
 	then
 		printf-error 'input header extensions is empty'
 		return 1
 	fi
 
-	if [ -z "$SOURCE_EXTENSIONS" ]
+	if [ "${#SOURCE_EXTENSIONS[@]}" == 0 ]
 	then
 		printf-error 'input source extensions is empty'
 		return 1
@@ -437,6 +437,19 @@ do-indent-shift()
 }
 
 
+split-string()
+{
+	local string=$1
+	local delimiter=$2
+
+	IFS="$delimiter"
+	local array=($string)
+	unset IFS
+
+	printf '%s\n' "${array[@]}"
+}
+
+
 array-contains-item()
 {
 	local item=$1
@@ -458,9 +471,15 @@ array-contains-item()
 find-by-extensions()
 {
 	local path=$1
-	local extensions=$2
+	local extensions=("${@:2}")
 
-	local arguments=$(sed -e "s/^\([^,]*\)/ -name '*.\1'/g" -e "s/,\([^,]*\)/ -or -name '*.\1'/g" <<< "$extensions")
+	local arguments=" -name '*.${extensions[0]}'"
+	local extension
+	for extension in "${extensions[@]:1}"
+	do
+		arguments+=" -or -name '*.$extension'"
+	done
+
 	eval 'find '"$path"' -type f '"$arguments"
 }
 
@@ -893,8 +912,8 @@ then
 fi
 
 
-header_files=($(find-by-extensions . "$HEADER_EXTENSIONS"))
-source_files=($(find-by-extensions . "$SOURCE_EXTENSIONS"))
+header_files=($(find-by-extensions . "${HEADER_EXTENSIONS[@]}"))
+source_files=($(find-by-extensions . "${SOURCE_EXTENSIONS[@]}"))
 
 if [ "${#header_files[@]}" == 0 ] && [ "${#source_files[@]}" == 0 ]
 then
@@ -923,8 +942,8 @@ output_source_path="$OUTPUT_DIR_PATH/$source_file_name"
 # Printing options
 
 printf-message 'Header search path: %s\n' "$HEADER_SEARCH_PATH"
-printf-message 'Input header extensions: %s\n' "$HEADER_EXTENSIONS"
-printf-message 'Input source extensions: %s\n' "$SOURCE_EXTENSIONS"
+printf-message 'Input header extensions: %s\n' "${HEADER_EXTENSIONS[*]}"
+printf-message 'Input source extensions: %s\n' "${SOURCE_EXTENSIONS[*]}"
 printf-message 'Base name: %s\n' "$NAME"
 if $HEADER_ONLY
 then
