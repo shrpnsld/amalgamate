@@ -280,7 +280,6 @@ parse-parameters()
 			case $retval in
 				$PARSE_OPTION_UNKNOWN_OPTION)
 					printf-error 'unknown option "%s"' "$option"
-					echo "error $?"
 					return 1
 					;;
 
