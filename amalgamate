@@ -412,7 +412,7 @@ do-prepend-with-standard-includes()
 	local output_header_path=$1
 	local standard_include_list=("${@:2}")
 
-	file-printf-prepend "$output_header_path" '%s\n\n' "$(IFS=$'\n' sort <<< "${standard_include_list[*]}")"
+	file-printf-prepend "$output_header_path" '%s\n\n' "$(IFS=$'\n'; sort <<< "${standard_include_list[*]}")"
 }
 
 
