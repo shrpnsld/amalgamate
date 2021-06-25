@@ -923,7 +923,7 @@ trim-trailing-whitespace()
 {
 	local file_path=$1
 
-	sed -i .bak 's/[	 ][	 ]*$//g' "$file_path"
+	sed -i.bak 's/[	 ][	 ]*$//g' "$file_path"
 	if [ $? != 0 ]
 	then
 		exit 1
