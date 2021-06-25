@@ -1105,5 +1105,5 @@ then
 	fi
 fi
 
-printf-message '\nDone.\n\n'
+printf-message '\nDone.\n'
 
