@@ -10,7 +10,6 @@ TEXT_STYLE_ERROR='\e[0;31m'
 
 ERROR_STYLE_BEGIN=''
 ERROR_STYLE_END=''
-
 if [ -t 1 ] && [ $(tput colors) \> 0 ]
 then
 	ERROR_STYLE_BEGIN="$TEXT_STYLE_ERROR"
@@ -21,7 +20,7 @@ printf-error()
 {
 	printf "$ERROR_STYLE_BEGIN$SCRIPT_NAME error:$ERROR_STYLE_END " >&2
 	printf "$@" >&2
-	printf '%s\n\n' >&2
+	printf '\n\n' >&2
 }
 
 
@@ -392,6 +391,7 @@ process-standard-header()
 add-standard-include-line()
 {
 	local include_line=$4
+
 	printf '%s' $(trim-string "$include_line")
 }
 
@@ -573,7 +573,6 @@ detect-extension()
 	local paths=("${@:3}")
 
 	local first_extension=$(path-extension "$first_path")
-
 	local path
 	for path in "${paths[@]}"
 	do
@@ -655,7 +654,6 @@ absolute-path-from-include-line()
 
 	local file_path=${line#*\"}
 	local file_path=${file_path%\"*}
-
 	expand-path "$file_path"
 }
 
