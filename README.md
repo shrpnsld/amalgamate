@@ -12,7 +12,9 @@ $ git clone https://github.com/shrpnsld/amalgamate.git
 ```
 ```bash
 $ # Use it
-$ amalgamate [options]
+$ amalgamate [options] # amalgamate all files in current directory and their dependencies
+$ amalgamate [options] -- [file ...] # specify files for amalgamation
+$ # files will be amalgamated with their dependencies
 ```
 
 Project tree [before](https://github.com/shrpnsld/trace-out/tree/master) `amalgamate`:

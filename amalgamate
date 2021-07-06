@@ -35,27 +35,29 @@ DEFAULT_OUTPUT_HEADER_EXTENSION='h'
 DEFAULT_OUTPUT_SOURCE_EXTENSION='cpp'
 
 HELP_MESSAGE=\
-'Usage:
-  amalgamate [options]
+"\e[1mUSAGE\e[0m
+  amalgamate [options]                Amalgamate everything it can find in the current directory
+  amalgamate [options] -- <files...>  Amalgamate specified files and their included files
 
-Options:
-  -I <header-path>      Path where header files can be found [default: current working directory'"'"'s parent]
-  -e <ext,ens,ions...>  Input header extensions [default: "'"$DEFAULT_INPUT_HEADER_EXTENSIONS"'"].
-  -s <ext,ens,ions...>  Input source extensions [default: "'"$DEFAULT_INPUT_SOURCE_EXTENSIONS"'"].
-  -o <output-dir-path>  Output directory [default: "../"].
+\e[1mOPTIONS:\e[0m
+  -I <header-path>      Path where header files can be found [default: current working directory's parent]
+  -e <ext,ens,ions...>  Input header extensions [default: '$DEFAULT_INPUT_HEADER_EXTENSIONS'].
+  -s <ext,ens,ions...>  Input source extensions [default: '$DEFAULT_INPUT_SOURCE_EXTENSIONS'].
+  -o <output-dir-path>  Output directory [default: '../'].
   -H                    Amalgamate all files to single header file.
   -S                    Amalgamate all files to single source file.
   -n <base-name>        Base name for output files [default: parent directory name].
-  -x <hpp,cpp>          Extensions for output header and source files [default: inferred from input files; if cannot, then "'"$DEFAULT_OUTPUT_HEADER_EXTENSION"','"$DEFAULT_OUTPUT_SOURCE_EXTENSION"'"].
+  -x <hpp,cpp>          Extensions for output header and source files [default: inferred from input files; if cannot, then '$DEFAULT_OUTPUT_HEADER_EXTENSION','$DEFAULT_OUTPUT_SOURCE_EXTENSION'].
   -g                    Group unexpanded headers on top.
   -E <count>            Do not allow more than <count> consecutive empty lines.
-  -G <id> | -G '"''"'       Use include guard in header instead of `#pragma once`. Use `<id>` for `#define` directive or generate it from header name if empty string was passed.
+  -G <id> | -G ''       Use include guard in header instead of '#pragma once'. Use '<id>' for '#define' directive or generate it from header name if empty string was passed.
   -t                    Trim trailing whitespace.
   -a                    Insert annotations.
   -v                    Verbose mode.
   -h                    Show this message.
 
-'
+\e[1mMore information at \e[mhttps://github.com/shrpnsld/amalgamate\e[0m
+"
 
 HEADER_STRING_TEMPLATE='%s// ============================================================================\n%s// == %s ==\n%s// =='
 FOOTER_STRING_TEMPLATE='%s// ==\n%s// == %s ==\n%s// ============================================================================'
@@ -190,7 +192,7 @@ parse-option()
 			;;
 
 		h)
-			printf '%s' "$HELP_MESSAGE"
+			printf "$HELP_MESSAGE"
 			exit
 			;;
 
