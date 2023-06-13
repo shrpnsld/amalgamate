@@ -674,7 +674,13 @@ file-printf-prepend()
 	local format=$2
 	local arguments=("${@:3}")
 
-	printf '%s' "$(printf "$format" "${arguments[@]}"; printf '%s' $(cat "$file_path"))" > "$file_path"
+	local tmp_file_path="$file_path.tmp"
+	mktemp "$tmp_file_path" &> /dev/null
+
+	printf "$format" "${arguments[@]}" > "$tmp_file_path"
+	cat "$file_path" >> "$tmp_file_path"
+	rm "$file_path"
+	mv "$tmp_file_path" "$file_path"
 }
 
 
