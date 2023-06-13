@@ -674,7 +674,8 @@ file-printf-prepend()
 	local format=$2
 	local arguments=("${@:3}")
 
-	printf '%s' "$(printf "$format" "${arguments[@]}"; printf '%s' $(cat "$file_path"))" > "$file_path"
+	content=$(cat "$file_path")
+	printf "$format%s" "${arguments[@]}" "$content" > "$file_path"
 }
 
 
