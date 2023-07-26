@@ -39,10 +39,11 @@ HELP_MESSAGE=\
   amalgamate [options] -- <files...>  Amalgamate specified files and their included files
 
 \e[1mOPTIONS:\e[0m
-  -I <header-path>      Path where header files can be found [default: current working directory's parent]
+  -I <header-path>      Path to header files [default: input directory].
   -e <ext,ens,ions...>  Input header extensions [default: '$DEFAULT_INPUT_HEADER_EXTENSIONS'].
   -s <ext,ens,ions...>  Input source extensions [default: '$DEFAULT_INPUT_SOURCE_EXTENSIONS'].
-  -o <output-dir-path>  Output directory [default: '../'].
+  -i <input-dir-path>   Input directory [defalt: current working directory].
+  -o <output-dir-path>  Output directory [default: current working directory].
   -H                    Amalgamate all files to single header file.
   -S                    Amalgamate all files to single source file.
   -n <base-name>        Base name for output files [default: parent directory name].
@@ -61,10 +62,11 @@ HELP_MESSAGE=\
 HEADER_STRING_TEMPLATE='%s// ============================================================================\n%s// == %s ==\n%s// =='
 FOOTER_STRING_TEMPLATE='%s// ==\n%s// == %s ==\n%s// ============================================================================'
 
-HEADER_SEARCH_PATH=$(dirname $(pwd))
+HEADER_SEARCH_PATH=''
 HEADER_EXTENSIONS=("${DEFAULT_INPUT_HEADER_EXTENSIONS[@]}")
 SOURCE_EXTENSIONS=("${DEFAULT_INPUT_SOURCE_EXTENSIONS[@]}")
-OUTPUT_DIR_PATH="$(pwd)/.."
+INPUT_DIR_PATH=''
+OUTPUT_DIR_PATH=''
 HEADER_ONLY=false
 SOURCE_ONLY=false
 NAME=$(basename $(pwd))
@@ -131,6 +133,11 @@ parse-option()
 
 		s)
 			SOURCE_EXTENSIONS=($(split-string "$value" ','))
+			return 1
+			;;
+
+		i)
+			INPUT_DIR_PATH="$value"
 			return 1
 			;;
 
@@ -204,23 +211,44 @@ parse-option()
 
 validate-options()
 {
-	if [ ! -d "$HEADER_SEARCH_PATH" ]
+	if [ -n "$INPUT_DIR_PATH" ]
 	then
-		printf-error 'bad header search path "%s"' "$HEADER_SEARCH_PATH"
-		return 1
+		if [ ! -d "$INPUT_DIR_PATH" ]
+		then
+			printf-error 'bad input directory path "%s"' "$INPUT_DIR_PATH"
+			return 1
+		fi
+
+		INPUT_DIR_PATH=$(expand-dir-path "$INPUT_DIR_PATH")
+	else
+		INPUT_DIR_PATH="$PWD"
 	fi
 
-	HEADER_SEARCH_PATH=$(expand-dir-path "$HEADER_SEARCH_PATH")
-
-
-	if [ ! -d "$OUTPUT_DIR_PATH" ]
+	if [ -n "$HEADER_SEARCH_PATH" ]
 	then
-		printf-error 'bad output directory path "%s"' "$OUTPUT_DIR_PATH"
-		return 1
+		if [ ! -d "$HEADER_SEARCH_PATH" ]
+		then
+			printf-error 'bad header search path "%s"' "$HEADER_SEARCH_PATH"
+			return 1
+		fi
+
+		HEADER_SEARCH_PATH=$(expand-dir-path "$HEADER_SEARCH_PATH")
+	else
+		HEADER_SEARCH_PATH=$(expand-dir-path "$INPUT_DIR_PATH")
 	fi
 
-	OUTPUT_DIR_PATH=$(expand-dir-path "$OUTPUT_DIR_PATH")
+	if [ -n "$OUTPUT_DIR_PATH" ]
+	then
+		if [ ! -d "$OUTPUT_DIR_PATH" ]
+		then
+			printf-error 'bad output directory path "%s"' "$OUTPUT_DIR_PATH"
+			return 1
+		fi
 
+		OUTPUT_DIR_PATH=$(expand-dir-path "$OUTPUT_DIR_PATH")
+	else
+		OUTPUT_DIR_PATH="$PWD"
+	fi
 
 	if [ "${#HEADER_EXTENSIONS[@]}" == 0 ]
 	then
@@ -960,8 +988,8 @@ fi
 
 if [ -z "$header_files" ] && [ -z "$source_files" ]
 then
-	header_files=($(find-by-extensions . "${HEADER_EXTENSIONS[@]}"))
-	source_files=($(find-by-extensions . "${SOURCE_EXTENSIONS[@]}"))
+	header_files=($(find-by-extensions ${INPUT_DIR_PATH} "${HEADER_EXTENSIONS[@]}"))
+	source_files=($(find-by-extensions ${INPUT_DIR_PATH} "${SOURCE_EXTENSIONS[@]}"))
 fi
 
 if [ "${#header_files[@]}" == 0 ] && [ "${#source_files[@]}" == 0 ]
@@ -990,6 +1018,8 @@ output_source_path="$OUTPUT_DIR_PATH/$source_file_name"
 
 # Printing options
 
+printf-message 'Input direecotry: %s\n' "$INPUT_DIR_PATH"
+printf-message 'Output direecotry: %s\n' "$OUTPUT_DIR_PATH"
 printf-message 'Header search path: %s\n' "$HEADER_SEARCH_PATH"
 printf-message 'Input header extensions: %s\n' "${HEADER_EXTENSIONS[*]}"
 printf-message 'Input source extensions: %s\n' "${SOURCE_EXTENSIONS[*]}"
