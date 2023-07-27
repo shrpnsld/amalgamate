@@ -377,7 +377,7 @@ make-include-guard-id()
 {
 	local file_name=$1
 
-	sed -e 's/-/_/g' -e 's/\./_/g' <<< "$file_name" | tr '[a-z]' '[A-Z]'
+	tr '.' '_' <<< "${file_name}_INCLUDED" | tr '-' '_' | tr '[a-z]' '[A-Z]'
 }
 
 
