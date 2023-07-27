@@ -46,7 +46,7 @@ HELP_MESSAGE=\
   -o <output-dir-path>  Output directory [default: current working directory].
   -H                    Amalgamate all files to single header file.
   -S                    Amalgamate all files to single source file.
-  -n <base-name>        Base name for output files [default: parent directory name].
+  -n <base-name>        Base name for output files [default: current working directory name].
   -x <hpp,cpp>          Extensions for output header and source files [default: inferred from input files; if cannot, then '$DEFAULT_OUTPUT_HEADER_EXTENSION','$DEFAULT_OUTPUT_SOURCE_EXTENSION'].
   -g                    Group unexpanded headers on top.
   -E <count>            Do not allow more than <count> consecutive empty lines.
@@ -69,7 +69,7 @@ INPUT_DIR_PATH=''
 OUTPUT_DIR_PATH=''
 HEADER_ONLY=false
 SOURCE_ONLY=false
-NAME=$(basename $(pwd))
+BASE_NAME=''
 OUTPUT_HEADER_EXTENSION=-1
 OUTPUT_SOURCE_EXTENSION=-1
 EMPTY_LINE_COUNT_LIMIT=''
@@ -155,7 +155,7 @@ parse-option()
 			;;
 
 		n)
-			NAME="$value"
+			BASE_NAME="$value"
 			return 1
 			;;
 
@@ -248,6 +248,11 @@ validate-options()
 		OUTPUT_DIR_PATH=$(expand-dir-path "$OUTPUT_DIR_PATH")
 	else
 		OUTPUT_DIR_PATH="$PWD"
+	fi
+
+	if [ -z "$BASE_NAME" ]
+	then
+		BASE_NAME=$(basename "$PWD")
 	fi
 
 	if [ "${#HEADER_EXTENSIONS[@]}" == 0 ]
@@ -970,7 +975,7 @@ then
 fi
 
 
-OUTPUT_DIR_PATH="$OUTPUT_DIR_PATH/$NAME-$OUTPUT_DIRECTORY_SUFFIX"
+OUTPUT_DIR_PATH="$OUTPUT_DIR_PATH/$BASE_NAME-$OUTPUT_DIRECTORY_SUFFIX"
 rm -rf "$OUTPUT_DIR_PATH" &> /dev/null
 if [ $? != 0 ]
 then
@@ -1009,8 +1014,8 @@ then
 	OUTPUT_SOURCE_EXTENSION=$(detect-extension "$DEFAULT_OUTPUT_SOURCE_EXTENSION" "${source_files[@]}")
 fi
 
-header_file_name="$NAME.$OUTPUT_HEADER_EXTENSION"
-source_file_name="$NAME.$OUTPUT_SOURCE_EXTENSION"
+header_file_name="$BASE_NAME.$OUTPUT_HEADER_EXTENSION"
+source_file_name="$BASE_NAME.$OUTPUT_SOURCE_EXTENSION"
 
 output_header_path="$OUTPUT_DIR_PATH/$header_file_name"
 output_source_path="$OUTPUT_DIR_PATH/$source_file_name"
@@ -1023,7 +1028,7 @@ printf-message 'Output direecotry: %s\n' "$OUTPUT_DIR_PATH"
 printf-message 'Header search path: %s\n' "$HEADER_SEARCH_PATH"
 printf-message 'Input header extensions: %s\n' "${HEADER_EXTENSIONS[*]}"
 printf-message 'Input source extensions: %s\n' "${SOURCE_EXTENSIONS[*]}"
-printf-message 'Base name: %s\n' "$NAME"
+printf-message 'Base name: %s\n' "$BASE_NAME"
 if $HEADER_ONLY
 then
 	printf-message 'Header only\n'
