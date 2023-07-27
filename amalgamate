@@ -412,6 +412,20 @@ printf-message()
 }
 
 
+value-or()
+{
+	local value=$1
+	local or=$2
+
+	if [ -n "$value" ]
+	then
+		printf '%s' "$value"
+	else
+		printf '%s' "$or"
+	fi
+}
+
+
 make-include-guard-id()
 {
 	local file_name=$1
@@ -1066,57 +1080,77 @@ fi
 
 # Printing options
 
+printf-message '%s\n' '[Input]'
 printf-message 'Input direecotry: %s\n' "$INPUT_DIR_PATH"
 printf-message 'Output direecotry: %s\n' "$OUTPUT_DIR_PATH"
 printf-message 'Header search path: %s\n' "$HEADER_SEARCH_PATH"
 printf-message 'Input header extensions: %s\n' "${HEADER_EXTENSIONS[*]}"
 printf-message 'Input source extensions: %s\n' "${SOURCE_EXTENSIONS[*]}"
+
+printf-message '\n%s\n' '[Output]'
+
 printf-message 'Base name: %s\n' "$BASE_NAME"
 if $HEADER_ONLY
 then
-	printf-message 'Header only\n'
-	printf-message 'Output header extension: %s\n' "$OUTPUT_HEADER_EXTENSION"
+	printf-message 'Header only. Output extension: %s\n' "$OUTPUT_HEADER_EXTENSION"
 elif $SOURCE_ONLY
 then
-	printf-message 'Source only'
-	printf-message 'Output source extension: %s\n' "$OUTPUT_SOURCE_EXTENSION"
+	printf-message 'Source only. Output extension: %s\n' "$OUTPUT_SOURCE_EXTENSION"
 else
-	printf-message 'Output header extension: %s\n' "$OUTPUT_HEADER_EXTENSION"
-	printf-message 'Output source extension: %s\n' "$OUTPUT_SOURCE_EXTENSION"
+	printf-message 'Output extensions: %s, %s\n' "$OUTPUT_HEADER_EXTENSION" "$OUTPUT_SOURCE_EXTENSION"
 fi
 
+if $HEADER_ONLY
+then
+	printf-message 'Header prologue file: %s\n' $(value-or "$HEADER_PROLOGUE_FILE_PATH" '[none]')
+elif $SOURCE_ONLY
+then
+	printf-message 'Source prologue file: %s\n' $(value-or "$SOURCE_PROLOGUE_FILE_PATH" '[none]')
+else
+	printf-message 'Header prologue file: %s\n' $(value-or "$HEADER_PROLOGUE_FILE_PATH" '[none]')
+	printf-message 'Source prologue file: %s\n' $(value-or "$SOURCE_PROLOGUE_FILE_PATH" '[none]')
+fi
+
+if ! $SOURCE_ONLY
+then
+	printf-message 'Include guard: '
+	if $USE_INCLUDE_GUARD
+	then
+		printf-message '#ifndef %s\n' "$INCLUDE_GUARD_ID"
+	else
+		printf-message '#pragma once\n'
+	fi
+fi
 
 printf-message 'Reduce consecutive blank lines to: %s\n' $(value-or "$BLANK_LINE_COUNT_LIMIT" '[none]')
+
+printf-message 'Trim trailing whitespace: '
 if $TRIM_TRAILING_WHITESPACE
 then
-	printf-message 'Trim trailing whitespace: yes\n'
+	printf-message 'yes\n'
 else
-	printf-message 'Trim trailing whitespace: no\n'
+	printf-message 'no\n'
 fi
 
 printf-message 'Insert annotations: '
 if [ "$FILE_PRINTF_ANNOTATION_FUNCTION" != ':' ]
 then
-	printf-message 'Insert annotations: yes\n'
+	printf-message 'yes\n'
 else
-	printf-message 'Insert annotations: no\n'
+	printf-message 'no\n'
 fi
 
-printf-message '\nSaving amalgamated files to:\n%s/\n' "$OUTPUT_DIR_PATH"
+printf-message '\n'
+
+# Amalgamating
+
 if $HEADER_ONLY
 then
 	output_source_path="$output_header_path"
-	printf-message '└── %s\n\n' "$header_file_name"
 elif $SOURCE_ONLY
 then
 	output_header_path="$output_source_path"
-	printf-message '└── %s\n\n' "$source_file_name"
-else
-	printf-message '├── %s\n└── %s\n\n' "$header_file_name" "$source_file_name"
 fi
-
-
-rm -f "$output_header_path" "$output_source_path"
 
 included_files+=("$output_header_path")
 
@@ -1197,5 +1231,5 @@ then
 	fi
 fi
 
-printf-message '\nDone.\n'
+printf-message 'Done.\n'
 
