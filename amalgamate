@@ -49,7 +49,7 @@ HELP_MESSAGE=\
   -n <base-name>        Base name for output files [default: current working directory name].
   -x <hpp,cpp>          Extensions for output header and source files [default: inferred from input files; if cannot, then '$DEFAULT_OUTPUT_HEADER_EXTENSION','$DEFAULT_OUTPUT_SOURCE_EXTENSION'].
   -g                    Group unexpanded headers on top.
-  -E <count>            Do not allow more than <count> consecutive empty lines.
+  -B <count>            Reduce consecutive blank lines to no more than '<count>'
   -G <id> | -G ''       Use include guard in header instead of '#pragma once'. Use '<id>' for '#define' directive or generate it from header name if empty string was passed.
   -t                    Trim trailing whitespace.
   -a                    Insert annotations.
@@ -72,7 +72,7 @@ SOURCE_ONLY=false
 BASE_NAME=''
 OUTPUT_HEADER_EXTENSION=-1
 OUTPUT_SOURCE_EXTENSION=-1
-EMPTY_LINE_COUNT_LIMIT=''
+BLANK_LINE_COUNT_LIMIT=''
 TRIM_TRAILING_WHITESPACE=false
 INCLUDE_GUARD_ID=''
 
@@ -170,8 +170,8 @@ parse-option()
 			PREPEND_WITH_STANDARD_INCLUDES_FUNCTION=do-prepend-with-standard-includes
 			;;
 
-		E)
-			EMPTY_LINE_COUNT_LIMIT="$value"
+		B)
+			BLANK_LINE_COUNT_LIMIT="$value"
 			return 1
 			;;
 
@@ -286,9 +286,9 @@ validate-options()
 		return 1
 	fi
 
-	if [ -n "$EMPTY_LINE_COUNT_LIMIT" ] && ! [[ $EMPTY_LINE_COUNT_LIMIT =~ ^([0-9]|[1-9][0-9]+)$ ]]
+	if [ -n "$BLANK_LINE_COUNT_LIMIT" ] && ! [[ $BLANK_LINE_COUNT_LIMIT =~ ^([0-9]|[1-9][0-9]+)$ ]]
 	then
-		printf-error 'empty line count is not a positive integer'
+		printf-error 'blank line count should be a positive integer'
 		return 1
 	fi
 }
@@ -583,7 +583,7 @@ is-pragma-once-line()
 }
 
 
-is-empty-line()
+is-blank-line()
 {
 	local line=$1
 
@@ -842,7 +842,7 @@ expand-file()
 			continue
 		fi
 
-		if is-empty-line "$line"
+		if is-blank-line "$line"
 		then
 			file-printf "$output_path" "%s\n" "$line"
 			continue
@@ -913,7 +913,7 @@ merge-sources()
 }
 
 
-reduce-empty-lines()
+reduce-blank-lines()
 {
 	local file_path=$1
 	local empty_line_limit=$2
@@ -1042,8 +1042,8 @@ else
 	printf-message 'Output source extension: %s\n' "$OUTPUT_SOURCE_EXTENSION"
 fi
 
-printf-message 'Reduce consecutive empty lines to: %s\n' "$EMPTY_LINE_COUNT_LIMIT"
 
+printf-message 'Reduce consecutive blank lines to: %s\n' $(value-or "$BLANK_LINE_COUNT_LIMIT" '[none]')
 if $TRIM_TRAILING_WHITESPACE
 then
 	printf-message 'Trim trailing whitespace: yes\n'
@@ -1051,6 +1051,7 @@ else
 	printf-message 'Trim trailing whitespace: no\n'
 fi
 
+printf-message 'Insert annotations: '
 if [ "$FILE_PRINTF_ANNOTATION_FUNCTION" != ':' ]
 then
 	printf-message 'Insert annotations: yes\n'
@@ -1124,18 +1125,18 @@ then
 	fi
 fi
 
-if [ -n "$EMPTY_LINE_COUNT_LIMIT" ]
+if [ -n "$BLANK_LINE_COUNT_LIMIT" ]
 then
-	printf-message 'Reducing empty lines...\n'
+	printf-message 'Reducing blank lines...\n'
 
 	if [ -r "$output_header_path" ]
 	then
-		reduce-empty-lines "$output_header_path" $EMPTY_LINE_COUNT_LIMIT
+		reduce-blank-lines "$output_header_path" $BLANK_LINE_COUNT_LIMIT
 	fi
 
 	if [ -r "$output_source_path" ]
 	then
-		reduce-empty-lines "$output_source_path" $EMPTY_LINE_COUNT_LIMIT
+		reduce-blank-lines "$output_source_path" $BLANK_LINE_COUNT_LIMIT
 	fi
 fi
 
