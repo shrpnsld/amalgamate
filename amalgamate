@@ -48,8 +48,8 @@ HELP_MESSAGE=\
   -S                    Amalgamate all files to single source file.
   -n <base-name>        Base name for output files [default: current working directory name].
   -x <hpp,cpp>          Extensions for output header and source files [default: inferred from input files; if cannot, then '$DEFAULT_OUTPUT_HEADER_EXTENSION','$DEFAULT_OUTPUT_SOURCE_EXTENSION'].
-  -P <file>             Add this file on top of amalgamated header.
-  -p <file>             Add this file on top of amalgamated source.
+  -P <file>             Add this file on top of amalgamated header (but same as '-p' if generating single source).
+  -p <file>             Add this file on top of amalgamated source (but same as '-P' if generating single header).
   -g                    Group unexpanded headers on top.
   -B <count>            Reduce consecutive blank lines to no more than '<count>'
   -G <id> | -G ''       Use include guard in header instead of '#pragma once'. Use '<id>' for '#define' directive or generate it from header name if empty string was passed.
@@ -324,6 +324,18 @@ validate-options()
 		fi
 
 		SOURCE_PROLOGUE_FILE_PATH=$(expand-path "$SOURCE_PROLOGUE_FILE_PATH")
+	fi
+
+	# '-p' is same as '-P' when generating single header
+	if $GENERATE_HEADER && ! $GENERATE_SOURCE && [ -z "$HEADER_PROLOGUE_FILE_PATH" ] && [ -n "$SOURCE_PROLOGUE_FILE_PATH" ]
+	then
+		HEADER_PROLOGUE_FILE_PATH="$SOURCE_PROLOGUE_FILE_PATH"
+	fi
+
+	# '-P' is same as '-p' when generating single source
+	if $GENERATE_SOURCE && ! $GENERATE_HEADER && [ -z "$SOURCE_PROLOGUE_FILE_PATH" ] && [ -n "$HEADER_PROLOGUE_FILE_PATH" ]
+	then
+		SOURCE_PROLOGUE_FILE_PATH="$HEADER_PROLOGUE_FILE_PATH"
 	fi
 
 	if [ -n "$BLANK_LINE_COUNT_LIMIT" ] && ! [[ $BLANK_LINE_COUNT_LIMIT =~ ^([0-9]|[1-9][0-9]+)$ ]]
