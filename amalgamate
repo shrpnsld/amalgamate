@@ -69,8 +69,8 @@ HEADER_EXTENSIONS=("${DEFAULT_INPUT_HEADER_EXTENSIONS[@]}")
 SOURCE_EXTENSIONS=("${DEFAULT_INPUT_SOURCE_EXTENSIONS[@]}")
 INPUT_DIR_PATH=''
 OUTPUT_DIR_PATH=''
-HEADER_ONLY=false
-SOURCE_ONLY=false
+GENERATE_HEADER=true
+GENERATE_SOURCE=true
 BASE_NAME=''
 OUTPUT_HEADER_EXTENSION=-1
 OUTPUT_SOURCE_EXTENSION=-1
@@ -152,11 +152,13 @@ parse-option()
 			;;
 
 		H)
-			HEADER_ONLY=true
+			GENERATE_HEADER=true
+			GENERATE_SOURCE=false
 			;;
 
 		S)
-			SOURCE_ONLY=true
+			GENERATE_HEADER=false
+			GENERATE_SOURCE=true
 			;;
 
 		n)
@@ -1062,7 +1064,7 @@ source_file_name="$BASE_NAME.$OUTPUT_SOURCE_EXTENSION"
 output_header_path="$OUTPUT_DIR_PATH/$header_file_name"
 output_source_path="$OUTPUT_DIR_PATH/$source_file_name"
 
-if ! $SOURCE_ONLY && $USE_INCLUDE_GUARD && [ -z "$INCLUDE_GUARD_ID" ]
+if $GENERATE_HEADER && $USE_INCLUDE_GUARD && [ -z "$INCLUDE_GUARD_ID" ]
 then
 	INCLUDE_GUARD_ID=$(make-include-guard-id "$header_file_name")
 fi
@@ -1079,28 +1081,27 @@ printf-message 'Input source extensions: %s\n' "${SOURCE_EXTENSIONS[*]}"
 printf-message '\n%s\n' '[Output]'
 
 printf-message 'Base name: %s\n' "$BASE_NAME"
-if $HEADER_ONLY
+if $GENERATE_HEADER && ! $GENERATE_SOURCE
 then
 	printf-message 'Header only. Output extension: %s\n' "$OUTPUT_HEADER_EXTENSION"
-elif $SOURCE_ONLY
+elif $GENERATE_SOURCE && ! $GENERATE_HEADER
 then
 	printf-message 'Source only. Output extension: %s\n' "$OUTPUT_SOURCE_EXTENSION"
 else
 	printf-message 'Output extensions: %s, %s\n' "$OUTPUT_HEADER_EXTENSION" "$OUTPUT_SOURCE_EXTENSION"
 fi
 
-if $HEADER_ONLY
+if $GENERATE_HEADER
 then
 	printf-message 'Header prologue file: %s\n' $(value-or "$HEADER_PROLOGUE_FILE_PATH" '[none]')
-elif $SOURCE_ONLY
+fi
+
+if $GENERATE_SOURCE
 then
-	printf-message 'Source prologue file: %s\n' $(value-or "$SOURCE_PROLOGUE_FILE_PATH" '[none]')
-else
-	printf-message 'Header prologue file: %s\n' $(value-or "$HEADER_PROLOGUE_FILE_PATH" '[none]')
 	printf-message 'Source prologue file: %s\n' $(value-or "$SOURCE_PROLOGUE_FILE_PATH" '[none]')
 fi
 
-if ! $SOURCE_ONLY
+if $GENERATE_HEADER
 then
 	printf-message 'Include guard: '
 	if $USE_INCLUDE_GUARD
@@ -1133,10 +1134,10 @@ printf-message '\n'
 
 # Amalgamating
 
-if $HEADER_ONLY
+if $GENERATE_HEADER && ! $GENERATE_SOURCE
 then
 	output_source_path="$output_header_path"
-elif $SOURCE_ONLY
+elif $GENERATE_SOURCE && ! $GENERATE_HEADER
 then
 	output_header_path="$output_source_path"
 fi
@@ -1147,13 +1148,19 @@ if [ ${#header_files[@]} != 0 ]
 then
 	printf-message 'Amalgamating headers...\n'
 
-	if ! $SOURCE_ONLY && [ -n "$HEADER_PROLOGUE_FILE_PATH" ]
+	if $GENERATE_HEADER && [ -n "$HEADER_PROLOGUE_FILE_PATH" ]
 	then
 		printf-message 'Adding prologue %s\n' "$HEADER_PROLOGUE_FILE_PATH"
 		cat "$HEADER_PROLOGUE_FILE_PATH" >> "$output_header_path"
+
+	# If generating single source, prolgue added here
+	elif $GENERATE_SOURCE && ! $GENERATE_HEADER && [ -n "$SOURCE_PROLOGUE_FILE_PATH" ]
+	then
+		printf-message 'Adding prologue %s\n' "$SOURCE_PROLOGUE_FILE_PATH"
+		cat "$SOURCE_PROLOGUE_FILE_PATH" >> "$output_source_path"
 	fi
 
-	if ! $SOURCE_ONLY
+	if $GENERATE_HEADER
 	then
 		include_guard_header=$(make-include-guard-header "$INCLUDE_GUARD_ID")
 		file-printf "$output_header_path" '%s\n\n' "${include_guard_header}"
@@ -1161,7 +1168,7 @@ then
 
 	merge-headers "$output_header_path" "${header_files[@]}"
 
-	if ! $SOURCE_ONLY
+	if $GENERATE_HEADER
 	then
 		include_guard_footer=$(make-include-guard-footer "$INCLUDE_GUARD_ID")
 		file-printf "$output_header_path" '\n\n%s' "$include_guard_footer"
@@ -1174,13 +1181,14 @@ if [ ${#source_files[@]} != 0 ]
 then
 	printf-message 'Amalgamating sources...\n'
 
-	if ! $HEADER_ONLY && [ -n "$SOURCE_PROLOGUE_FILE_PATH" ]
+	# Avoiding prologue being added twice for single source (first time in header amalgamation stage)
+	if $GENERATE_SOURCE && $GENERATE_HEADER && [ -n "$SOURCE_PROLOGUE_FILE_PATH" ]
 	then
 		printf-message 'Adding prologue %s\n' "$SOURCE_PROLOGUE_FILE_PATH"
 		cat "$SOURCE_PROLOGUE_FILE_PATH" >> "$output_source_path"
 	fi
 
-	if [ ${#header_files[@]} != 0 ] && ! $SOURCE_ONLY
+	if [ ${#header_files[@]} != 0 ] && $GENERATE_HEADER && $GENERATE_SOURCE
 	then
 		file-printf "$output_source_path" '#include "%s"\n' "$(basename $header_file_name)"
 	fi
