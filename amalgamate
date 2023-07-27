@@ -39,20 +39,20 @@ HELP_MESSAGE=\
   amalgamate [options] -- <files...>  Amalgamate specified files and their included files
 
 \e[1mOPTIONS:\e[0m
-  -I <header-path>      Path to header files [default: input directory].
-  -e <ext,ens,ions...>  Input header extensions [default: '$DEFAULT_INPUT_HEADER_EXTENSIONS'].
-  -s <ext,ens,ions...>  Input source extensions [default: '$DEFAULT_INPUT_SOURCE_EXTENSIONS'].
   -i <input-dir-path>   Input directory [defalt: current working directory].
+  -I <header-path>      Path to header files [default: input directory].
+  -e <ext,ens,ions...>  Input header extensions [default: '${DEFAULT_INPUT_HEADER_EXTENSIONS[@]}'].
+  -s <ext,ens,ions...>  Input source extensions [default: '${DEFAULT_INPUT_SOURCE_EXTENSIONS[@]}'].
   -o <output-dir-path>  Output directory [default: current working directory].
-  -S                    Amalgamate into a single source file.
-  -M                    Amalgamate into a header and a source file.
   -n <base-name>        Base name for output files [default: current working directory name].
   -x <hpp,cpp>          Extensions for output header and source files [default: inferred from input files; if cannot, then '$DEFAULT_OUTPUT_HEADER_EXTENSION','$DEFAULT_OUTPUT_SOURCE_EXTENSION'].
+  -S                    Amalgamate into a single source file.
+  -M                    Amalgamate into a header and a source file.
   -P <file>             Add this file on top of amalgamated header (but same as '-p' if generating single source).
   -p <file>             Add this file on top of amalgamated source (but same as '-P' if generating single header).
-  -g                    Group unexpanded headers on top.
-  -B <count>            Reduce consecutive blank lines to no more than '<count>'
   -G <id> | -G ''       Use include guard in header instead of '#pragma once'. Use '<id>' for '#define' directive or generate it from header name if empty string was passed.
+  -g                    Group uninlined headers on top.
+  -B <count>            Reduce consecutive blank lines to no more than '<count>'
   -t                    Trim trailing whitespace.
   -a                    Insert annotations.
   -v                    Verbose mode.
@@ -64,22 +64,23 @@ HELP_MESSAGE=\
 HEADER_STRING_TEMPLATE='%s// ============================================================================\n%s// == %s ==\n%s// =='
 FOOTER_STRING_TEMPLATE='%s// ==\n%s// == %s ==\n%s// ============================================================================'
 
+INPUT_DIR_PATH=''
 HEADER_SEARCH_PATH=''
 HEADER_EXTENSIONS=("${DEFAULT_INPUT_HEADER_EXTENSIONS[@]}")
 SOURCE_EXTENSIONS=("${DEFAULT_INPUT_SOURCE_EXTENSIONS[@]}")
-INPUT_DIR_PATH=''
 OUTPUT_DIR_PATH=''
-GENERATE_HEADER=true
-GENERATE_SOURCE=false
 BASE_NAME=''
 OUTPUT_HEADER_EXTENSION=-1
 OUTPUT_SOURCE_EXTENSION=-1
+GENERATE_HEADER=true
+GENERATE_SOURCE=false
 HEADER_PROLOGUE_FILE_PATH=''
 SOURCE_PROLOGUE_FILE_PATH=''
-BLANK_LINE_COUNT_LIMIT=''
-TRIM_TRAILING_WHITESPACE=false
 USE_INCLUDE_GUARD=false
 INCLUDE_GUARD_ID=''
+GROUP_UNINLINED_HEADERS_ON_TOP=false
+BLANK_LINE_COUNT_LIMIT=''
+TRIM_TRAILING_WHITESPACE=false
 
 MAKE_INCLUDE_GUARD_HEADER_FUNCTION=do-make-include-guard-pragma-once
 MAKE_INCLUDE_GUARD_FOOTER_FUNCTION=:
@@ -183,6 +184,7 @@ parse-option()
 			;;
 
 		g)
+			GROUP_UNINLINED_HEADERS_ON_TOP=true
 			PROCESS_STANDARD_HEADER_FUNCTION=add-standard-include-line
 			PREPEND_WITH_STANDARD_INCLUDES_FUNCTION=do-prepend-with-standard-includes
 			;;
@@ -313,7 +315,6 @@ validate-options()
 
 		HEADER_PROLOGUE_FILE_PATH=$(expand-path "$HEADER_PROLOGUE_FILE_PATH")
 	fi
-
 
 	if [ -n "$SOURCE_PROLOGUE_FILE_PATH" ]
 	then
@@ -840,7 +841,7 @@ declare -a included_files
 declare -a globally_included_standard_files
 declare -a locally_included_standard_files
 
-expand-file()
+inline-file()
 {
 	IFS=''
 	local absolute_file_path=$1
@@ -882,12 +883,12 @@ expand-file()
 
 			if array-contains-item "$absolute_include_path" "${included_files[@]}"
 			then
-				file-printf-annotation "$output_path" '%s// %s    // amalgamate: file already expanded\n' "$indent" "$line"
+				file-printf-annotation "$output_path" '%s// %s    // amalgamate: file already inlined\n' "$indent" "$line"
 				continue
 			fi
 
 			included_files+=("$absolute_include_path")
-			expand-file "$absolute_include_path" "$output_path" "$(indent-shift "$indent")"
+			inline-file "$absolute_include_path" "$output_path" "$(indent-shift "$indent")"
 
 			continue
 		fi
@@ -936,14 +937,13 @@ merge-headers()
 	for path in "${paths[@]}"
 	do
 		local file_absolute_path=$(expand-path "$path")
-
 		if array-contains-item "$file_absolute_path" "${included_files[@]}"
 		then
 			continue
 		fi
 
 		included_files+=("$file_absolute_path")
-		expand-file "$file_absolute_path" "$output_header_path" ''
+		inline-file "$file_absolute_path" "$output_header_path" ''
 	done
 
 	prepend-with-standard-includes "$output_header_path" "${locally_included_standard_files[@]}"
@@ -961,8 +961,7 @@ merge-sources()
 	for path in "${paths[@]}"
 	do
 		local file_absolute_path=$(expand-path "$path")
-
-		expand-file "$file_absolute_path" "$output_source_path" ''
+		inline-file "$file_absolute_path" "$output_source_path" ''
 	done
 
 	prepend-with-standard-includes "$output_source_path" "${locally_included_standard_files[@]}"
@@ -1084,14 +1083,13 @@ fi
 # Printing options
 
 printf-message '%s\n' '[Input]'
-printf-message 'Input direecotry: %s\n' "$INPUT_DIR_PATH"
-printf-message 'Output direecotry: %s\n' "$OUTPUT_DIR_PATH"
+printf-message 'Input directory: %s\n' "$INPUT_DIR_PATH"
 printf-message 'Header search path: %s\n' "$HEADER_SEARCH_PATH"
 printf-message 'Input header extensions: %s\n' "${HEADER_EXTENSIONS[*]}"
 printf-message 'Input source extensions: %s\n' "${SOURCE_EXTENSIONS[*]}"
 
 printf-message '\n%s\n' '[Output]'
-
+printf-message 'Output directory: %s\n' "$OUTPUT_DIR_PATH"
 printf-message 'Base name: %s\n' "$BASE_NAME"
 if $GENERATE_HEADER && ! $GENERATE_SOURCE
 then
@@ -1105,12 +1103,12 @@ fi
 
 if $GENERATE_HEADER
 then
-	printf-message 'Header prologue file: %s\n' $(value-or "$HEADER_PROLOGUE_FILE_PATH" '[none]')
+	printf-message 'Header prologue file: %s\n' $(value-or "$HEADER_PROLOGUE_FILE_PATH" 'no')
 fi
 
 if $GENERATE_SOURCE
 then
-	printf-message 'Source prologue file: %s\n' $(value-or "$SOURCE_PROLOGUE_FILE_PATH" '[none]')
+	printf-message 'Source prologue file: %s\n' $(value-or "$SOURCE_PROLOGUE_FILE_PATH" 'no')
 fi
 
 if $GENERATE_HEADER
@@ -1124,7 +1122,15 @@ then
 	fi
 fi
 
-printf-message 'Reduce consecutive blank lines to: %s\n' $(value-or "$BLANK_LINE_COUNT_LIMIT" '[none]')
+printf-message 'Group uninlined headers on top: '
+if $GROUP_UNINLINED_HEADERS_ON_TOP
+then
+	printf-message 'yes\n'
+else
+	printf-message 'no\n'
+fi
+
+printf-message 'Reduce consecutive blank lines to: %s\n' $(value-or "$BLANK_LINE_COUNT_LIMIT" 'no')
 
 printf-message 'Trim trailing whitespace: '
 if $TRIM_TRAILING_WHITESPACE
