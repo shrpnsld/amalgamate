@@ -283,7 +283,6 @@ validate-options()
 		return 1
 	fi
 
-
 	if [ -z "$OUTPUT_HEADER_EXTENSION" ]
 	then
 		printf-error 'output header extension is empty'
@@ -734,16 +733,6 @@ path-from-standard-include-line()
 }
 
 
-absolute-path-from-include-line()
-{
-	local line=$1
-
-	local file_path=${line#*\"}
-	local file_path=${file_path%\"*}
-	expand-path "$file_path"
-}
-
-
 file-printf()
 {
 	local file_path=$1
@@ -844,7 +833,7 @@ expand-file()
 	local output_path=$2
 	local indent=$3
 
-	local relative_file_path=$(relative-path "$absolute_file_path" $(pwd))
+	local relative_file_path=$(relative-path "$absolute_file_path" $PWD)
 	printf-message '%s\n' "$relative_file_path"
 
 	file-print-header-annotation "$output_path" "$relative_file_path" "$indent"
