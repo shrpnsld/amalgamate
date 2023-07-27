@@ -44,8 +44,8 @@ HELP_MESSAGE=\
   -s <ext,ens,ions...>  Input source extensions [default: '$DEFAULT_INPUT_SOURCE_EXTENSIONS'].
   -i <input-dir-path>   Input directory [defalt: current working directory].
   -o <output-dir-path>  Output directory [default: current working directory].
-  -H                    Amalgamate all files to single header file.
-  -S                    Amalgamate all files to single source file.
+  -S                    Amalgamate into a single source file.
+  -M                    Amalgamate into a header and a source file.
   -n <base-name>        Base name for output files [default: current working directory name].
   -x <hpp,cpp>          Extensions for output header and source files [default: inferred from input files; if cannot, then '$DEFAULT_OUTPUT_HEADER_EXTENSION','$DEFAULT_OUTPUT_SOURCE_EXTENSION'].
   -P <file>             Add this file on top of amalgamated header (but same as '-p' if generating single source).
@@ -70,7 +70,7 @@ SOURCE_EXTENSIONS=("${DEFAULT_INPUT_SOURCE_EXTENSIONS[@]}")
 INPUT_DIR_PATH=''
 OUTPUT_DIR_PATH=''
 GENERATE_HEADER=true
-GENERATE_SOURCE=true
+GENERATE_SOURCE=false
 BASE_NAME=''
 OUTPUT_HEADER_EXTENSION=-1
 OUTPUT_SOURCE_EXTENSION=-1
@@ -151,13 +151,13 @@ parse-option()
 			return 1
 			;;
 
-		H)
-			GENERATE_HEADER=true
-			GENERATE_SOURCE=false
-			;;
-
 		S)
 			GENERATE_HEADER=false
+			GENERATE_SOURCE=true
+			;;
+
+		M)
+			GENERATE_HEADER=true
 			GENERATE_SOURCE=true
 			;;
 
