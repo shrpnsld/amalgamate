@@ -48,6 +48,8 @@ HELP_MESSAGE=\
   -S                    Amalgamate all files to single source file.
   -n <base-name>        Base name for output files [default: current working directory name].
   -x <hpp,cpp>          Extensions for output header and source files [default: inferred from input files; if cannot, then '$DEFAULT_OUTPUT_HEADER_EXTENSION','$DEFAULT_OUTPUT_SOURCE_EXTENSION'].
+  -P <file>             Add this file on top of amalgamated header.
+  -p <file>             Add this file on top of amalgamated source.
   -g                    Group unexpanded headers on top.
   -B <count>            Reduce consecutive blank lines to no more than '<count>'
   -G <id> | -G ''       Use include guard in header instead of '#pragma once'. Use '<id>' for '#define' directive or generate it from header name if empty string was passed.
@@ -72,6 +74,8 @@ SOURCE_ONLY=false
 BASE_NAME=''
 OUTPUT_HEADER_EXTENSION=-1
 OUTPUT_SOURCE_EXTENSION=-1
+HEADER_PROLOGUE_FILE_PATH=''
+SOURCE_PROLOGUE_FILE_PATH=''
 BLANK_LINE_COUNT_LIMIT=''
 TRIM_TRAILING_WHITESPACE=false
 USE_INCLUDE_GUARD=false
@@ -163,6 +167,16 @@ parse-option()
 		x)
 			OUTPUT_HEADER_EXTENSION="${value%,*}"
 			OUTPUT_SOURCE_EXTENSION="${value#*,}"
+			return 1
+			;;
+
+		P)
+			HEADER_PROLOGUE_FILE_PATH="$value"
+			return 1
+			;;
+
+		p)
+			SOURCE_PROLOGUE_FILE_PATH="$value"
 			return 1
 			;;
 
@@ -286,6 +300,29 @@ validate-options()
 	then
 		printf-error 'extensions for output files cannot be the same'
 		return 1
+	fi
+
+	if [ -n "$HEADER_PROLOGUE_FILE_PATH" ]
+	then
+		if [ ! -r "$HEADER_PROLOGUE_FILE_PATH" ]
+		then
+			printf-error 'bad header prologue file "%s"' "$HEADER_PROLOGUE_FILE_PATH"
+			return 1
+		fi
+
+		HEADER_PROLOGUE_FILE_PATH=$(expand-path "$HEADER_PROLOGUE_FILE_PATH")
+	fi
+
+
+	if [ -n "$SOURCE_PROLOGUE_FILE_PATH" ]
+	then
+		if [ ! -r "$SOURCE_PROLOGUE_FILE_PATH" ]
+		then
+			printf-error 'bad source prologue file "%s"' "$SOURCE_PROLOGUE_FILE_PATH"
+			return 1
+		fi
+
+		SOURCE_PROLOGUE_FILE_PATH=$(expand-path "$SOURCE_PROLOGUE_FILE_PATH")
 	fi
 
 	if [ -n "$BLANK_LINE_COUNT_LIMIT" ] && ! [[ $BLANK_LINE_COUNT_LIMIT =~ ^([0-9]|[1-9][0-9]+)$ ]]
@@ -1087,6 +1124,12 @@ if [ ${#header_files[@]} != 0 ]
 then
 	printf-message 'Amalgamating headers...\n'
 
+	if ! $SOURCE_ONLY && [ -n "$HEADER_PROLOGUE_FILE_PATH" ]
+	then
+		printf-message 'Adding prologue %s\n' "$HEADER_PROLOGUE_FILE_PATH"
+		cat "$HEADER_PROLOGUE_FILE_PATH" >> "$output_header_path"
+	fi
+
 	if ! $SOURCE_ONLY
 	then
 		include_guard_header=$(make-include-guard-header "$INCLUDE_GUARD_ID")
@@ -1107,6 +1150,13 @@ fi
 if [ ${#source_files[@]} != 0 ]
 then
 	printf-message 'Amalgamating sources...\n'
+
+	if ! $HEADER_ONLY && [ -n "$SOURCE_PROLOGUE_FILE_PATH" ]
+	then
+		printf-message 'Adding prologue %s\n' "$SOURCE_PROLOGUE_FILE_PATH"
+		cat "$SOURCE_PROLOGUE_FILE_PATH" >> "$output_source_path"
+	fi
+
 	if [ ${#header_files[@]} != 0 ] && ! $SOURCE_ONLY
 	then
 		file-printf "$output_source_path" '#include "%s"\n' "$(basename $header_file_name)"
