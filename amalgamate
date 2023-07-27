@@ -74,6 +74,7 @@ OUTPUT_HEADER_EXTENSION=-1
 OUTPUT_SOURCE_EXTENSION=-1
 BLANK_LINE_COUNT_LIMIT=''
 TRIM_TRAILING_WHITESPACE=false
+USE_INCLUDE_GUARD=false
 INCLUDE_GUARD_ID=''
 
 MAKE_INCLUDE_GUARD_HEADER_FUNCTION=do-make-include-guard-pragma-once
@@ -176,6 +177,7 @@ parse-option()
 			;;
 
 		G)
+			USE_INCLUDE_GUARD=true
 			INCLUDE_GUARD_ID="$value"
 			MAKE_INCLUDE_GUARD_HEADER_FUNCTION=do-make-include-guard-ifdef
 			MAKE_INCLUDE_GUARD_FOOTER_FUNCTION=do-make-include-guard-endif
@@ -1020,6 +1022,10 @@ source_file_name="$BASE_NAME.$OUTPUT_SOURCE_EXTENSION"
 output_header_path="$OUTPUT_DIR_PATH/$header_file_name"
 output_source_path="$OUTPUT_DIR_PATH/$source_file_name"
 
+if ! $SOURCE_ONLY && $USE_INCLUDE_GUARD && [ -z "$INCLUDE_GUARD_ID" ]
+then
+	INCLUDE_GUARD_ID=$(make-include-guard-id "$header_file_name")
+fi
 
 # Printing options
 
@@ -1081,15 +1087,16 @@ if [ ${#header_files[@]} != 0 ]
 then
 	printf-message 'Amalgamating headers...\n'
 
+	if ! $SOURCE_ONLY
+	then
+		include_guard_header=$(make-include-guard-header "$INCLUDE_GUARD_ID")
+		file-printf "$output_header_path" '%s\n\n' "${include_guard_header}"
+	fi
+
 	merge-headers "$output_header_path" "${header_files[@]}"
 
 	if ! $SOURCE_ONLY
 	then
-		INCLUDE_GUARD_ID=$(make-include-guard-id "$header_file_name")
-
-		include_guard_header=$(make-include-guard-header "$INCLUDE_GUARD_ID")
-		file-printf-prepend "$output_header_path" '%s\n\n' "${include_guard_header}"
-
 		include_guard_footer=$(make-include-guard-footer "$INCLUDE_GUARD_ID")
 		file-printf "$output_header_path" '\n\n%s' "$include_guard_footer"
 	fi
