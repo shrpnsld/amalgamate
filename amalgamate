@@ -531,6 +531,24 @@ array-contains-item()
 	return 1
 }
 
+filter-array-with-array()
+{
+	local array_length=$1
+	local array=("${@:2:$array_length}")
+	local values_to_delete_length=$(( array_length + 1 ))
+	local values_to_delete_start=$(( array_length + 3 ))
+	local values_to_delete=("${@:$values_to_delete_start}")
+
+	local item
+	for item in "${array[@]}"
+	do
+		if ! array-contains-item "$item" "${values_to_delete[@]}"
+		then
+			printf '%s\n' "$item"
+		fi
+	done
+}
+
 find-by-extensions()
 {
 	local path=$1
@@ -724,12 +742,12 @@ get-clean-line()
 	sed -e 's/[\ \t]*\/\/[\ \t]*\[amalgamate:[\ \t]*[-a-z][-a-z]*[\ \t]*\][\ \t]*$//' <<< "$line"
 }
 
-gather-standard-includes()
+gather-standard-include-paths()
 {
 	local paths=("$@")
 
-	local already_processed_standard_paths=()
-	local include_lines=()
+	local already_processed_paths=()
+	local include_paths=()
 	local line
 	for path in "${paths[@]}"
 	do
@@ -747,18 +765,18 @@ gather-standard-includes()
 				continue
 			fi
 
-			local standard_include_path=$(path-from-standard-include-line "$line")
-			if array-contains-item "$standard_include_path" "${already_processed_standard_paths[@]}"
+			local path=$(path-from-standard-include-line "$line")
+			if array-contains-item "$path" "${already_processed_paths[@]}"
 			then
 				continue
 			fi
 
-			already_processed_standard_paths+=("$standard_include_path")
-			include_lines+=("$line")
+			already_processed_paths+=("$path")
+			include_paths+=("$path")
 		done < "$absolute_path"
 	done
 
-	printf '%s\n' "${include_lines[@]}" | sort
+	printf '%s\n' "${include_paths[@]}" | sort
 }
 
 declare -a GLOBAL_already_included_files
@@ -1076,8 +1094,8 @@ trim-trailing-whitespace()
 		if $GROUP_UNINLINED_HEADERS_ON_TOP
 		then
 			printf-message 'Grouping standard headers on top...\n'
-			standard_includes=("$(gather-standard-includes "${header_files[@]}" "${source_files[@]}")")
-			file-printf "$output_header_path" '%s\n' "${standard_includes[@]}"
+			standard_includes=($(gather-standard-include-paths "${header_files[@]}" "${source_files[@]}"))
+			file-printf "$output_header_path" '#include <%s>\n' "${standard_includes[@]}"
 		fi
 
 		printf-message 'Amalgamating files...\n'
@@ -1099,8 +1117,8 @@ trim-trailing-whitespace()
 		if $GROUP_UNINLINED_HEADERS_ON_TOP
 		then
 			printf-message 'Grouping standard headers on top...\n'
-			standard_includes=("$(gather-standard-includes "${header_files[@]}" "${source_files[@]}")")
-			file-printf "$output_source_path" '%s\n' "${standard_includes[@]}"
+			standard_includes=($(gather-standard-include-paths "${header_files[@]}" "${source_files[@]}"))
+			file-printf "$output_source_path" '#include <%s>\n' "${standard_includes[@]}"
 		fi
 
 		printf-message 'Amalgamating files...\n'
@@ -1127,10 +1145,13 @@ trim-trailing-whitespace()
 		if $GROUP_UNINLINED_HEADERS_ON_TOP
 		then
 			printf-message 'Grouping standard headers on top...\n'
-			standard_includes_in_headers=("$(gather-standard-includes "${header_files[@]}")")
-			standard_includes_in_sources=("$(gather-standard-includes "${source_files[@]}")")
-			file-printf "$output_header_path" '%s\n' "${standard_includes_in_headers[@]}"
-			file-printf "$output_header_path" '%s\n' "${standard_includes_in_sources[@]}"
+			standard_includes_in_headers=($(gather-standard-include-paths "${header_files[@]}"))
+			standard_includes_in_sources=($(gather-standard-include-paths "${source_files[@]}"))
+
+			standard_includes_in_sources=($(filter-array-with-array "${#standard_includes_in_sources[@]}" "${standard_includes_in_sources[@]}" "${#standard_includes_in_headers[@]}" "${standard_includes_in_headers[@]}"))
+
+			file-printf "$output_header_path" '#include <%s>\n' "${standard_includes_in_headers[@]}"
+			file-printf "$output_source_path" '#include <%s>\n' "${standard_includes_in_sources[@]}"
 		fi
 
 		printf-message 'Amalgamating files...\n'
