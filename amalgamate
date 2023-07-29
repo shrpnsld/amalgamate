@@ -72,8 +72,8 @@ OUTPUT_DIR_PATH=''
 BASE_NAME=''
 OUTPUT_HEADER_EXTENSION=-1
 OUTPUT_SOURCE_EXTENSION=-1
-GENERATE_HEADER=true
-GENERATE_SOURCE=false
+AMALGAMATE_INTO_HEADER=true
+AMALGAMATE_INTO_SOURCE=false
 HEADER_PROLOGUE_FILE_PATH=''
 SOURCE_PROLOGUE_FILE_PATH=''
 USE_INCLUDE_GUARD=false
@@ -90,7 +90,6 @@ FILE_PRINT_FOOTER_ANNOTATION_FUNCTION=:
 INDENT_SHIFT_FUNCTION=:
 PRINTF_VERBOSE_FUNCTION=:
 PROCESS_STANDARD_HEADER_FUNCTION=file-printf
-PREPEND_WITH_STANDARD_INCLUDES_FUNCTION=:
 
 
 #
@@ -153,13 +152,13 @@ parse-option()
 			;;
 
 		S)
-			GENERATE_HEADER=false
-			GENERATE_SOURCE=true
+			AMALGAMATE_INTO_HEADER=false
+			AMALGAMATE_INTO_SOURCE=true
 			;;
 
 		M)
-			GENERATE_HEADER=true
-			GENERATE_SOURCE=true
+			AMALGAMATE_INTO_HEADER=true
+			AMALGAMATE_INTO_SOURCE=true
 			;;
 
 		n)
@@ -185,8 +184,7 @@ parse-option()
 
 		g)
 			GROUP_UNINLINED_HEADERS_ON_TOP=true
-			PROCESS_STANDARD_HEADER_FUNCTION=add-standard-include-line
-			PREPEND_WITH_STANDARD_INCLUDES_FUNCTION=do-prepend-with-standard-includes
+			PROCESS_STANDARD_HEADER_FUNCTION=:
 			;;
 
 		B)
@@ -328,13 +326,13 @@ validate-options()
 	fi
 
 	# '-p' is same as '-P' when generating single header
-	if $GENERATE_HEADER && ! $GENERATE_SOURCE && [ -z "$HEADER_PROLOGUE_FILE_PATH" ] && [ -n "$SOURCE_PROLOGUE_FILE_PATH" ]
+	if $AMALGAMATE_INTO_HEADER && ! $AMALGAMATE_INTO_SOURCE && [ -z "$HEADER_PROLOGUE_FILE_PATH" ] && [ -n "$SOURCE_PROLOGUE_FILE_PATH" ]
 	then
 		HEADER_PROLOGUE_FILE_PATH="$SOURCE_PROLOGUE_FILE_PATH"
 	fi
 
 	# '-P' is same as '-p' when generating single source
-	if $GENERATE_SOURCE && ! $GENERATE_HEADER && [ -z "$SOURCE_PROLOGUE_FILE_PATH" ] && [ -n "$HEADER_PROLOGUE_FILE_PATH" ]
+	if $AMALGAMATE_INTO_SOURCE && ! $AMALGAMATE_INTO_HEADER && [ -z "$SOURCE_PROLOGUE_FILE_PATH" ] && [ -n "$HEADER_PROLOGUE_FILE_PATH" ]
 	then
 		SOURCE_PROLOGUE_FILE_PATH="$HEADER_PROLOGUE_FILE_PATH"
 	fi
@@ -485,29 +483,6 @@ do-make-include-guard-endif()
 process-standard-header()
 {
 	"$PROCESS_STANDARD_HEADER_FUNCTION" "$@"
-}
-
-
-add-standard-include-line()
-{
-	local include_line=$4
-
-	printf '%s' $(trim-string "$include_line")
-}
-
-
-prepend-with-standard-includes()
-{
-	"$PREPEND_WITH_STANDARD_INCLUDES_FUNCTION" "$@"
-}
-
-
-do-prepend-with-standard-includes()
-{
-	local output_header_path=$1
-	local standard_include_list=("${@:2}")
-
-	file-printf-prepend "$output_header_path" '%s\n\n' "$(IFS=$'\n'; sort <<< "${standard_include_list[*]}")"
 }
 
 
@@ -758,22 +733,6 @@ file-printf()
 }
 
 
-file-printf-prepend()
-{
-	local file_path=$1
-	local format=$2
-	local arguments=("${@:3}")
-
-	local tmp_file_path="$file_path.tmp"
-	mktemp "$tmp_file_path" &> /dev/null
-
-	printf "$format" "${arguments[@]}" > "$tmp_file_path"
-	cat "$file_path" >> "$tmp_file_path"
-	rm "$file_path"
-	mv "$tmp_file_path" "$file_path"
-}
-
-
 make-header-string()
 {
 	local line=$1
@@ -837,9 +796,46 @@ get-clean-line()
 }
 
 
-declare -a included_files
-declare -a globally_included_standard_files
-declare -a locally_included_standard_files
+gather-standard-includes()
+{
+	local paths=("$@")
+
+	local already_processed_standard_paths=()
+	local include_lines=()
+	local line
+	for path in "${paths[@]}"
+	do
+		local absolute_path=$(expand-path "$path")
+		while read -r line || [ -n "$line" ]
+		do
+			local tag=$(get-tag "$line")
+			if [ "$tag" == 'leave' ]
+			then
+				continue
+			fi
+
+			if ! is-standard-include-line "$line"
+			then
+				continue
+			fi
+
+			local standard_include_path=$(path-from-standard-include-line "$line")
+			if array-contains-item "$standard_include_path" "${already_processed_standard_paths[@]}"
+			then
+				continue
+			fi
+
+			already_processed_standard_paths+=("$standard_include_path")
+			include_lines+=("$line")
+		done < "$absolute_path"
+	done
+
+	printf '%s\n' "${include_lines[@]}" | sort
+}
+
+
+declare -a already_included_files
+declare -a already_included_standard_files
 
 inline-file()
 {
@@ -881,13 +877,13 @@ inline-file()
 				exit 1
 			fi
 
-			if array-contains-item "$absolute_include_path" "${included_files[@]}"
+			if array-contains-item "$absolute_include_path" "${already_included_files[@]}"
 			then
 				file-printf-annotation "$output_path" '%s// %s    // amalgamate: file already inlined\n' "$indent" "$line"
 				continue
 			fi
 
-			included_files+=("$absolute_include_path")
+			already_included_files+=("$absolute_include_path")
 			inline-file "$absolute_include_path" "$output_path" "$(indent-shift "$indent")"
 
 			continue
@@ -908,14 +904,14 @@ inline-file()
 		if is-standard-include-line "$line"
 		then
 			local standard_include_path=$(path-from-standard-include-line "$line")
-			if array-contains-item "$standard_include_path" "${globally_included_standard_files[@]}"
+			if array-contains-item "$standard_include_path" "${already_included_standard_files[@]}"
 			then
 				file-printf-annotation "$output_path" '%s// %s    // amalgamate: file already included\n' "$indent" "$line"
 				continue
 			fi
 
-			globally_included_standard_files+=("$standard_include_path")
-			locally_included_standard_files+=($(process-standard-header "$output_path" '%s%s\n' "$indent" "$line"))
+			already_included_standard_files+=("$standard_include_path")
+			process-standard-header "$output_path" '%s%s\n' "$indent" "$line"
 			continue
 		fi
 
@@ -926,36 +922,30 @@ inline-file()
 }
 
 
-merge-headers()
+amalgamate-headers()
 {
 	local output_header_path=$1
 	local paths=("${@:2}")
-
-	locally_included_standard_files=()
 
 	local path
 	for path in "${paths[@]}"
 	do
 		local file_absolute_path=$(expand-path "$path")
-		if array-contains-item "$file_absolute_path" "${included_files[@]}"
+		if array-contains-item "$file_absolute_path" "${already_included_files[@]}"
 		then
 			continue
 		fi
 
-		included_files+=("$file_absolute_path")
+		already_included_files+=("$file_absolute_path")
 		inline-file "$file_absolute_path" "$output_header_path" ''
 	done
-
-	prepend-with-standard-includes "$output_header_path" "${locally_included_standard_files[@]}"
 }
 
 
-merge-sources()
+amalgamate-sources()
 {
 	local output_source_path=$1
 	local paths=("${@:2}")
-
-	locally_included_standard_files=()
 
 	local path
 	for path in "${paths[@]}"
@@ -963,8 +953,6 @@ merge-sources()
 		local file_absolute_path=$(expand-path "$path")
 		inline-file "$file_absolute_path" "$output_source_path" ''
 	done
-
-	prepend-with-standard-includes "$output_source_path" "${locally_included_standard_files[@]}"
 }
 
 
@@ -1075,7 +1063,7 @@ source_file_name="$BASE_NAME.$OUTPUT_SOURCE_EXTENSION"
 output_header_path="$OUTPUT_DIR_PATH/$header_file_name"
 output_source_path="$OUTPUT_DIR_PATH/$source_file_name"
 
-if $GENERATE_HEADER && $USE_INCLUDE_GUARD && [ -z "$INCLUDE_GUARD_ID" ]
+if $AMALGAMATE_INTO_HEADER && $USE_INCLUDE_GUARD && [ -z "$INCLUDE_GUARD_ID" ]
 then
 	INCLUDE_GUARD_ID=$(make-include-guard-id "$header_file_name")
 fi
@@ -1091,27 +1079,27 @@ printf-message 'Input source extensions: %s\n' "${SOURCE_EXTENSIONS[*]}"
 printf-message '\n%s\n' '[Output]'
 printf-message 'Output directory: %s\n' "$OUTPUT_DIR_PATH"
 printf-message 'Base name: %s\n' "$BASE_NAME"
-if $GENERATE_HEADER && ! $GENERATE_SOURCE
+if $AMALGAMATE_INTO_HEADER && ! $AMALGAMATE_INTO_SOURCE
 then
 	printf-message 'Header only. Output extension: %s\n' "$OUTPUT_HEADER_EXTENSION"
-elif $GENERATE_SOURCE && ! $GENERATE_HEADER
+elif $AMALGAMATE_INTO_SOURCE && ! $AMALGAMATE_INTO_HEADER
 then
 	printf-message 'Source only. Output extension: %s\n' "$OUTPUT_SOURCE_EXTENSION"
 else
 	printf-message 'Output extensions: %s, %s\n' "$OUTPUT_HEADER_EXTENSION" "$OUTPUT_SOURCE_EXTENSION"
 fi
 
-if $GENERATE_HEADER
+if $AMALGAMATE_INTO_HEADER
 then
 	printf-message 'Header prologue file: %s\n' $(value-or "$HEADER_PROLOGUE_FILE_PATH" 'no')
 fi
 
-if $GENERATE_SOURCE
+if $AMALGAMATE_INTO_SOURCE
 then
 	printf-message 'Source prologue file: %s\n' $(value-or "$SOURCE_PROLOGUE_FILE_PATH" 'no')
 fi
 
-if $GENERATE_HEADER
+if $AMALGAMATE_INTO_HEADER
 then
 	printf-message 'Include guard: '
 	if $USE_INCLUDE_GUARD
@@ -1152,69 +1140,92 @@ printf-message '\n'
 
 # Amalgamating
 
-if $GENERATE_HEADER && ! $GENERATE_SOURCE
+if $AMALGAMATE_INTO_HEADER && ! $AMALGAMATE_INTO_SOURCE
 then
-	output_source_path="$output_header_path"
-elif $GENERATE_SOURCE && ! $GENERATE_HEADER
-then
-	output_header_path="$output_source_path"
-fi
-
-included_files+=("$output_header_path")
-
-if [ ${#header_files[@]} != 0 ]
-then
-	printf-message 'Amalgamating headers...\n'
-
-	if $GENERATE_HEADER && [ -n "$HEADER_PROLOGUE_FILE_PATH" ]
+	if [ -n "$HEADER_PROLOGUE_FILE_PATH" ]
 	then
-		printf-message 'Adding prologue %s\n' "$HEADER_PROLOGUE_FILE_PATH"
+		printf-message 'Adding prologue...\n'
 		cat "$HEADER_PROLOGUE_FILE_PATH" >> "$output_header_path"
-
-	# If generating single source, prolgue added here
-	elif $GENERATE_SOURCE && ! $GENERATE_HEADER && [ -n "$SOURCE_PROLOGUE_FILE_PATH" ]
-	then
-		printf-message 'Adding prologue %s\n' "$SOURCE_PROLOGUE_FILE_PATH"
-		cat "$SOURCE_PROLOGUE_FILE_PATH" >> "$output_source_path"
 	fi
 
-	if $GENERATE_HEADER
+	printf-message 'Adding include guard...\n'
+	include_guard_header=$(make-include-guard-header "$INCLUDE_GUARD_ID")
+	file-printf "$output_header_path" '%s\n\n' "${include_guard_header}"
+
+	if $GROUP_UNINLINED_HEADERS_ON_TOP
 	then
-		include_guard_header=$(make-include-guard-header "$INCLUDE_GUARD_ID")
-		file-printf "$output_header_path" '%s\n\n' "${include_guard_header}"
+		printf-message 'Grouping headers on top...\n'
+		standard_includes=("$(gather-standard-includes "${header_files[@]}" "${source_files[@]}")")
+		file-printf "$output_header_path" '%s\n' "${standard_includes[@]}"
 	fi
 
-	merge-headers "$output_header_path" "${header_files[@]}"
+	printf-message 'Amalgamating files...\n'
+	amalgamate-headers "$output_header_path" "${header_files[@]}"
+	amalgamate-sources "$output_header_path" "${source_files[@]}"
 
-	if $GENERATE_HEADER
+	if $USE_INCLUDE_GUARD
 	then
 		include_guard_footer=$(make-include-guard-footer "$INCLUDE_GUARD_ID")
 		file-printf "$output_header_path" '\n\n%s' "$include_guard_footer"
 	fi
-
-	printf-message '\n'
-fi
-
-if [ ${#source_files[@]} != 0 ]
+elif $AMALGAMATE_INTO_SOURCE && ! $AMALGAMATE_INTO_HEADER
 then
-	printf-message 'Amalgamating sources...\n'
-
-	# Avoiding prologue being added twice for single source (first time in header amalgamation stage)
-	if $GENERATE_SOURCE && $GENERATE_HEADER && [ -n "$SOURCE_PROLOGUE_FILE_PATH" ]
+	if [ -n "$SOURCE_PROLOGUE_FILE_PATH" ]
 	then
-		printf-message 'Adding prologue %s\n' "$SOURCE_PROLOGUE_FILE_PATH"
+		printf-message 'Adding prologue...\n'
 		cat "$SOURCE_PROLOGUE_FILE_PATH" >> "$output_source_path"
 	fi
 
-	if [ ${#header_files[@]} != 0 ] && $GENERATE_HEADER && $GENERATE_SOURCE
+	if $GROUP_UNINLINED_HEADERS_ON_TOP
 	then
-		file-printf "$output_source_path" '#include "%s"\n' "$(basename $header_file_name)"
+		printf-message 'Grouping headers on top...\n'
+		standard_includes=("$(gather-standard-includes "${header_files[@]}" "${source_files[@]}")")
+		file-printf "$output_source_path" '%s\n' "${standard_includes[@]}"
 	fi
 
-	merge-sources "$output_source_path" "${source_files[@]}"
+	printf-message 'Amalgamating files...\n'
+	amalgamate-headers "$output_source_path" "${header_files[@]}"
+	amalgamate-sources "$output_source_path" "${source_files[@]}"
+else
+	if [ -n "$HEADER_PROLOGUE_FILE_PATH" ]
+	then
+		printf-message 'Adding header prologue...\n'
+		cat "$HEADER_PROLOGUE_FILE_PATH" >> "$output_header_path"
+	fi
 
-	printf-message '\n'
+	if [ -n "$SOURCE_PROLOGUE_FILE_PATH" ]
+	then
+		printf-message 'Adding source prologue...\n'
+		cat "$SOURCE_PROLOGUE_FILE_PATH" >> "$output_source_path"
+	fi
+
+	printf-message 'Adding include guard...\n'
+	include_guard_header=$(make-include-guard-header "$INCLUDE_GUARD_ID")
+	file-printf "$output_header_path" '%s\n\n' "${include_guard_header}"
+
+	file-printf "$output_source_path" '#include "%s"\n' "$(basename $header_file_name)"
+
+	if $GROUP_UNINLINED_HEADERS_ON_TOP
+	then
+		printf-message 'Grouping headers on top...\n'
+		standard_includes_in_headers=("$(gather-standard-includes "${header_files[@]}")")
+		standard_includes_in_sources=("$(gather-standard-includes "${source_files[@]}")")
+		file-printf "$output_header_path" '%s\n' "${standard_includes_in_headers[@]}"
+		file-printf "$output_header_path" '%s\n' "${standard_includes_in_sources[@]}"
+	fi
+
+	printf-message 'Amalgamating files...\n'
+	amalgamate-headers "$output_header_path" "${header_files[@]}"
+	amalgamate-sources "$output_source_path" "${source_files[@]}"
+
+	if $USE_INCLUDE_GUARD
+	then
+		include_guard_footer=$(make-include-guard-footer "$INCLUDE_GUARD_ID")
+		file-printf "$output_header_path" '\n\n%s' "$include_guard_footer"
+	fi
 fi
+
+printf-message '\n'
 
 if $TRIM_TRAILING_WHITESPACE
 then
