@@ -5,15 +5,17 @@
 
 SCRIPT_NAME=$(basename $0)
 
-TEXT_STYLE_NORMAL='\e[0m'
+TS_N='\e[0m'
 TEXT_STYLE_ERROR='\e[0;31m'
+TS_B='\e[1m'
+TS_U='\e[4m'
 
 ERROR_STYLE_BEGIN=''
 ERROR_STYLE_END=''
 if [ -t 1 ] && [ $(tput colors) \> 0 ]
 then
 	ERROR_STYLE_BEGIN="$TEXT_STYLE_ERROR"
-	ERROR_STYLE_END="$TEXT_STYLE_NORMAL"
+	ERROR_STYLE_END="$TS_N"
 fi
 
 printf-error()
@@ -27,37 +29,38 @@ printf-error()
 # Constants
 
 OUTPUT_DIRECTORY_SUFFIX='amalgamated'
-DEFAULT_INPUT_HEADER_EXTENSIONS=(h hh hpp hxx h++ tpp txx tpl ii ixx ipp inl)
-DEFAULT_INPUT_SOURCE_EXTENSIONS=(c cc cpp cxx c++)
+DEFAULT_INPUT_HEADER_EXTENSIONS=(h,hh,hpp,hxx,h++,tpp,txx,tpl,ii,ixx,ipp,inl)
+DEFAULT_INPUT_SOURCE_EXTENSIONS=(c,cc,cpp,cxx,c++)
 DEFAULT_OUTPUT_HEADER_EXTENSION='h'
 DEFAULT_OUTPUT_SOURCE_EXTENSION='cpp'
 
 HELP_MESSAGE=\
-"\e[1mUSAGE\e[0m
-  amalgamate [options]                Amalgamate everything it can find in the current directory
-  amalgamate [options] -- <files...>  Amalgamate specified files and their included files
+"${TS_B}USAGE${TS_N}
+  ${TS_B}amalgamate${TS_N} [options]              – amalgamate everything it can find in the input directory
 
-\e[1mOPTIONS:\e[0m
-  -i <input-dir-path>   Input directory [defalt: current working directory].
-  -I <header-path>      Path to header files [default: input directory].
-  -e <ext,ens,ions...>  Input header extensions [default: '${DEFAULT_INPUT_HEADER_EXTENSIONS[@]}'].
-  -s <ext,ens,ions...>  Input source extensions [default: '${DEFAULT_INPUT_SOURCE_EXTENSIONS[@]}'].
-  -o <output-dir-path>  Output directory [default: current working directory].
-  -n <base-name>        Base name for output files [default: current working directory name].
-  -x <hpp,cpp>          Extensions for output header and source files [default: inferred from input files; if cannot, then '$DEFAULT_OUTPUT_HEADER_EXTENSION','$DEFAULT_OUTPUT_SOURCE_EXTENSION'].
-  -S                    Amalgamate into a single source file.
-  -M                    Amalgamate into a header and a source file.
-  -P <file>             Add this file on top of amalgamated header (but same as '-p' if generating single source).
-  -p <file>             Add this file on top of amalgamated source (but same as '-P' if generating single header).
-  -G <id> | -G ''       Use include guard in header instead of '#pragma once'. Use '<id>' for '#define' directive or generate it from header name if empty string was passed.
-  -g                    Group uninlined headers on top.
-  -b <count>            Reduce consecutive blank lines to no more than '<count>'.
-  -t                    Trim trailing whitespace.
-  -a                    Insert annotations.
-  -v                    Verbose mode.
-  -h                    Show this message.
+${TS_B}OPTIONS${TS_N}
+  ${TS_B}-i${TS_N} ${TS_U}path${TS_N}             Input directory [defalt: current working directory].
+  ${TS_B}-I${TS_N} ${TS_U}path${TS_N}             Include direcotry [default: input directory].
+  ${TS_B}-e${TS_N} ${TS_U}ext,ens,ions...${TS_N}  Input header extensions [default: ${TS_U}${DEFAULT_INPUT_HEADER_EXTENSIONS[@]}${TS_N}].
+  ${TS_B}-s${TS_N} ${TS_U}ext,ens,ions...${TS_N}  Input source extensions [default: ${TS_U}${DEFAULT_INPUT_SOURCE_EXTENSIONS[@]}${TS_N}].
+  ${TS_B}-o${TS_N} ${TS_U}path${TS_N}             Output directory [default: current working directory].
+  ${TS_B}-n${TS_N} ${TS_U}name${TS_N}             Base name for output files [default: current working directory name].
+  ${TS_B}-x${TS_N} ${TS_U}hpp,cpp${TS_N}          Extensions for output header and source files [default: inferred from input files or ${TS_U}$DEFAULT_OUTPUT_HEADER_EXTENSION,$DEFAULT_OUTPUT_SOURCE_EXTENSION${TS_N}].
+  ${TS_B}-S${TS_N}                  Amalgamate into a single source file.
+  ${TS_B}-M${TS_N}                  Amalgamate into a header-source pair.
+  ${TS_B}-P${TS_N} ${TS_U}file${TS_N}             Add this file on top of amalgamated header.
+  ${TS_B}-p${TS_N} ${TS_U}file${TS_N}             Add this file on top of amalgamated source.
+  ${TS_B}-G${TS_N} ${TS_U}id${TS_N}, ${TS_B}-G ''${TS_N}        Instead of '#pragma once' use include guard with macro ${TS_U}id${TS_N} or generate macro from header name.
+  ${TS_B}-L${TS_N} ${TS_U}file${TS_N}             Add this file after include guard, but before any includes inside amalgamated header.
+  ${TS_B}-g${TS_N}                  Group uninlined headers on top.
+  ${TS_B}-b${TS_N} ${TS_U}count${TS_N}            Reduce consecutive blank lines to no more than ${TS_U}count${TS_N}.
+  ${TS_B}-t${TS_N}                  Trim trailing whitespace.
+  ${TS_B}-a${TS_N}                  Insert annotations.
+  ${TS_B}-v${TS_N}                  Verbose mode.
+  ${TS_B}--${TS_N} ${TS_U}file ...${TS_N}         Specify files to amalgamate, rather than amalgamate everything in the input directory.
+  ${TS_B}-h${TS_N}                  Show this message.
 
-\e[1mMore information at \e[mhttps://github.com/shrpnsld/amalgamate\e[0m
+${TS_B}More information at${TS_N} ${TS_U}https://github.com/shrpnsld/amalgamate${TS_N}
 "
 
 HEADER_STRING_TEMPLATE='%s// ============================================================================\n%s// == %s ==\n%s// =='

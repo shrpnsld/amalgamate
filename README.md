@@ -1,6 +1,6 @@
 # amalgamate
 
-Combines C/C++ source files into one header and one source file.
+Combines C/C++ source files into a single header, a single source, or a header-source pair.
 
 
 
@@ -13,7 +13,6 @@ $ git clone https://github.com/shrpnsld/amalgamate.git
 ```bash
 $ # Use it
 $ amalgamate [options] # amalgamate all files in current directory and their dependencies
-$ amalgamate [options] -- [file ...] # specify files for amalgamation
 $ # files will be amalgamated with their dependencies
 ```
 
@@ -47,30 +46,33 @@ trace-out/
 
 
 ### Options
-
-* `-I <header-path>` – path where header files can be found
-* `-e <ext,ens,ions...>` – input header extensions
-* `-s <ext,ens,ions...>` – input source extensions
-* `-o <output-dir-path>` – output path for `<base-name>-amalgamated/` directory
-* `-H` – amalgamate all files to a single header file
-* `-S` – amalgamate all files to a single source file
-* `-n <base-name>` – base name for output files
-* `-x <hpp,cpp>` – extensions for output header and source files
-* `-g` – group unexpanded headers on top
-* `-E <count>` – do not allow more than `<count>` consecutive empty lines (default: 2)
-* `-G <id> | -G ''` – use include guard in header instead of `#pragma once`. Use `<id>` as header id or generate it from header name if empty string was passed
-* `-t` – trim trailing whitespace
-* `-a` – insert annotations
-* `-v` – verbose mode
-* `-h` – show help message
+* `-i <path>` – input directory (defalt: current working directory).
+* `-I <path>` – include directory (default: input directory).
+* `-e <ext,ens,ions...>` – input header extensions.
+* `-s <ext,ens,ions...>` – input source extensions.
+* `-o <path>` – output directory (default: current working directory).
+* `-n <name>` – base name for output files (default: current working directory name).
+* `-x <hpp,cpp>` – extensions for output header and source files.
+* `-S` – amalgamate into a single source file.
+* `-M` – amalgamate into a header-source pair.
+* `-P <file>` – add this file on top of amalgamated header.
+* `-p <file>` – add this file on top of amalgamated source.
+* `-G <id>` or `-G ''` – Instead of `#pragma once` use include guard with macro `id` or generate macro from header name.
+* `-g` – group uninlined headers on top.
+* `-b <count>` – reduce consecutive blank lines to no more than `<count>`.
+* `-t` – trim trailing whitespace.
+* `-a` – insert annotations.
+* `-v` – verbose mode.
+* `-- <file> ...` specify files to amalgamate, rather than amalgamate everything in the input directory.
+* `-h` – show help message.
 
 ### Tags
 
 Some lines in source code may need additional rules for processing, which you can mark with tags in the comments `[amalgamate:<tag>]`:
 
-* `leave` – leave line
-* `remove` – remove line
-* `uncomment` – uncomment line
+* `leave` – do not process line and insert it as is into amalgamated file.
+* `remove` – do not insert line into amalgamated file.
+* `uncomment` – uncomment line in amalgamated file.
 
 
 #### Example:
@@ -85,6 +87,14 @@ Some lines in source code may need additional rules for processing, which you ca
 
 
 # Notes
+
+Default extensions for input headers are .h, .hh, .hpp, .hxx, .h++, .tpp, .txx, .tpl, .ii, .ixx, .ipp, .inl. Default extensions for input sources are .c, .cc, .cpp, .cxx, .c++.
+
+`-P` and `-p` are considered the same if amalgamating into single file. Typical usage – license or copyright information.
+
+`-L` can be used to place commented defines that control amalgamated project behavior. In some cases this might be more convinient than changing parent project's settings.
+
+`-G ''` will generate macro name by uppercasing header name, changing non-letter characters with `_` and adding suffix `_INCLUDED`. For example, `some-header.hpp` with have include guard macro `SOME_HEADER_HPP_INCLUDED`
 
 While processing files, if script can't find header at path in `#include` directive, it searches header that is relative to the path passed to `-I` option. Default value for this option is current working directory's parent.
 
