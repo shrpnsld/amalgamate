@@ -82,6 +82,7 @@ USE_INCLUDE_GUARD=false
 INCLUDE_GUARD_ID=''
 INCLUDE_GUARD_HEADER='#pragma once'
 INCLUDE_GUARD_FOOTER=''
+INTERLUDE_FILE_PATH=''
 GROUP_UNINLINED_HEADERS_ON_TOP=false
 BLANK_LINE_COUNT_LIMIT=''
 TRIM_TRAILING_WHITESPACE=false
@@ -177,6 +178,11 @@ parse-option()
 
 		p)
 			SOURCE_PROLOGUE_FILE_PATH="$value"
+			return 1
+			;;
+
+		L)
+			INTERLUDE_FILE_PATH="$value"
 			return 1
 			;;
 
@@ -330,6 +336,17 @@ validate-options()
 	if $AMALGAMATE_INTO_SOURCE && ! $AMALGAMATE_INTO_HEADER && [ -z "$SOURCE_PROLOGUE_FILE_PATH" ] && [ -n "$HEADER_PROLOGUE_FILE_PATH" ]
 	then
 		SOURCE_PROLOGUE_FILE_PATH="$HEADER_PROLOGUE_FILE_PATH"
+	fi
+
+	if [ -n "$INTERLUDE_FILE_PATH" ]
+	then
+		if [ ! -r "$INTERLUDE_FILE_PATH" ]
+		then
+			printf-error 'bad interlude file "%s"' "$INTERLUDE_FILE_PATH"
+			return 1
+		fi
+
+		INTERLUDE_FILE_PATH=$(expand-path "$INTERLUDE_FILE_PATH")
 	fi
 
 	if [ -n "$BLANK_LINE_COUNT_LIMIT" ] && ! [[ $BLANK_LINE_COUNT_LIMIT =~ ^([0-9]|[1-9][0-9]+)$ ]]
@@ -1091,6 +1108,12 @@ trim-trailing-whitespace()
 		printf-message 'Adding include guard...\n'
 		file-printf "$output_header_path" '%s\n\n' "${INCLUDE_GUARD_HEADER}"
 
+		if [ -n "$INTERLUDE_FILE_PATH" ]
+		then
+			printf-message 'Adding interlude...\n'
+			cat "$INTERLUDE_FILE_PATH" >> "$output_header_path"
+		fi
+
 		if $GROUP_UNINLINED_HEADERS_ON_TOP
 		then
 			printf-message 'Grouping standard headers on top...\n'
@@ -1139,6 +1162,12 @@ trim-trailing-whitespace()
 
 		printf-message 'Adding include guard...\n'
 		file-printf "$output_header_path" '%s\n\n' "${INCLUDE_GUARD_HEADER}"
+
+		if [ -n "$INTERLUDE_FILE_PATH" ]
+		then
+			printf-message 'Adding interlude...\n'
+			cat "$INTERLUDE_FILE_PATH" >> "$output_header_path"
+		fi
 
 		file-printf "$output_source_path" '#include "%s"\n' "$(basename $header_file_name)"
 
