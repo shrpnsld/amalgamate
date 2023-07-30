@@ -76,8 +76,8 @@ OUTPUT_HEADER_EXTENSION=-1
 OUTPUT_SOURCE_EXTENSION=-1
 AMALGAMATE_INTO_HEADER=true
 AMALGAMATE_INTO_SOURCE=false
-HEADER_PROLOGUE_FILE_PATH=''
-SOURCE_PROLOGUE_FILE_PATH=''
+HEADER_PRELUDE_FILE_PATH=''
+SOURCE_PRELUDE_FILE_PATH=''
 USE_INCLUDE_GUARD=false
 INCLUDE_GUARD_ID=''
 INCLUDE_GUARD_HEADER='#pragma once'
@@ -125,39 +125,29 @@ parse-option()
 	local value=$2
 
 	case "$option" in
+		i)
+			INPUT_DIR_PATH="$value"
+			return 1
+			;;
+
 		I)
 			HEADER_SEARCH_PATH="$value"
 			return 1
 			;;
 
 		e)
-			HEADER_EXTENSIONS=($(split-string "$value" ','))
+			HEADER_EXTENSIONS="$value"
 			return 1
 			;;
 
 		s)
-			SOURCE_EXTENSIONS=($(split-string "$value" ','))
-			return 1
-			;;
-
-		i)
-			INPUT_DIR_PATH="$value"
+			SOURCE_EXTENSIONS="$value"
 			return 1
 			;;
 
 		o)
 			OUTPUT_DIR_PATH="$value"
 			return 1
-			;;
-
-		S)
-			AMALGAMATE_INTO_HEADER=false
-			AMALGAMATE_INTO_SOURCE=true
-			;;
-
-		M)
-			AMALGAMATE_INTO_HEADER=true
-			AMALGAMATE_INTO_SOURCE=true
 			;;
 
 		n)
@@ -171,13 +161,29 @@ parse-option()
 			return 1
 			;;
 
+		S)
+			AMALGAMATE_INTO_HEADER=false
+			AMALGAMATE_INTO_SOURCE=true
+			;;
+
+		M)
+			AMALGAMATE_INTO_HEADER=true
+			AMALGAMATE_INTO_SOURCE=true
+			;;
+
 		P)
-			HEADER_PROLOGUE_FILE_PATH="$value"
+			HEADER_PRELUDE_FILE_PATH="$value"
 			return 1
 			;;
 
 		p)
-			SOURCE_PROLOGUE_FILE_PATH="$value"
+			SOURCE_PRELUDE_FILE_PATH="$value"
+			return 1
+			;;
+
+		G)
+			USE_INCLUDE_GUARD=true
+			INCLUDE_GUARD_ID="$value"
 			return 1
 			;;
 
@@ -193,12 +199,6 @@ parse-option()
 
 		b)
 			BLANK_LINE_COUNT_LIMIT="$value"
-			return 1
-			;;
-
-		G)
-			USE_INCLUDE_GUARD=true
-			INCLUDE_GUARD_ID="$value"
 			return 1
 			;;
 
@@ -256,6 +256,9 @@ validate-options()
 		HEADER_SEARCH_PATH=$(expand-dir-path "$INPUT_DIR_PATH")
 	fi
 
+	HEADER_EXTENSIONS=($(split-string "$HEADER_EXTENSIONS" ','))
+	SOURCE_EXTENSIONS=($(split-string "$SOURCE_EXTENSIONS" ','))
+
 	if [ -n "$OUTPUT_DIR_PATH" ]
 	then
 		if [ ! -d "$OUTPUT_DIR_PATH" ]
@@ -304,38 +307,38 @@ validate-options()
 		return 1
 	fi
 
-	if [ -n "$HEADER_PROLOGUE_FILE_PATH" ]
+	if [ -n "$HEADER_PRELUDE_FILE_PATH" ]
 	then
-		if [ ! -r "$HEADER_PROLOGUE_FILE_PATH" ]
+		if [ ! -r "$HEADER_PRELUDE_FILE_PATH" ]
 		then
-			printf-error 'bad header prologue file "%s"' "$HEADER_PROLOGUE_FILE_PATH"
+			printf-error 'bad header prelude file "%s"' "$HEADER_PRELUDE_FILE_PATH"
 			return 1
 		fi
 
-		HEADER_PROLOGUE_FILE_PATH=$(expand-path "$HEADER_PROLOGUE_FILE_PATH")
+		HEADER_PRELUDE_FILE_PATH=$(expand-path "$HEADER_PRELUDE_FILE_PATH")
 	fi
 
-	if [ -n "$SOURCE_PROLOGUE_FILE_PATH" ]
+	if [ -n "$SOURCE_PRELUDE_FILE_PATH" ]
 	then
-		if [ ! -r "$SOURCE_PROLOGUE_FILE_PATH" ]
+		if [ ! -r "$SOURCE_PRELUDE_FILE_PATH" ]
 		then
-			printf-error 'bad source prologue file "%s"' "$SOURCE_PROLOGUE_FILE_PATH"
+			printf-error 'bad source prelude file "%s"' "$SOURCE_PRELUDE_FILE_PATH"
 			return 1
 		fi
 
-		SOURCE_PROLOGUE_FILE_PATH=$(expand-path "$SOURCE_PROLOGUE_FILE_PATH")
+		SOURCE_PRELUDE_FILE_PATH=$(expand-path "$SOURCE_PRELUDE_FILE_PATH")
 	fi
 
 	# '-p' is same as '-P' when generating single header
-	if $AMALGAMATE_INTO_HEADER && ! $AMALGAMATE_INTO_SOURCE && [ -z "$HEADER_PROLOGUE_FILE_PATH" ] && [ -n "$SOURCE_PROLOGUE_FILE_PATH" ]
+	if $AMALGAMATE_INTO_HEADER && ! $AMALGAMATE_INTO_SOURCE && [ -z "$HEADER_PRELUDE_FILE_PATH" ] && [ -n "$SOURCE_PRELUDE_FILE_PATH" ]
 	then
-		HEADER_PROLOGUE_FILE_PATH="$SOURCE_PROLOGUE_FILE_PATH"
+		HEADER_PRELUDE_FILE_PATH="$SOURCE_PRELUDE_FILE_PATH"
 	fi
 
 	# '-P' is same as '-p' when generating single source
-	if $AMALGAMATE_INTO_SOURCE && ! $AMALGAMATE_INTO_HEADER && [ -z "$SOURCE_PROLOGUE_FILE_PATH" ] && [ -n "$HEADER_PROLOGUE_FILE_PATH" ]
+	if $AMALGAMATE_INTO_SOURCE && ! $AMALGAMATE_INTO_HEADER && [ -z "$SOURCE_PRELUDE_FILE_PATH" ] && [ -n "$HEADER_PRELUDE_FILE_PATH" ]
 	then
-		SOURCE_PROLOGUE_FILE_PATH="$HEADER_PROLOGUE_FILE_PATH"
+		SOURCE_PRELUDE_FILE_PATH="$HEADER_PRELUDE_FILE_PATH"
 	fi
 
 	if [ -n "$INTERLUDE_FILE_PATH" ]
@@ -1048,12 +1051,12 @@ trim-trailing-whitespace()
 
 	if $AMALGAMATE_INTO_HEADER
 	then
-		printf-message 'Header prologue file: %s\n' $(value-or "$HEADER_PROLOGUE_FILE_PATH" 'no')
+		printf-message 'Header prelude file: %s\n' $(value-or "$HEADER_PRELUDE_FILE_PATH" 'no')
 	fi
 
 	if $AMALGAMATE_INTO_SOURCE
 	then
-		printf-message 'Source prologue file: %s\n' $(value-or "$SOURCE_PROLOGUE_FILE_PATH" 'no')
+		printf-message 'Source prelude file: %s\n' $(value-or "$SOURCE_PRELUDE_FILE_PATH" 'no')
 	fi
 
 	if $AMALGAMATE_INTO_HEADER
@@ -1099,10 +1102,10 @@ trim-trailing-whitespace()
 { # Amalgamating
 	if $AMALGAMATE_INTO_HEADER && ! $AMALGAMATE_INTO_SOURCE
 	then
-		if [ -n "$HEADER_PROLOGUE_FILE_PATH" ]
+		if [ -n "$HEADER_PRELUDE_FILE_PATH" ]
 		then
-			printf-message 'Adding prologue...\n'
-			cat "$HEADER_PROLOGUE_FILE_PATH" >> "$output_header_path"
+			printf-message 'Adding prelude...\n'
+			cat "$HEADER_PRELUDE_FILE_PATH" >> "$output_header_path"
 		fi
 
 		printf-message 'Adding include guard...\n'
@@ -1131,10 +1134,10 @@ trim-trailing-whitespace()
 		fi
 	elif $AMALGAMATE_INTO_SOURCE && ! $AMALGAMATE_INTO_HEADER
 	then
-		if [ -n "$SOURCE_PROLOGUE_FILE_PATH" ]
+		if [ -n "$SOURCE_PRELUDE_FILE_PATH" ]
 		then
-			printf-message 'Adding prologue...\n'
-			cat "$SOURCE_PROLOGUE_FILE_PATH" >> "$output_source_path"
+			printf-message 'Adding prelude...\n'
+			cat "$SOURCE_PRELUDE_FILE_PATH" >> "$output_source_path"
 		fi
 
 		if $GROUP_UNINLINED_HEADERS_ON_TOP
@@ -1148,16 +1151,16 @@ trim-trailing-whitespace()
 		amalgamate-headers "$output_source_path" "${header_files[@]}"
 		amalgamate-sources "$output_source_path" "${source_files[@]}"
 	else
-		if [ -n "$HEADER_PROLOGUE_FILE_PATH" ]
+		if [ -n "$HEADER_PRELUDE_FILE_PATH" ]
 		then
-			printf-message 'Adding header prologue...\n'
-			cat "$HEADER_PROLOGUE_FILE_PATH" >> "$output_header_path"
+			printf-message 'Adding header prelude...\n'
+			cat "$HEADER_PRELUDE_FILE_PATH" >> "$output_header_path"
 		fi
 
-		if [ -n "$SOURCE_PROLOGUE_FILE_PATH" ]
+		if [ -n "$SOURCE_PRELUDE_FILE_PATH" ]
 		then
-			printf-message 'Adding source prologue...\n'
-			cat "$SOURCE_PROLOGUE_FILE_PATH" >> "$output_source_path"
+			printf-message 'Adding source prelude...\n'
+			cat "$SOURCE_PRELUDE_FILE_PATH" >> "$output_source_path"
 		fi
 
 		printf-message 'Adding include guard...\n'
