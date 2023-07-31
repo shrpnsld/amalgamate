@@ -1,6 +1,11 @@
 # amalgamate
 
-Combines C/C++ source files into a single header, a single source, or a header-source pair.
+Combines multiple C/C++ header and source files into a single header, a single source, or a header-source pair.
+
+### Features
+
+* Offers a lot of control over the amalgamation process, but does not require you to use all of it.
+* Written with Bash 3.2, so it works even on macOS with its stock Bash installation.
 
 
 
@@ -13,36 +18,8 @@ $ git clone https://github.com/shrpnsld/amalgamate.git
 ```bash
 $ # Use it
 $ amalgamate [options] # amalgamate all files in current directory and their dependencies
-$ # files will be amalgamated with their dependencies
 ```
 
-Project tree [before](https://github.com/shrpnsld/trace-out/tree/master) `amalgamate`:
-
-```bash
-trace-out/
-├── trace-out.hpp
-└── detail/
-    ├── constants.hpp
-    ├── function_printer.cpp
-    ├── ... # 29 more file
-    ├── posix/
-    │   ├── platform_specific.cpp
-    │   ├── stdlib_specific.cpp
-    │   └── ... # 5 more file
-    └── windows/
-        ├── platform_specific.cpp
-        ├── stdlib_specific.cpp
-        └── ... # 5 more file
-```
-
-
-Project tree [after](https://github.com/shrpnsld/trace-out/tree/dist) `amalgamate`:
-
-```bash
-trace-out/
-├── trace-out.hpp
-└── trace-out.cpp
-```
 
 
 ### Options
@@ -59,6 +36,7 @@ trace-out/
 * `-p <file>` – add this file on top of amalgamated source.
 * `-G <id>` or `-G ''` – Instead of `#pragma once` use include guard with macro `id` or generate macro from header name.
 * `-g` – group uninlined headers on top.
+* `-f <path>` put this file on top of amalgamation queue.
 * `-b <count>` – reduce consecutive blank lines to no more than `<count>`.
 * `-t` – trim trailing whitespace.
 * `-a` – insert annotations.
@@ -68,7 +46,7 @@ trace-out/
 
 ### Tags
 
-Some lines in source code may need additional rules for processing, which you can mark with tags in the comments `[amalgamate:<tag>]`:
+Some lines in the source code may need additional rules for processing, which you can mark with tags in the comments `[amalgamate:<tag>]`:
 
 * `leave` – do not process line and insert it as is into amalgamated file.
 * `remove` – do not insert line into amalgamated file.
@@ -88,18 +66,18 @@ Some lines in source code may need additional rules for processing, which you ca
 
 # Notes
 
-Default extensions for input headers are .h, .hh, .hpp, .hxx, .h++, .tpp, .txx, .tpl, .ii, .ixx, .ipp, .inl. Default extensions for input sources are .c, .cc, .cpp, .cxx, .c++.
+Default extensions for input headers are *h*, *hh*, *hpp*, *hxx*, *h++*, *tpp*, *txx*, *tpl*, *ii*, *ixx*, *ipp*, *inl*. Default extensions for input sources are *c*, *cc*, *cpp*, *cxx*, *c++*.
 
-`-P` and `-p` are considered the same if amalgamating into single file. Typical usage – license or copyright information.
+`-P` and `-p` are considered the same if amalgamating into a single file. The typical usage for this option is to place license or copyright information.
 
-`-L` can be used to place commented defines that control amalgamated project behavior. In some cases this might be more convinient than changing parent project's settings.
+`-L` can be used to place commented defines that control the amalgamated project's behavior. In some cases, this might be more convenient than changing the parent project's settings.
 
-`-G ''` will generate macro name by uppercasing header name, changing non-letter characters with `_` and adding suffix `_INCLUDED`. For example, `some-header.hpp` with have include guard macro `SOME_HEADER_HPP_INCLUDED`
+`-G ''` will generate the macro name by uppercasing the header name, changing non-letter characters with `_`, and adding the suffix `_INCLUDED`. For example, *some-header.hpp* will have the include guard macro `SOME_HEADER_HPP_INCLUDED`.
 
-While processing files, if script can't find header at path in `#include` directive, it searches header that is relative to the path passed to `-I` option. Default value for this option is current working directory's parent.
+`-f` can be useful when you want the content of a certain file to appear before the content of any other file (but after the prelude, include guard, interlude, and include directives). The typical usage is to put the module interface as the first code the user will see in the amalgamated file.
 
-By default script uses parent directory name as base name for output header and source files. Output files are stored in `<base-name>-amalgamated/` directory at output path.
+When resolving the path inside the `#include` directive, it is first checked as relative to the current file being processed. If no file is found there, then that path is checked inside the include directory.
 
-Default output path is current working directory's parent.
+By default, amalgamate uses the current working directory's name as the base name for the output header and source files. The output files are stored in the *\<base-name\>-amalgamated/* directory at the output path.
 
-Extensions for output files are inferred from header and source files – if all extensions for headers/sources are the same then their extensions are used, otherwise `.h` and `.cpp` are used. To set extensions explicitly use `-x` option.
+Extensions for the output files are inferred from the header and the source files – if all extensions for headers/sources are the same, then their extensions are used; otherwise, *h* and *cpp* are used. To set extensions explicitly, use the `-x` option.
