@@ -773,37 +773,17 @@ gather-standard-include-paths()
 {
 	local paths=("$@")
 
-	local already_processed_paths=()
-	local include_paths=()
-	local line
-	for path in "${paths[@]}"
-	do
-		local absolute_path=$(expand-path "$path")
-		while read -r line || [ -n "$line" ]
-		do
-			local tag=$(get-tag "$line")
-			if [ "$tag" == 'leave' ]
-			then
-				continue
-			fi
+	# every '#include <...>' line
+	grep '^[\ \t]*\#[\ \t]*include[\ \t]*<.*>' -I --no-filename "${paths[@]}" |
 
-			if ! is-standard-include-line "$line"
-			then
-				continue
-			fi
+	# that is not tagged as '[amalgamate: leave]'
+	grep --invert-match '^[\ \t]*\#[\ \t]*include[\ \t]*<.*>[\ \t]*\/\/[\ \t]*\[amalgamate\:[\ \t]*leave[\ \t]*\].*$' |
 
-			local path=$(path-from-standard-include-line "$line")
-			if array-contains-item "$path" "${already_processed_paths[@]}"
-			then
-				continue
-			fi
+	# retreiving only path
+	sed -e 's/^.*<//' -e 's/>.*$//' |
 
-			already_processed_paths+=("$path")
-			include_paths+=("$path")
-		done < "$absolute_path"
-	done
-
-	printf '%s\n' "${include_paths[@]}" | sort
+	# sorting and removing duplicates
+	sort | uniq
 }
 
 declare -a GLOBAL_already_included_files
