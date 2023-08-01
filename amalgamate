@@ -998,7 +998,12 @@ trim-trailing-whitespace()
 { # Determining output artifacts
 	if [ -z "$header_files" ] && [ -z "$source_files" ]
 	then
-		header_files=("$INPUT_DIR_PATH/$TOP_OF_AMALGAMATION_QUEUE")
+		header_files=()
+		if [ -n "$TOP_OF_AMALGAMATION_QUEUE" ]
+		then
+			header_files+=("$INPUT_DIR_PATH/$TOP_OF_AMALGAMATION_QUEUE")
+		fi
+
 		header_files+=($(find-by-extensions "$INPUT_DIR_PATH" "${HEADER_EXTENSIONS[@]}"))
 		source_files=($(find-by-extensions "$INPUT_DIR_PATH" "${SOURCE_EXTENSIONS[@]}"))
 	fi
