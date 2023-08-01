@@ -29,8 +29,8 @@ printf-error()
 # Constants
 
 OUTPUT_DIRECTORY_SUFFIX='amalgamated'
-DEFAULT_INPUT_HEADER_EXTENSIONS=(h,hh,hpp,hxx,h++,tpp,txx,tpl,ii,ixx,ipp,inl)
-DEFAULT_INPUT_SOURCE_EXTENSIONS=(c,cc,cpp,cxx,c++)
+DEFAULT_INPUT_HEADER_EXTENSIONS=(h hh hpp hxx h++ tpp txx tpl ii ixx ipp inl)
+DEFAULT_INPUT_SOURCE_EXTENSIONS=(c cc cpp cxx c++)
 DEFAULT_OUTPUT_HEADER_EXTENSION='h'
 DEFAULT_OUTPUT_SOURCE_EXTENSION='cpp'
 
@@ -41,8 +41,8 @@ HELP_MESSAGE=\
 ${TS_B}OPTIONS${TS_N}
   ${TS_B}-i${TS_N} ${TS_U}path${TS_N}             Input directory [defalt: current working directory].
   ${TS_B}-I${TS_N} ${TS_U}path${TS_N}             Include direcotry [default: input directory].
-  ${TS_B}-e${TS_N} ${TS_U}ext,ens,ions...${TS_N}  Input header extensions [default: ${TS_U}${DEFAULT_INPUT_HEADER_EXTENSIONS[@]}${TS_N}].
-  ${TS_B}-s${TS_N} ${TS_U}ext,ens,ions...${TS_N}  Input source extensions [default: ${TS_U}${DEFAULT_INPUT_SOURCE_EXTENSIONS[@]}${TS_N}].
+  ${TS_B}-e${TS_N} ${TS_U}ext,ens,ions...${TS_N}  Input header extensions [default: ${TS_U}h,hh,hpp,hxx,h++,tpp,txx,tpl,ii,ixx,ipp,inl${TS_N}].
+  ${TS_B}-s${TS_N} ${TS_U}ext,ens,ions...${TS_N}  Input source extensions [default: ${TS_U}c,cc,cpp,cxx,c++${TS_N}].
   ${TS_B}-o${TS_N} ${TS_U}path${TS_N}             Output directory [default: current working directory].
   ${TS_B}-n${TS_N} ${TS_U}name${TS_N}             Base name for output files [default: current working directory name].
   ${TS_B}-x${TS_N} ${TS_U}hpp,cpp${TS_N}          Extensions for output header and source files [default: inferred from input files or ${TS_U}$DEFAULT_OUTPUT_HEADER_EXTENSION,$DEFAULT_OUTPUT_SOURCE_EXTENSION${TS_N}].
@@ -141,12 +141,12 @@ parse-option()
 			;;
 
 		e)
-			HEADER_EXTENSIONS="$value"
+			HEADER_EXTENSIONS=($(split-string "$value" ','))
 			return 1
 			;;
 
 		s)
-			SOURCE_EXTENSIONS="$value"
+			SOURCE_EXTENSIONS=($(split-string "$value" ','))
 			return 1
 			;;
 
@@ -265,9 +265,6 @@ validate-options()
 	else
 		HEADER_SEARCH_PATH=$(expand-dir-path "$INPUT_DIR_PATH")
 	fi
-
-	HEADER_EXTENSIONS=($(split-string "$HEADER_EXTENSIONS" ','))
-	SOURCE_EXTENSIONS=($(split-string "$SOURCE_EXTENSIONS" ','))
 
 	if [ -n "$OUTPUT_DIR_PATH" ]
 	then
