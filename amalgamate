@@ -53,7 +53,7 @@ ${TS_B}OPTIONS${TS_N}
   ${TS_B}-G${TS_N} ${TS_U}id${TS_N}, ${TS_B}-G ''${TS_N}        Instead of '#pragma once' use include guard with macro ${TS_U}id${TS_N} or generate macro from header name.
   ${TS_B}-L${TS_N} ${TS_U}file${TS_N}             Add this file after include guard, but before any includes inside amalgamated header.
   ${TS_B}-g${TS_N}                  Group uninlined headers on top.
-  ${TS_B}-f${TS_N} ${TS_U}file${TS_N} ${TS_B}--${TS_N}          Put this file on top of amalgamation queue.
+  ${TS_B}-1${TS_N} ${TS_U}file${TS_N} ${TS_B}--${TS_N}          Put this file on top of amalgamation queue.
   ${TS_B}-b${TS_N} ${TS_U}count${TS_N}            Reduce consecutive blank lines to no more than ${TS_U}count${TS_N}.
   ${TS_B}-t${TS_N}                  Trim trailing whitespace.
   ${TS_B}-a${TS_N}                  Insert annotations.
@@ -202,7 +202,7 @@ parse-option()
 			PROCESS_STANDARD_HEADER_FUNCTION=:
 			;;
 
-		f)
+		1)
 			TOP_OF_AMALGAMATION_QUEUE="$value"
 			return 1
 			;;
@@ -357,6 +357,12 @@ validate-options()
 		fi
 
 		INTERLUDE_FILE_PATH=$(expand-path "$INTERLUDE_FILE_PATH")
+	fi
+
+	if [ ! -r "$INPUT_DIR_PATH/$TOP_OF_AMALGAMATION_QUEUE" ]
+	then
+		printf-error 'failed to open file "%s" (passed as an argument for "-1" option)\nNote: path must be relative to the input directory' "$TOP_OF_AMALGAMATION_QUEUE"
+		return 1
 	fi
 
 	if [ -n "$BLANK_LINE_COUNT_LIMIT" ] && ! [[ $BLANK_LINE_COUNT_LIMIT =~ ^([0-9]|[1-9][0-9]+)$ ]]
