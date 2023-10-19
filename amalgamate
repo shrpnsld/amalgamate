@@ -22,7 +22,7 @@ printf-error()
 {
 	printf "$ERROR_STYLE_BEGIN$SCRIPT_NAME error:$ERROR_STYLE_END " >&2
 	printf "$@" >&2
-	printf '\n\n' >&2
+	printf '\n' >&2
 }
 
 #
@@ -36,7 +36,7 @@ DEFAULT_OUTPUT_SOURCE_EXTENSION='cpp'
 
 HELP_MESSAGE=\
 "${TS_B}USAGE${TS_N}
-  ${TS_B}amalgamate${TS_N} [options]              – amalgamate everything it can find in the input directory
+  ${TS_B}amalgamate${TS_N} [options] – amalgamate everything it can find in the input directory
 
 ${TS_B}OPTIONS${TS_N}
   ${TS_B}-i${TS_N} ${TS_U}path${TS_N}             Input directory [defalt: current working directory].
@@ -104,7 +104,7 @@ PROCESS_STANDARD_HEADER_FUNCTION=file-printf
 
 PARAMETER_TYPE_OPTION=1
 PARAMETER_TYPE_DELIMITER=2
-PARAMTER_TYPE_BAD=255
+PARAMETER_TYPE_BAD=255
 parameter-type()
 {
 	local string=$1
@@ -120,7 +120,7 @@ parameter-type()
 		return $PARAMETER_TYPE_OPTION
 	fi
 
-	return $PARAMTER_TYPE_BAD
+	return $PARAMETER_TYPE_BAD
 }
 
 PARSE_OPTION_UNKNOWN_OPTION=255
@@ -412,7 +412,7 @@ parse-arguments()
 				break
 				;;
 
-			$PARAMTER_TYPE_BAD)
+			$PARAMETER_TYPE_BAD)
 				printf-error 'bad parameter format "%s"' "$parameter"
 				return 1
 				;;
