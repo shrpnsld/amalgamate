@@ -36,12 +36,12 @@ $ amalgamate [options] # amalgamate all files in current directory and their dep
 * `-p <file>` – add this file on top of amalgamated source.
 * `-G <id>` or `-G ''` – Instead of `#pragma once` use include guard with macro `id` or generate macro from header name.
 * `-g` – group uninlined headers on top.
-* `-1 <path>` put this file on top of amalgamation queue (path should be relative to the input directory).
+* `-1 <path>` – put this file on top of amalgamation queue (path should be relative to the input directory).
 * `-b <count>` – reduce consecutive blank lines to no more than `<count>`.
 * `-t` – trim trailing whitespace.
 * `-a` – insert annotations.
 * `-v` – verbose mode.
-* `-- <file> ...` specify files to amalgamate, rather than amalgamate everything in the input directory.
+* `-- <file> ...` – specify files to amalgamate, rather than amalgamate everything in the input directory.
 * `-h` – show help message.
 
 ### Tags
@@ -74,7 +74,7 @@ Default extensions for input headers are *h*, *hh*, *hpp*, *hxx*, *h++*, *tpp*, 
 
 `-G ''` will generate the macro name by uppercasing the header name, changing non-letter characters with `_`, and adding the suffix `_INCLUDED`. For example, *some-header.hpp* will have the include guard macro `SOME_HEADER_HPP_INCLUDED`.
 
-`-f` can be useful when you want the content of a certain file to appear before the content of any other file (but after the prelude, include guard, interlude, and include directives). The typical usage is to put the module interface as the first code the user will see in the amalgamated file.
+`-1` can be useful when you want the content of a certain file to appear before the content of any other file (but after the prelude, include guard, interlude, and include directives). The typical usage is to put the module interface as the first code the user will see in the amalgamated file.
 
 When resolving the path inside the `#include` directive, it is first checked as relative to the current file being processed. If no file is found there, then that path is checked inside the include directory.
 

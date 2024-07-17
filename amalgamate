@@ -3,6 +3,8 @@
 #
 # Essentials
 
+# [bash-it:start]
+
 SCRIPT_NAME=$(basename $0)
 
 TS_N='\e[0m'
@@ -12,7 +14,7 @@ TS_U='\e[4m'
 
 ERROR_STYLE_BEGIN=''
 ERROR_STYLE_END=''
-if [ -t 1 ] && [ $(tput colors) \> 0 ]
+if [[ -t 1 ]] && [[ $(tput colors) > 0 ]]
 then
 	ERROR_STYLE_BEGIN="$TEXT_STYLE_ERROR"
 	ERROR_STYLE_END="$TS_N"
@@ -37,9 +39,10 @@ DEFAULT_OUTPUT_SOURCE_EXTENSION='cpp'
 HELP_MESSAGE=\
 "${TS_B}USAGE${TS_N}
   ${TS_B}amalgamate${TS_N} [options] – amalgamate everything it can find in the input directory
+  ${TS_B}amalgamate${TS_N} [options] -- <file>... – amalgamate specified files
 
 ${TS_B}OPTIONS${TS_N}
-  ${TS_B}-i${TS_N} ${TS_U}path${TS_N}             Input directory [defalt: current working directory].
+  ${TS_B}-i${TS_N} ${TS_U}path${TS_N}             Input directory [default: current working directory].
   ${TS_B}-I${TS_N} ${TS_U}path${TS_N}             Include direcotry [default: input directory].
   ${TS_B}-e${TS_N} ${TS_U}ext,ens,ions...${TS_N}  Input header extensions [default: ${TS_U}h,hh,hpp,hxx,h++,tpp,txx,tpl,ii,ixx,ipp,inl${TS_N}].
   ${TS_B}-s${TS_N} ${TS_U}ext,ens,ions...${TS_N}  Input source extensions [default: ${TS_U}c,cc,cpp,cxx,c++${TS_N}].
@@ -53,7 +56,7 @@ ${TS_B}OPTIONS${TS_N}
   ${TS_B}-G${TS_N} ${TS_U}id${TS_N}, ${TS_B}-G ''${TS_N}        Instead of '#pragma once' use include guard with macro ${TS_U}id${TS_N} or generate macro from header name.
   ${TS_B}-L${TS_N} ${TS_U}file${TS_N}             Add this file after include guard, but before any includes inside amalgamated header.
   ${TS_B}-g${TS_N}                  Group uninlined headers on top.
-  ${TS_B}-1${TS_N} ${TS_U}file${TS_N} ${TS_B}--${TS_N}          Put this file on top of amalgamation queue.
+  ${TS_B}-1${TS_N} ${TS_U}file${TS_N}             Put this file on top of amalgamation queue.
   ${TS_B}-b${TS_N} ${TS_U}count${TS_N}            Reduce consecutive blank lines to no more than ${TS_U}count${TS_N}.
   ${TS_B}-t${TS_N}                  Trim trailing whitespace.
   ${TS_B}-a${TS_N}                  Insert annotations.
@@ -109,12 +112,12 @@ parameter-type()
 {
 	local string=$1
 
-	if [ "${string:0:3}" == '--' ] && [ "${#string}" == 2 ]
+	if [[ ${string:0:3} == '--' ]] && [[ ${#string} == 2 ]]
 	then
 		return $PARAMETER_TYPE_DELIMITER
 	fi
 
-	if [ "${string:0:1}" == '-' ]
+	if [[ ${string:0:1} == '-' ]]
 	then
 		printf '%s\n' "${string#-}"
 		return $PARAMETER_TYPE_OPTION
@@ -240,9 +243,9 @@ parse-option()
 
 validate-options()
 {
-	if [ -n "$INPUT_DIR_PATH" ]
+	if [[ -n $INPUT_DIR_PATH ]]
 	then
-		if [ ! -d "$INPUT_DIR_PATH" ]
+		if [[ ! -d $INPUT_DIR_PATH ]]
 		then
 			printf-error 'bad input directory path "%s"' "$INPUT_DIR_PATH"
 			return 1
@@ -253,9 +256,9 @@ validate-options()
 		INPUT_DIR_PATH="$PWD"
 	fi
 
-	if [ -n "$HEADER_SEARCH_PATH" ]
+	if [[ -n $HEADER_SEARCH_PATH ]]
 	then
-		if [ ! -d "$HEADER_SEARCH_PATH" ]
+		if [[ ! -d $HEADER_SEARCH_PATH ]]
 		then
 			printf-error 'bad header search path "%s"' "$HEADER_SEARCH_PATH"
 			return 1
@@ -266,9 +269,9 @@ validate-options()
 		HEADER_SEARCH_PATH=$(expand-dir-path "$INPUT_DIR_PATH")
 	fi
 
-	if [ -n "$OUTPUT_DIR_PATH" ]
+	if [[ -n $OUTPUT_DIR_PATH ]]
 	then
-		if [ ! -d "$OUTPUT_DIR_PATH" ]
+		if [[ ! -d $OUTPUT_DIR_PATH ]]
 		then
 			printf-error 'bad output directory path "%s"' "$OUTPUT_DIR_PATH"
 			return 1
@@ -279,44 +282,44 @@ validate-options()
 		OUTPUT_DIR_PATH="$PWD"
 	fi
 
-	if [ -z "$BASE_NAME" ]
+	if [[ -z $BASE_NAME ]]
 	then
 		BASE_NAME=$(basename "$PWD")
 	fi
 
-	if [ "${#HEADER_EXTENSIONS[@]}" == 0 ]
+	if [[ ${#HEADER_EXTENSIONS[@]} == 0 ]]
 	then
 		printf-error 'input header extensions is empty'
 		return 1
 	fi
 
-	if [ "${#SOURCE_EXTENSIONS[@]}" == 0 ]
+	if [[ ${#SOURCE_EXTENSIONS[@]} == 0 ]]
 	then
 		printf-error 'input source extensions is empty'
 		return 1
 	fi
 
-	if [ -z "$OUTPUT_HEADER_EXTENSION" ]
+	if [[ -z $OUTPUT_HEADER_EXTENSION ]]
 	then
 		printf-error 'output header extension is empty'
 		return 1
 	fi
 
-	if [ -z "$OUTPUT_SOURCE_EXTENSION" ]
+	if [[ -z $OUTPUT_SOURCE_EXTENSION ]]
 	then
 		printf-error 'output source extension is empty'
 		return 1
 	fi
 
-	if [ "$OUTPUT_HEADER_EXTENSION" != -1 ] && [ "$OUTPUT_SOURCE_EXTENSION" != -1 ] && [ "$OUTPUT_HEADER_EXTENSION" == "$OUTPUT_SOURCE_EXTENSION" ]
+	if [[ $OUTPUT_HEADER_EXTENSION != -1 ]] && [[ $OUTPUT_SOURCE_EXTENSION != -1 ]] && [[ $OUTPUT_HEADER_EXTENSION == $OUTPUT_SOURCE_EXTENSION ]]
 	then
 		printf-error 'extensions for output files cannot be the same'
 		return 1
 	fi
 
-	if [ -n "$HEADER_PRELUDE_FILE_PATH" ]
+	if [[ -n $HEADER_PRELUDE_FILE_PATH ]]
 	then
-		if [ ! -r "$HEADER_PRELUDE_FILE_PATH" ]
+		if [[ ! -r $HEADER_PRELUDE_FILE_PATH ]]
 		then
 			printf-error 'bad header prelude file "%s"' "$HEADER_PRELUDE_FILE_PATH"
 			return 1
@@ -325,9 +328,9 @@ validate-options()
 		HEADER_PRELUDE_FILE_PATH=$(expand-path "$HEADER_PRELUDE_FILE_PATH")
 	fi
 
-	if [ -n "$SOURCE_PRELUDE_FILE_PATH" ]
+	if [[ -n $SOURCE_PRELUDE_FILE_PATH ]]
 	then
-		if [ ! -r "$SOURCE_PRELUDE_FILE_PATH" ]
+		if [[ ! -r $SOURCE_PRELUDE_FILE_PATH ]]
 		then
 			printf-error 'bad source prelude file "%s"' "$SOURCE_PRELUDE_FILE_PATH"
 			return 1
@@ -348,9 +351,9 @@ validate-options()
 		SOURCE_PRELUDE_FILE_PATH="$HEADER_PRELUDE_FILE_PATH"
 	fi
 
-	if [ -n "$INTERLUDE_FILE_PATH" ]
+	if [[ -n $INTERLUDE_FILE_PATH ]]
 	then
-		if [ ! -r "$INTERLUDE_FILE_PATH" ]
+		if [[ ! -r $INTERLUDE_FILE_PATH ]]
 		then
 			printf-error 'bad interlude file "%s"' "$INTERLUDE_FILE_PATH"
 			return 1
@@ -359,13 +362,13 @@ validate-options()
 		INTERLUDE_FILE_PATH=$(expand-path "$INTERLUDE_FILE_PATH")
 	fi
 
-	if [ ! -r "$INPUT_DIR_PATH/$TOP_OF_AMALGAMATION_QUEUE" ]
+	if [[ ! -r $INPUT_DIR_PATH/$TOP_OF_AMALGAMATION_QUEUE ]]
 	then
 		printf-error 'failed to open file "%s" (passed as an argument for "-1" option)\nNote: path must be relative to the input directory' "$TOP_OF_AMALGAMATION_QUEUE"
 		return 1
 	fi
 
-	if [ -n "$BLANK_LINE_COUNT_LIMIT" ] && ! [[ $BLANK_LINE_COUNT_LIMIT =~ ^([0-9]|[1-9][0-9]+)$ ]]
+	if [[ -n $BLANK_LINE_COUNT_LIMIT ]] && ! [[ $BLANK_LINE_COUNT_LIMIT =~ ^([0-9]|[1-9][0-9]+)$ ]]
 	then
 		printf-error 'blank line count should be a positive integer'
 		return 1
@@ -419,12 +422,12 @@ parse-arguments()
 		esac
 	done
 
-	if [ $parameter_index == ${#parameters[@]} ]
+	if [[ $parameter_index == ${#parameters[@]} ]]
 	then
 		return
 	fi
 
-	if [ $parameter_type == $PARAMETER_TYPE_DELIMITER ]
+	if [[ $parameter_type == $PARAMETER_TYPE_DELIMITER ]]
 	then
 		for (( ; parameter_index < ${#parameters[@]}; ++parameter_index ))
 		do
@@ -432,10 +435,10 @@ parse-arguments()
 			local extension=$(path-extension "$path")
 			if array-contains-item "$extension" "${HEADER_EXTENSIONS[@]}"
 			then
-				header_files+=("$path")
+				HEADER_FILES+=("$path")
 			elif array-contains-item "$extension" "${SOURCE_EXTENSIONS[@]}"
 			then
-				source_files+=("$path")
+				SOURCE_FILES+=("$path")
 			else
 				printf-error 'unknown file extension "%s"' "$path"
 				return 1
@@ -454,7 +457,7 @@ value-or()
 	local value=$1
 	local or=$2
 
-	if [ -n "$value" ]
+	if [[ -n $value ]]
 	then
 		printf '%s' "$value"
 	else
@@ -466,7 +469,7 @@ make-include-guard-id()
 {
 	local file_name=$1
 
-	tr '.' '_' <<< "${file_name}_INCLUDED" | tr '-' '_' | tr '[a-z]' '[A-Z]'
+	tr '.' '_' <<< "${file_name}_INCLUDED" | tr '-' '_' | tr '(' '_' | tr ')' '_' | tr '[a-z]' '[A-Z]'
 }
 
 process-standard-header()
@@ -553,9 +556,9 @@ array-contains-item()
 	local array=("${@:2}")
 
 	local current
-	for current in ${array[@]}
+	for current in "${array[@]}"
 	do
-		if [ "$current" == "$item" ]
+		if [[ $current == $item ]]
 		then
 			return 0
 		fi
@@ -568,9 +571,7 @@ filter-array-with-array()
 {
 	local array_length=$1
 	local array=("${@:2:$array_length}")
-	local values_to_delete_length=$(( array_length + 1 ))
-	local values_to_delete_start=$(( array_length + 3 ))
-	local values_to_delete=("${@:$values_to_delete_start}")
+	local values_to_delete=("${@:$array_length + 2}")
 
 	local item
 	for item in "${array[@]}"
@@ -594,28 +595,28 @@ find-by-extensions()
 		arguments+=" -or -name '*.$extension'"
 	done
 
-	eval 'find '"$path"' -type f '"$arguments"
+	eval 'find "'"$path"'" -type f '"$arguments"
 }
 
 is-include-line()
 {
 	local line=$1
 
-	[[ $line =~ ^[\ \	]*\#[\ \t]*include[\ \t]*\".*\".* ]]
+	[[ $line =~ ^[\ \	]*\#[\ \	]*include[\ \	]*\"[A-Za-z0-9\+\.\/\-]+\".* ]]
 }
 
 is-standard-include-line()
 {
 	local line=$1
 
-	[[ $line =~ ^[\ \	]*\#[\ \t]*include[\ \t]*\<.*\>.* ]]
+	[[ $line =~ ^[\ \	]*\#[\ \	]*include[\ \	]*\<[A-Za-z0-9\+\.\/\-]+\>.* ]]
 }
 
 is-pragma-once-line()
 {
 	local line=$1
 
-	[[ $line =~ ^[\ \	]*\#[\ \t]*pragma[\ \t]*once.* ]]
+	[[ $line =~ ^[\ \	]*\#[\ \	]*pragma[\ \	]+once.* ]]
 }
 
 is-blank-line()
@@ -629,7 +630,24 @@ path-extension()
 {
 	local path=$1
 
-	printf '%s\n' "${path##*.}"
+	local character
+	local index
+	for (( index = ${#path} - 1; index > 0; --index ))
+	do
+		character="${path:$index:1}"
+		if [[ $character == '/' ]] || [[ $character == '.' ]]
+		then
+			break
+		fi
+	done
+
+	if [[ $character != '.' ]]
+	then
+		printf '\n'
+		return
+	fi
+
+	printf '%s\n' "${path:$index+1}"
 }
 
 detect-extension()
@@ -643,22 +661,27 @@ detect-extension()
 	for path in "${paths[@]}"
 	do
 		local extension=$(path-extension "$path")
-		if [ "$first_extension" != "$extension" ]
+		if [[ $first_extension != $extension ]]
 		then
 			printf '%s\n' "$default_extension"
 			return 0
 		fi
 	done
 
+	if [[ -z $first_path ]]
+	then
+		printf '%s\n' "$default_extension"
+		return 0
+	fi
+
 	printf '%s\n' "$first_extension"
-	return 0
 }
 
 expand-dir-path()
 {
 	local path=$1
 
-	local absolute_dir_path=$(cd $path; pwd)
+	local absolute_dir_path=$(cd "$path"; pwd)
 
 	printf '%s\n' "$absolute_dir_path"
 }
@@ -679,13 +702,20 @@ relative-path()
 	local path=$1
 	local base_path=$2
 
-	local relative_path="${path#$base_path}"
-	if [ "$relative_path" != "$path" ]
+	if [[ $base_path == '/' ]]
 	then
-		relative_path=".$relative_path"
+		printf '.%s\n' "$path"
+		return
 	fi
 
-	printf '%s\n' "$relative_path"
+	local relative_path="${path#$base_path/}"
+	if [[ $relative_path == $path ]]
+	then
+		printf '%s\n' "$path"
+		return
+	fi
+
+	printf './%s\n' "$relative_path"
 }
 
 path-from-include-line()
@@ -741,14 +771,14 @@ resolve-include-path()
 	local dir=$(dirname "$absolute_file_path")
 	local non_expanded_path="$dir/$include_path"
 
-	if [ -f "$non_expanded_path" ]
+	if [[ -f $non_expanded_path ]]
 	then
 		expand-path "$non_expanded_path"
 		return
 	fi
 
 	local absolute_include_path="$HEADER_SEARCH_PATH/$include_path"
-	if [ ! -f "$absolute_include_path" ]
+	if [[ ! -f $absolute_include_path ]]
 	then
 		return 1
 	fi
@@ -760,24 +790,29 @@ get-tag()
 {
 	local line=$1
 
-	if ! [[ "$line" =~ ^.*\/\/[\ \	]*\[[\ \	]*amalgamate:[\ \	]*[-a-z][-a-z]*[\ \	]*\][\ \	]*$ ]]
+	if ! [[ "$line" =~ ^.*\/\/[\ \	]*\[[\ \	]*amalgamate[\ \	]*:[\ \	]*[a-z]+[\ \	]*\][\ \	]*$ ]]
 	then
 		return
 	fi
 
-	sed -e 's/^.*\/\/[\ \	]*\[[\ \	]*amalgamate:[\ \	]*//' -e 's/[\ \	]*\].*$//' <<< "$line"
+	sed -e 's/^.*\/\/[\ \	]*\[[\ \	]*amalgamate[\ \	]*:[\ \	]*//' -e 's/[\ \	]*\].*$//' <<< "$line"
 }
 
 get-clean-line()
 {
 	local line=$1
 
-	sed -e 's/[\ \t]*\/\/[\ \t]*\[amalgamate:[\ \t]*[-a-z][-a-z]*[\ \t]*\][\ \t]*$//' <<< "$line"
+	sed -e 's/[\ \	]*\/\/[\ \	]*\[amalgamate[\ \	]*:[\ \	]*[a-z][a-z]*[\ \	]*\][\ \	]*$//' <<< "$line"
 }
 
 gather-standard-include-paths()
 {
 	local paths=("$@")
+
+	if [[ ${#paths[@]} == 0 ]]
+	then
+		return
+	fi
 
 	# every '#include <...>' line
 	grep '^[\ \t]*\#[\ \t]*include[\ \t]*<.*>' -I --no-filename "${paths[@]}" |
@@ -802,7 +837,7 @@ inline-file()
 	local output_path=$2
 	local indent=$3
 
-	local relative_file_path=$(relative-path "$absolute_file_path" $PWD)
+	local relative_file_path="$(relative-path "$absolute_file_path" $PWD)"
 	printf-message '%s\n' "$relative_file_path"
 
 	file-print-header-annotation "$output_path" "$relative_file_path" "$indent"
@@ -811,15 +846,15 @@ inline-file()
 	while read -r line || [ -n "$line" ]
 	do
 		local tag=$(get-tag "$line")
-		if [ "$tag" == 'leave' ]
+		if [[ $tag == 'leave' ]]
 		then
 			local clean_line=$(get-clean-line "$line")
 			file-printf "$output_path" '%s%s\n' "$indent" "$clean_line"
 			continue
-		elif [ "$tag" == 'remove' ]
+		elif [[ $tag == 'remove' ]]
 		then
 			continue
-		elif [ "$tag" == 'uncomment' ]
+		elif [[ $tag == 'uncomment' ]]
 		then
 			local clean_line=$(get-clean-line "$line")
 			line="${clean_line#*//}"
@@ -829,7 +864,7 @@ inline-file()
 		then
 			local include_path=$(path-from-include-line "$line")
 			local absolute_include_path=$(resolve-include-path "$include_path" "$absolute_file_path")
-			if [ -z "$absolute_include_path" ]
+			if [[ -z $absolute_include_path ]]
 			then
 				printf-error 'cannot find include file "%s" required in "%s"' "$include_path" "$absolute_file_path"
 				exit 1
@@ -879,6 +914,27 @@ inline-file()
 	file-print-footer-annotation "$output_path" "$relative_file_path" "$indent"
 }
 
+amalgamate-first-file()
+{
+	local output_header_path=$1
+	local paths=("${@:2}")
+
+	local path
+	for path in "${paths[@]}"
+	do
+		local file_absolute_path=$(expand-path "$path")
+
+		local extension=$(path-extension "$path")
+		if array-contains-item "$extension" "${HEADER_EXTENSIONS[@]}" && array-contains-item "$file_absolute_path" "${GLOBAL_already_included_files[@]}"
+		then
+			continue
+		fi
+
+		GLOBAL_already_included_files+=("$file_absolute_path")
+		inline-file "$file_absolute_path" "$output_header_path" ''
+	done
+}
+
 amalgamate-headers()
 {
 	local output_header_path=$1
@@ -919,11 +975,13 @@ reduce-blank-lines()
 	local temp="$file_path.tmp"
 	mktemp "$temp" &> /dev/null
 
+	IFS=$'\n'
+
 	local empty_line_count=0
 	local line
 	while read -r line || [ -n "$line" ]
 	do
-		if [ -z "$line" ]
+		if [[ -z $line ]]
 		then
 			(( ++empty_line_count ))
 			if (( empty_line_count > empty_line_limit ))
@@ -937,6 +995,8 @@ reduce-blank-lines()
 		printf '%s\n' "$line" >> "$temp"
 	done < "$file_path"
 
+	unset IFS
+
 	mv -f "$temp" "$file_path"
 }
 
@@ -945,7 +1005,7 @@ trim-trailing-whitespace()
 	local file_path=$1
 
 	sed -i.bak 's/[	 ][	 ]*$//g' "$file_path"
-	if [ $? != 0 ]
+	if [[ $? != 0 ]]
 	then
 		exit 1
 	fi
@@ -953,12 +1013,14 @@ trim-trailing-whitespace()
 	rm "$file_path.bak"
 }
 
+# [bash-it:end]
+
 #
 # Main
 
 { # Dealing with input arguments
 	parse-arguments "$@" && validate-options
-	if [ $? != 0 ]
+	if [[ $? != 0 ]]
 	then
 		exit 1
 	fi
@@ -967,47 +1029,60 @@ trim-trailing-whitespace()
 { # Initial cleanup
 	OUTPUT_DIR_PATH="$OUTPUT_DIR_PATH/$BASE_NAME-$OUTPUT_DIRECTORY_SUFFIX"
 	rm -rf "$OUTPUT_DIR_PATH" &> /dev/null
-	if [ $? != 0 ]
+	if [[ $? != 0 ]]
 	then
 		printf-error 'cannot remove output directory "%s"' "$OUTPUT_DIR_PATH"
 		exit 1
 	fi
 
 	mkdir -p "$OUTPUT_DIR_PATH"
-	if [ $? != 0 ]
+	if [[ $? != 0 ]]
 	then
 		printf-error 'cannot write path "%s"' "$OUTPUT_DIR_PATH"
 		exit 1
 	fi
 }
 
-{ # Determining output artifacts
-	if [ -z "$header_files" ] && [ -z "$source_files" ]
+{ # Determining input files
+	if [[ -z $HEADER_FILES ]] && [[ -z $SOURCE_FILES ]]
 	then
-		header_files=()
-		if [ -n "$TOP_OF_AMALGAMATION_QUEUE" ]
-		then
-			header_files+=("$INPUT_DIR_PATH/$TOP_OF_AMALGAMATION_QUEUE")
-		fi
-
-		header_files+=($(find-by-extensions "$INPUT_DIR_PATH" "${HEADER_EXTENSIONS[@]}"))
-		source_files=($(find-by-extensions "$INPUT_DIR_PATH" "${SOURCE_EXTENSIONS[@]}"))
+		HEADER_FILES=($(find-by-extensions "$INPUT_DIR_PATH" "${HEADER_EXTENSIONS[@]}"))
+		SOURCE_FILES=($(find-by-extensions "$INPUT_DIR_PATH" "${SOURCE_EXTENSIONS[@]}"))
 	fi
 
-	if [ "${#header_files[@]}" == 0 ] && [ "${#source_files[@]}" == 0 ]
+	if [[ ${#HEADER_FILES[@]} == 0 ]] && [[ ${#SOURCE_FILES[@]} == 0 ]]
 	then
 		printf-error 'no C/C++ files found'
 		exit 1
 	fi
 
-	if [ "$OUTPUT_HEADER_EXTENSION" == -1 ]
+	all_headers=("${HEADER_FILES[@]}")
+	all_sources=("${SOURCE_FILES[@]}")
+
+	FIRST_FILES=()
+	if [[ -n $TOP_OF_AMALGAMATION_QUEUE ]]
 	then
-		OUTPUT_HEADER_EXTENSION=$(detect-extension "$DEFAULT_OUTPUT_HEADER_EXTENSION" "${header_files[@]}")
+		FIRST_FILES=("$INPUT_DIR_PATH/$TOP_OF_AMALGAMATION_QUEUE")
+		first_file_extension=$(path-extension "${FIRST_FILES[0]}")
+		if array-contains-item "$first_file_extension" "${HEADER_EXTENSIONS[@]}"
+		then
+			HEADER_FILES=($(filter-array-with-array ${#HEADER_FILES[@]} "${HEADER_FILES[@]}" "${FIRST_FILES[@]}"))
+		elif array-contains-item "$first_file_extension" "${SOURCE_EXTENSIONS[@]}"
+		then
+			SOURCE_FILES=($(filter-array-with-array ${#SOURCE_FILES[@]} "${SOURCE_FILES[@]}" "${FIRST_FILES[0]}"))
+		fi
+	fi
+}
+
+{ # Determining output artifacts
+	if [[ $OUTPUT_HEADER_EXTENSION == -1 ]]
+	then
+		OUTPUT_HEADER_EXTENSION=$(detect-extension "$DEFAULT_OUTPUT_HEADER_EXTENSION" "${all_headers[@]}")
 	fi
 
-	if [ "$OUTPUT_SOURCE_EXTENSION" == -1 ]
+	if [[ $OUTPUT_SOURCE_EXTENSION == -1 ]]
 	then
-		OUTPUT_SOURCE_EXTENSION=$(detect-extension "$DEFAULT_OUTPUT_SOURCE_EXTENSION" "${source_files[@]}")
+		OUTPUT_SOURCE_EXTENSION=$(detect-extension "$DEFAULT_OUTPUT_SOURCE_EXTENSION" "${all_sources[@]}")
 	fi
 
 	header_file_name="$BASE_NAME.$OUTPUT_HEADER_EXTENSION"
@@ -1018,7 +1093,7 @@ trim-trailing-whitespace()
 
 	if $AMALGAMATE_INTO_HEADER && $USE_INCLUDE_GUARD
 	then
-		if [ -z "$INCLUDE_GUARD_ID" ]
+		if [[ -z $INCLUDE_GUARD_ID ]]
 		then
 			INCLUDE_GUARD_ID=$(make-include-guard-id "$header_file_name")
 		fi
@@ -1035,27 +1110,33 @@ trim-trailing-whitespace()
 	printf-message 'Input header extensions: %s\n' "${HEADER_EXTENSIONS[*]}"
 	printf-message 'Input source extensions: %s\n' "${SOURCE_EXTENSIONS[*]}"
 
-	printf-message '\n%s\n' '[Output]'
-	printf-message 'Output directory: %s\n' "$OUTPUT_DIR_PATH"
-	printf-message 'Base name: %s\n' "$BASE_NAME"
-	if $AMALGAMATE_INTO_HEADER && ! $AMALGAMATE_INTO_SOURCE
-	then
-		printf-message 'Header only. Output extension: %s\n' "$OUTPUT_HEADER_EXTENSION"
-	elif $AMALGAMATE_INTO_SOURCE && ! $AMALGAMATE_INTO_HEADER
-	then
-		printf-message 'Source only. Output extension: %s\n' "$OUTPUT_SOURCE_EXTENSION"
-	else
-		printf-message 'Output extensions: %s, %s\n' "$OUTPUT_HEADER_EXTENSION" "$OUTPUT_SOURCE_EXTENSION"
-	fi
-
 	if $AMALGAMATE_INTO_HEADER
 	then
 		printf-message 'Header prelude file: %s\n' $(value-or "$HEADER_PRELUDE_FILE_PATH" 'no')
+		printf-message 'Header interlude file: %s\n' $(value-or "$INTERLUDE_FILE_PATH" 'no')
 	fi
 
 	if $AMALGAMATE_INTO_SOURCE
 	then
 		printf-message 'Source prelude file: %s\n' $(value-or "$SOURCE_PRELUDE_FILE_PATH" 'no')
+	fi
+
+	if [[ -n $TOP_OF_AMALGAMATION_QUEUE ]]
+	then
+		printf-message 'Top of queue: %s\n' "$INPUT_DIR_PATH/$TOP_OF_AMALGAMATION_QUEUE"
+	fi
+
+	printf-message '\n%s\n' '[Output]'
+	printf-message 'Destination: %s\n' "$OUTPUT_DIR_PATH"
+	printf-message 'Base name: %s\n' "$BASE_NAME"
+	if $AMALGAMATE_INTO_HEADER && ! $AMALGAMATE_INTO_SOURCE
+	then
+		printf-message 'Header only. Extension: %s\n' "$OUTPUT_HEADER_EXTENSION"
+	elif $AMALGAMATE_INTO_SOURCE && ! $AMALGAMATE_INTO_HEADER
+	then
+		printf-message 'Source only. Extension: %s\n' "$OUTPUT_SOURCE_EXTENSION"
+	else
+		printf-message 'Extensions: %s, %s\n' "$OUTPUT_HEADER_EXTENSION" "$OUTPUT_SOURCE_EXTENSION"
 	fi
 
 	if $AMALGAMATE_INTO_HEADER
@@ -1077,11 +1158,6 @@ trim-trailing-whitespace()
 		printf-message 'no\n'
 	fi
 
-	if [ -n "$TOP_OF_AMALGAMATION_QUEUE" ]
-	then
-		printf-message 'Top of queue: %s\n' "$INPUT_DIR_PATH/$TOP_OF_AMALGAMATION_QUEUE"
-	fi
-
 	printf-message 'Reduce consecutive blank lines to: %s\n' $(value-or "$BLANK_LINE_COUNT_LIMIT" 'no')
 
 	printf-message 'Trim trailing whitespace: '
@@ -1093,7 +1169,7 @@ trim-trailing-whitespace()
 	fi
 
 	printf-message 'Insert annotations: '
-	if [ "$FILE_PRINTF_ANNOTATION_FUNCTION" != ':' ]
+	if [[ $FILE_PRINTF_ANNOTATION_FUNCTION != ':' ]]
 	then
 		printf-message 'yes\n'
 	else
@@ -1106,7 +1182,7 @@ trim-trailing-whitespace()
 { # Amalgamating
 	if $AMALGAMATE_INTO_HEADER && ! $AMALGAMATE_INTO_SOURCE
 	then
-		if [ -n "$HEADER_PRELUDE_FILE_PATH" ]
+		if [[ -n $HEADER_PRELUDE_FILE_PATH ]]
 		then
 			printf-message 'Adding prelude...\n'
 			cat "$HEADER_PRELUDE_FILE_PATH" >> "$output_header_path"
@@ -1115,30 +1191,34 @@ trim-trailing-whitespace()
 		printf-message 'Adding include guard...\n'
 		file-printf "$output_header_path" '%s\n\n' "${INCLUDE_GUARD_HEADER}"
 
-		if [ -n "$INTERLUDE_FILE_PATH" ]
+		if [[ -n $INTERLUDE_FILE_PATH ]]
 		then
-			printf-message 'Adding interlude...\n'
+			printf-message 'Adding header interlude...\n'
 			cat "$INTERLUDE_FILE_PATH" >> "$output_header_path"
 		fi
 
 		if $GROUP_UNINLINED_HEADERS_ON_TOP
 		then
 			printf-message 'Grouping standard headers on top...\n'
-			standard_includes=($(gather-standard-include-paths "${header_files[@]}" "${source_files[@]}"))
-			file-printf "$output_header_path" '#include <%s>\n' "${standard_includes[@]}"
+			standard_includes=($(gather-standard-include-paths "${HEADER_FILES[@]}" "${SOURCE_FILES[@]}"))
+			if [[ ${#standard_includes[@]} > 0 ]]
+			then
+				file-printf "$output_header_path" '#include <%s>\n' "${standard_includes[@]}"
+			fi
 		fi
 
 		printf-message 'Amalgamating files...\n'
-		amalgamate-headers "$output_header_path" "${header_files[@]}"
-		amalgamate-sources "$output_header_path" "${source_files[@]}"
+		amalgamate-first-file "$output_header_path" "${FIRST_FILES[@]}"
+		amalgamate-headers "$output_header_path" "${HEADER_FILES[@]}"
+		amalgamate-sources "$output_header_path" "${SOURCE_FILES[@]}"
 
-		if [ -n "$INCLUDE_GUARD_FOOTER" ]
+		if [[ -n $INCLUDE_GUARD_FOOTER ]]
 		then
-			file-printf "$output_header_path" '\n\n%s' "$INCLUDE_GUARD_FOOTER"
+			file-printf "$output_header_path" '\n%s\n' "$INCLUDE_GUARD_FOOTER"
 		fi
 	elif $AMALGAMATE_INTO_SOURCE && ! $AMALGAMATE_INTO_HEADER
 	then
-		if [ -n "$SOURCE_PRELUDE_FILE_PATH" ]
+		if [[ -n $SOURCE_PRELUDE_FILE_PATH ]]
 		then
 			printf-message 'Adding prelude...\n'
 			cat "$SOURCE_PRELUDE_FILE_PATH" >> "$output_source_path"
@@ -1147,21 +1227,25 @@ trim-trailing-whitespace()
 		if $GROUP_UNINLINED_HEADERS_ON_TOP
 		then
 			printf-message 'Grouping standard headers on top...\n'
-			standard_includes=($(gather-standard-include-paths "${header_files[@]}" "${source_files[@]}"))
-			file-printf "$output_source_path" '#include <%s>\n' "${standard_includes[@]}"
+			standard_includes=($(gather-standard-include-paths "${HEADER_FILES[@]}" "${SOURCE_FILES[@]}"))
+			if [[ ${#standard_includes[@]} > 0 ]]
+			then
+				file-printf "$output_source_path" '#include <%s>\n' "${standard_includes[@]}"
+			fi
 		fi
 
 		printf-message 'Amalgamating files...\n'
-		amalgamate-headers "$output_source_path" "${header_files[@]}"
-		amalgamate-sources "$output_source_path" "${source_files[@]}"
+		amalgamate-first-file "$output_source_path" "${FIRST_FILES[@]}"
+		amalgamate-headers "$output_source_path" "${HEADER_FILES[@]}"
+		amalgamate-sources "$output_source_path" "${SOURCE_FILES[@]}"
 	else
-		if [ -n "$HEADER_PRELUDE_FILE_PATH" ]
+		if [[ -n $HEADER_PRELUDE_FILE_PATH ]]
 		then
 			printf-message 'Adding header prelude...\n'
 			cat "$HEADER_PRELUDE_FILE_PATH" >> "$output_header_path"
 		fi
 
-		if [ -n "$SOURCE_PRELUDE_FILE_PATH" ]
+		if [[ -n $SOURCE_PRELUDE_FILE_PATH ]]
 		then
 			printf-message 'Adding source prelude...\n'
 			cat "$SOURCE_PRELUDE_FILE_PATH" >> "$output_source_path"
@@ -1170,9 +1254,9 @@ trim-trailing-whitespace()
 		printf-message 'Adding include guard...\n'
 		file-printf "$output_header_path" '%s\n\n' "${INCLUDE_GUARD_HEADER}"
 
-		if [ -n "$INTERLUDE_FILE_PATH" ]
+		if [[ -n $INTERLUDE_FILE_PATH ]]
 		then
-			printf-message 'Adding interlude...\n'
+			printf-message 'Adding header interlude...\n'
 			cat "$INTERLUDE_FILE_PATH" >> "$output_header_path"
 		fi
 
@@ -1181,22 +1265,30 @@ trim-trailing-whitespace()
 		if $GROUP_UNINLINED_HEADERS_ON_TOP
 		then
 			printf-message 'Grouping standard headers on top...\n'
-			standard_includes_in_headers=($(gather-standard-include-paths "${header_files[@]}"))
-			standard_includes_in_sources=($(gather-standard-include-paths "${source_files[@]}"))
+			standard_includes_in_headers=($(gather-standard-include-paths "${HEADER_FILES[@]}"))
+			standard_includes_in_sources=($(gather-standard-include-paths "${SOURCE_FILES[@]}"))
 
 			standard_includes_in_sources=($(filter-array-with-array "${#standard_includes_in_sources[@]}" "${standard_includes_in_sources[@]}" "${#standard_includes_in_headers[@]}" "${standard_includes_in_headers[@]}"))
 
-			file-printf "$output_header_path" '#include <%s>\n' "${standard_includes_in_headers[@]}"
-			file-printf "$output_source_path" '#include <%s>\n' "${standard_includes_in_sources[@]}"
+			if [[ ${#standard_includes_in_headers[@]} > 0 ]]
+			then
+				file-printf "$output_header_path" '#include <%s>\n' "${standard_includes_in_headers[@]}"
+			fi
+
+			if [[ ${#standard_includes_in_sources[@]} > 0 ]]
+			then
+				file-printf "$output_source_path" '#include <%s>\n' "${standard_includes_in_sources[@]}"
+			fi
 		fi
 
 		printf-message 'Amalgamating files...\n'
-		amalgamate-headers "$output_header_path" "${header_files[@]}"
-		amalgamate-sources "$output_source_path" "${source_files[@]}"
+		amalgamate-first-file "$output_header_path" "${FIRST_FILES[@]}"
+		amalgamate-headers "$output_header_path" "${HEADER_FILES[@]}"
+		amalgamate-sources "$output_source_path" "${SOURCE_FILES[@]}"
 
-		if [ -n "$INCLUDE_GUARD_FOOTER" ]
+		if [[ -n $INCLUDE_GUARD_FOOTER ]]
 		then
-			file-printf "$output_header_path" '\n\n%s' "$INCLUDE_GUARD_FOOTER"
+			file-printf "$output_header_path" '\n%s\n' "$INCLUDE_GUARD_FOOTER"
 		fi
 	fi
 
@@ -1208,27 +1300,27 @@ trim-trailing-whitespace()
 	then
 		printf-message 'Trimming trailing whitespace...\n'
 
-		if [ -r "$output_header_path" ]
+		if [[ -r $output_header_path ]]
 		then
 			trim-trailing-whitespace "$output_header_path"
 		fi
 
-		if [ -r "$output_source_path" ]
+		if [[ -r $output_source_path ]]
 		then
 			trim-trailing-whitespace "$output_source_path"
 		fi
 	fi
 
-	if [ -n "$BLANK_LINE_COUNT_LIMIT" ]
+	if [[ -n $BLANK_LINE_COUNT_LIMIT ]]
 	then
 		printf-message 'Reducing blank lines...\n'
 
-		if [ -r "$output_header_path" ]
+		if [[ -r $output_header_path ]]
 		then
 			reduce-blank-lines "$output_header_path" $BLANK_LINE_COUNT_LIMIT
 		fi
 
-		if [ -r "$output_source_path" ]
+		if [[ -r $output_source_path ]]
 		then
 			reduce-blank-lines "$output_source_path" $BLANK_LINE_COUNT_LIMIT
 		fi
