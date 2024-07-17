@@ -1,0 +1,88 @@
+source $(SAMPLE amalgamate)
+
+TEST-CASE 'get-tag() with valid tag lines'
+	result=$(get-tag '//[amalgamate:leave]')
+	CHECK [ "$result" == 'leave' ]
+
+	result=$(get-tag ' //[amalgamate:leave]')
+	CHECK [ "$result" == 'leave' ]
+
+	result=$(get-tag '// [amalgamate:leave]')
+	CHECK [ "$result" == 'leave' ]
+
+	result=$(get-tag '// [amalgamate :leave]')
+	CHECK [ "$result" == 'leave' ]
+
+	result=$(get-tag '// [amalgamate: leave]')
+	CHECK [ "$result" == 'leave' ]
+
+	result=$(get-tag '//[amalgamate:leave] ')
+	CHECK [ "$result" == 'leave' ]
+
+	result=$(get-tag ' // [amalgamate:leave] ')
+	CHECK [ "$result" == 'leave' ]
+
+	result=$(get-tag $'\t//[amalgamate:leave]')
+	CHECK [ "$result" == 'leave' ]
+
+	result=$(get-tag $'//\t[amalgamate:leave]')
+	CHECK [ "$result" == 'leave' ]
+
+	result=$(get-tag $'// [amalgamate\t:leave]')
+	CHECK [ "$result" == 'leave' ]
+
+	result=$(get-tag $'// [amalgamate:\tleave]')
+	CHECK [ "$result" == 'leave' ]
+
+	result=$(get-tag $'//[amalgamate:leave]\t')
+	CHECK [ "$result" == 'leave' ]
+
+	result=$(get-tag $' \t//[amalgamate:leave]')
+	CHECK [ "$result" == 'leave' ]
+
+	result=$(get-tag $'\t //[amalgamate:leave]')
+	CHECK [ "$result" == 'leave' ]
+
+	result=$(get-tag $'// \t[amalgamate:leave]')
+	CHECK [ "$result" == 'leave' ]
+
+	result=$(get-tag $'//\t [amalgamate:leave]')
+	CHECK [ "$result" == 'leave' ]
+
+	result=$(get-tag $'//[amalgamate \t:leave]')
+	CHECK [ "$result" == 'leave' ]
+
+	result=$(get-tag $'//[amalgamate:\t leave]')
+	CHECK [ "$result" == 'leave' ]
+
+	result=$(get-tag $'//[amalgamate:leave] \t')
+	CHECK [ "$result" == 'leave' ]
+
+	result=$(get-tag $'//[amalgamate:leave]\t ')
+	CHECK [ "$result" == 'leave' ]
+
+	result=$(get-tag $' \t// \t[amalgamate:leave] \t')
+	CHECK [ "$result" == 'leave' ]
+
+	result=$(get-tag $'\t //\t [amalgamate:leave]\t ')
+	CHECK [ "$result" == 'leave' ]
+
+	result=$(get-tag '#include <socket.h> // [amalgamate:leave]')
+	CHECK [ "$result" == 'leave' ]
+
+	result=$(get-tag '// #include <socket.h> // [amalgamate:uncomment]')
+	CHECK [ "$result" == 'uncomment' ]
+
+TEST-CASE 'get-tag() with invalid tag lines'
+	result=$(get-tag '[amalgamate:]')
+	CHECK [ "$result" == '' ]
+
+	result=$(get-tag '[amalgamate:leave]')
+	CHECK [ "$result" == '' ]
+
+	result=$(get-tag 'amalgamate:leave')
+	CHECK [ "$result" == '' ]
+
+	result=$(get-tag '// amalgamate:leave')
+	CHECK [ "$result" == '' ]
+

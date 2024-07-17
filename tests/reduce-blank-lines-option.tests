@@ -1,0 +1,26 @@
+USE-SANDBOX
+
+TEST-CASE 'amalgamate -b 0'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-COMMAND amalgamate -b 0
+	CHECK-CONTENTS \
+		OF-FILE 'project-amalgamated/project.hpp' \
+		WITH-FILE 'expected/project-amalgamated-b-0.hpp'
+
+TEST-CASE 'amalgamate -b 1'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-COMMAND amalgamate -b 1
+	CHECK-CONTENTS \
+		OF-FILE 'project-amalgamated/project.hpp' \
+		WITH-FILE 'expected/project-amalgamated-b-1.hpp'
+
+TEST-CASE 'amalgamate -b 2'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-COMMAND amalgamate -b 2
+	CHECK-CONTENTS \
+		OF-FILE 'project-amalgamated/project.hpp' \
+		WITH-FILE 'expected/project-amalgamated-b-2.hpp'
+

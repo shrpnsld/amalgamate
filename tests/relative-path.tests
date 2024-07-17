@@ -1,0 +1,22 @@
+source $(SAMPLE amalgamate)
+
+TEST-CASE 'relative-path() with path inside base path'
+	result=$(relative-path '/one' '/')
+	CHECK [ "$result" == './one' ]
+
+	result=$(relative-path '/one/two' '/one')
+	CHECK [ "$result" == './two' ]
+
+	result=$(relative-path '/one/two/three' '/one')
+	CHECK [ "$result" == './two/three' ]
+
+	result=$(relative-path '/one/two/three' '/one/two')
+	CHECK [ "$result" == './three' ]
+
+	result=$(relative-path '/one/two/three/four' '/one/two')
+	CHECK [ "$result" == './three/four' ]
+
+TEST-CASE 'relative-path() with path outside base path'
+	result=$(relative-path '/one/two/three/four' '/first/second')
+	CHECK [ "$result" == '/one/two/three/four' ]
+

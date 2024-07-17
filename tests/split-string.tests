@@ -1,0 +1,26 @@
+source $(SAMPLE amalgamate)
+
+TEST-CASE 'split-string() with empty string'
+	result=($(split-string '' ','))
+	CHECK [ "${#result[@]}" == 0 ]
+
+TEST-CASE 'split-string() with single item'
+	result=($(split-string 'one' ','))
+	CHECK [ "${#result[@]}" == 1 ]
+	CHECK [ "${result[0]}" == 'one' ]
+
+	result=($(split-string 'one,' ','))
+	CHECK [ "${#result[@]}" == 1 ]
+	CHECK [ "${result[0]}" == 'one' ]
+
+	result=($(split-string ',one' ','))
+	CHECK [ "${#result[@]}" == 1 ]
+	CHECK [ "${result[0]}" == 'one' ]
+
+TEST-CASE 'split-string() with something to split'
+	result=($(split-string 'one,two,three' ','))
+	CHECK [ "${#result[@]}" == 3 ]
+	CHECK [ "${result[0]}" == 'one' ]
+	CHECK [ "${result[1]}" == 'two' ]
+	CHECK [ "${result[2]}" == 'three' ]
+

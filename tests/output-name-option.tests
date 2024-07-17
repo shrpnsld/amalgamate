@@ -1,0 +1,46 @@
+USE-SANDBOX
+
+TEST-CASE 'amalgamate # no "-n", using default name'
+USE-REQUISITES 'project'
+	cd 'project'
+	amalgamate
+	CHECK [ -r 'project-amalgamated/project.hpp' ]
+
+TEST-CASE 'amalgamate -n another'
+USE-REQUISITES 'project'
+	cd 'project'
+	amalgamate -n 'another'
+	CHECK [ -r 'another-amalgamated/another.hpp' ]
+
+TEST-CASE 'amalgamate -n another -S'
+USE-REQUISITES 'project'
+	cd 'project'
+	amalgamate -n 'another' -S
+	CHECK [ -r 'another-amalgamated/another.cpp' ]
+
+TEST-CASE 'amalgamate -n another -M'
+USE-REQUISITES 'project'
+	cd 'project'
+	amalgamate -n 'another' -M
+	CHECK [ -r 'another-amalgamated/another.hpp' ]
+	CHECK [ -r 'another-amalgamated/another.cpp' ]
+
+TEST-CASE 'amalgamate -n something-else'
+USE-REQUISITES 'project'
+	cd 'project'
+	amalgamate -n 'something-else'
+	CHECK [ -r 'something-else-amalgamated/something-else.hpp' ]
+
+TEST-CASE 'amalgamate -n something-else -S'
+USE-REQUISITES 'project'
+	cd 'project'
+	amalgamate -n 'something-else' -S
+	CHECK [ -r 'something-else-amalgamated/something-else.cpp' ]
+
+TEST-CASE 'amalgamate -n something-else -M'
+USE-REQUISITES 'project'
+	cd 'project'
+	amalgamate -n 'something-else' -M
+	CHECK [ -r 'something-else-amalgamated/something-else.hpp' ]
+	CHECK [ -r 'something-else-amalgamated/something-else.cpp' ]
+

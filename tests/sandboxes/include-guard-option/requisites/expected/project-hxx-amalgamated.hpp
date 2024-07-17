@@ -1,0 +1,6 @@
+#ifndef PROJECT_HXX_HPP_INCLUDED
+#define PROJECT_HXX_HPP_INCLUDED
+
+// header
+
+#endif // PROJECT_HXX_HPP_INCLUDED

@@ -1,0 +1,108 @@
+USE-SANDBOX
+
+SECTION 'with single header and "small-project"'
+
+TEST-CASE 'amalgamate -1 header.hpp with "small-project"'
+USE-REQUISITES 'small-project'
+	cd 'small-project'
+	CHECK-COMMAND amalgamate -1 'header.hpp'
+	CHECK-CONTENTS \
+		OF-FILE 'small-project-amalgamated/small-project.hpp' \
+		WITH-FILE 'expected/small-project/single-header/1-header.hpp-amalgamated.hpp'
+
+TEST-CASE 'amalgamate -1 source.cpp with "small-project"'
+USE-REQUISITES 'small-project'
+	cd 'small-project'
+	CHECK-COMMAND amalgamate -1 'source.cpp'
+	CHECK-CONTENTS \
+		OF-FILE 'small-project-amalgamated/small-project.hpp' \
+		WITH-FILE 'expected/small-project/single-header/1-source.cpp-amalgamated.hpp'
+
+SECTION '"-S" with "small-project"'
+
+TEST-CASE 'amalgamate -1 header.hpp -S with "small-project"'
+USE-REQUISITES 'small-project'
+	cd 'small-project'
+	CHECK-COMMAND amalgamate -1 'header.hpp' -S
+	CHECK-CONTENTS \
+		OF-FILE 'small-project-amalgamated/small-project.cpp' \
+		WITH-FILE 'expected/small-project/single-source/1-header.hpp-amalgamated.cpp'
+
+TEST-CASE 'amalgamate -1 source.cpp -S with "small-project"'
+USE-REQUISITES 'small-project'
+	cd 'small-project'
+	CHECK-COMMAND amalgamate -1 'source.cpp' -S
+	CHECK-CONTENTS \
+		OF-FILE 'small-project-amalgamated/small-project.cpp' \
+		WITH-FILE 'expected/small-project/single-source/1-source.cpp-amalgamated.cpp'
+
+SECTION '"-M" with "small-project"'
+
+TEST-CASE 'amalgamate -1 header.hpp -M with "small-project"'
+USE-REQUISITES 'small-project'
+	cd 'small-project'
+	CHECK-COMMAND amalgamate -1 header.hpp -M
+	CHECK-CONTENTS \
+		OF-FILE 'small-project-amalgamated/small-project.hpp' \
+		WITH-FILE 'expected/small-project/pair-1-header.hpp/header.hpp'
+	CHECK-CONTENTS \
+		OF-FILE 'small-project-amalgamated/small-project.cpp' \
+		WITH-FILE 'expected/small-project/pair-1-header.hpp/source.cpp'
+
+TEST-CASE 'amalgamate -1 source.cpp -M with "small-project"'
+USE-REQUISITES 'small-project'
+	cd 'small-project'
+	CHECK-COMMAND amalgamate -1 source.cpp -M
+	CHECK-CONTENTS \
+		OF-FILE 'small-project-amalgamated/small-project.hpp' \
+		WITH-FILE 'expected/small-project/pair-1-source.cpp/header.hpp'
+	CHECK-CONTENTS \
+		OF-FILE 'small-project-amalgamated/small-project.cpp' \
+		WITH-FILE 'expected/small-project/pair-1-source.cpp/source.cpp'
+
+SECTION '"-M" with "bigger-project"'
+
+TEST-CASE 'amalgamate -1 one.hpp -M with "bigger-project"'
+USE-REQUISITES 'bigger-project'
+	cd 'bigger-project'
+	CHECK-COMMAND amalgamate -1 one.hpp -M
+	CHECK-CONTENTS \
+		OF-FILE 'bigger-project-amalgamated/bigger-project.hpp' \
+		WITH-FILE 'expected/bigger-project/pair-1-one.hpp/header.hpp'
+	CHECK-CONTENTS \
+		OF-FILE 'bigger-project-amalgamated/bigger-project.cpp' \
+		WITH-FILE 'expected/bigger-project/pair-1-one.hpp/source.cpp'
+
+TEST-CASE 'amalgamate -1 one.cpp -M with "bigger-project"'
+USE-REQUISITES 'bigger-project'
+	cd 'bigger-project'
+	CHECK-COMMAND amalgamate -1 one.cpp -M
+	CHECK-CONTENTS \
+		OF-FILE 'bigger-project-amalgamated/bigger-project.hpp' \
+		WITH-FILE 'expected/bigger-project/pair-1-one.cpp/header.hpp'
+	CHECK-CONTENTS \
+		OF-FILE 'bigger-project-amalgamated/bigger-project.cpp' \
+		WITH-FILE 'expected/bigger-project/pair-1-one.cpp/source.cpp'
+
+TEST-CASE 'amalgamate -1 two.hpp -M with "bigger-project"'
+USE-REQUISITES 'bigger-project'
+	cd 'bigger-project'
+	CHECK-COMMAND amalgamate -1 two.hpp -M
+	CHECK-CONTENTS \
+		OF-FILE 'bigger-project-amalgamated/bigger-project.hpp' \
+		WITH-FILE 'expected/bigger-project/pair-1-two.hpp/header.hpp'
+	CHECK-CONTENTS \
+		OF-FILE 'bigger-project-amalgamated/bigger-project.cpp' \
+		WITH-FILE 'expected/bigger-project/pair-1-two.hpp/source.cpp'
+
+TEST-CASE 'amalgamate -1 two.cpp -M with "bigger-project"'
+USE-REQUISITES 'bigger-project'
+	cd 'bigger-project'
+	CHECK-COMMAND amalgamate -1 two.cpp -M
+	CHECK-CONTENTS \
+		OF-FILE 'bigger-project-amalgamated/bigger-project.hpp' \
+		WITH-FILE 'expected/bigger-project/pair-1-two.cpp/header.hpp'
+	CHECK-CONTENTS \
+		OF-FILE 'bigger-project-amalgamated/bigger-project.cpp' \
+		WITH-FILE 'expected/bigger-project/pair-1-two.cpp/source.cpp'
+

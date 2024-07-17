@@ -1,0 +1,37 @@
+USE-SANDBOX
+
+TEST-CASE 'amalgamate -L "interlude-one.txt"'
+USE-REQUISITES 'project' 'interlude-one.txt'
+	cd 'project'
+	CHECK-COMMAND amalgamate -L '../interlude-one.txt'
+	CHECK-CONTENTS \
+		OF-FILE 'project-amalgamated/project.hpp' \
+		WITH-FILE 'expected/project-amalgamated-into-header-interlude-one.hpp'
+
+TEST-CASE 'amalgamate -L "interlude-two.txt"'
+USE-REQUISITES 'project' 'interlude-two.txt'
+	cd 'project'
+	CHECK-COMMAND amalgamate -L '../interlude-two.txt'
+	CHECK-CONTENTS \
+		OF-FILE 'project-amalgamated/project.hpp' \
+		WITH-FILE 'expected/project-amalgamated-into-header-interlude-two.hpp'
+
+TEST-CASE 'amalgamate -L "interlude-one.txt" -S'
+USE-REQUISITES 'project' 'interlude-one.txt'
+	cd 'project'
+	CHECK-COMMAND amalgamate -L '../interlude-one.txt' -S
+	CHECK-CONTENTS \
+		OF-FILE 'project-amalgamated/project.cpp' \
+		WITH-FILE 'expected/project-amalgamated-into-source-interlude-one.cpp'
+
+TEST-CASE 'amalgamate -L "interlude-one.txt" -M'
+USE-REQUISITES 'project' 'interlude-one.txt'
+	cd 'project'
+	CHECK-COMMAND amalgamate -L '../interlude-one.txt' -M
+	CHECK-CONTENTS \
+		OF-FILE 'project-amalgamated/project.hpp' \
+		WITH-FILE 'expected/project-amalgamated-into-pair-interlude-one.hpp'
+	CHECK-CONTENTS \
+		OF-FILE 'project-amalgamated/project.cpp' \
+		WITH-FILE 'expected/project-amalgamated-into-pair-interlude-one.cpp'
+

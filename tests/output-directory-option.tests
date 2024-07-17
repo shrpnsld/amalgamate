@@ -1,0 +1,28 @@
+USE-SANDBOX
+
+TEST-CASE 'amalgamate -o "<inside current working directory>"'
+USE-REQUISITES 'project'
+	cd 'project'
+	mkdir 'build'
+	CHECK-COMMAND amalgamate -o 'build'
+	CHECK-CONTENTS \
+		OF-FILE 'build/project-amalgamated/project.hpp' \
+		WITH-FILE 'expected/project-amalgamated.hpp'
+
+TEST-CASE 'amalgamate -o "<one level above>"'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-COMMAND amalgamate -o '..'
+	CHECK-CONTENTS \
+		OF-FILE '../project-amalgamated/project.hpp' \
+		WITH-FILE 'expected/project-amalgamated.hpp'
+
+TEST-CASE 'amalgamate -o "<one level above and one level deep>"'
+USE-REQUISITES 'project'
+	mkdir -p 'one'
+	cd 'project'
+	CHECK-COMMAND amalgamate -o '../one'
+	CHECK-CONTENTS \
+		OF-FILE '../one/project-amalgamated/project.hpp' \
+		WITH-FILE 'expected/project-amalgamated.hpp'
+

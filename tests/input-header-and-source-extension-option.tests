@@ -1,0 +1,46 @@
+USE-SANDBOX
+
+TEST-CASE 'amalgamate -e h -s c -M'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-COMMAND amalgamate -e h -s c -M
+	CHECK-CONTENTS \
+		OF-FILE 'project-amalgamated/project.h' \
+		WITH-FILE 'expected/project-h-c-amalgamated.h'
+	CHECK-CONTENTS \
+		OF-FILE 'project-amalgamated/project.c' \
+		WITH-FILE 'expected/project-h-c-amalgamated.c'
+
+TEST-CASE 'amalgamate -e hpp -s cpp -M'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-COMMAND amalgamate -e hpp -s cpp -M
+	CHECK-CONTENTS \
+		OF-FILE 'project-amalgamated/project.hpp' \
+		WITH-FILE 'expected/project-hpp-cpp-amalgamated.hpp'
+	CHECK-CONTENTS \
+		OF-FILE 'project-amalgamated/project.cpp' \
+		WITH-FILE 'expected/project-hpp-cpp-amalgamated.cpp'
+
+TEST-CASE 'amalgamate -e hxx -s cxx -M'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-COMMAND amalgamate -e hxx -s cxx -M
+	CHECK-CONTENTS \
+		OF-FILE 'project-amalgamated/project.hxx' \
+		WITH-FILE 'expected/project-hxx-cxx-amalgamated.hxx'
+	CHECK-CONTENTS \
+		OF-FILE 'project-amalgamated/project.cxx' \
+		WITH-FILE 'expected/project-hxx-cxx-amalgamated.cxx'
+
+TEST-CASE 'amalgamate -e h++ -s c++ -M'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-COMMAND amalgamate -e h++ -s c++ -M
+	CHECK-CONTENTS \
+		OF-FILE 'project-amalgamated/project.h++' \
+		WITH-FILE 'expected/project-h++-c++-amalgamated.h++'
+	CHECK-CONTENTS \
+		OF-FILE 'project-amalgamated/project.c++' \
+		WITH-FILE 'expected/project-h++-c++-amalgamated.c++'
+

@@ -1,0 +1,30 @@
+source $(SAMPLE amalgamate)
+
+TEST-CASE 'is-pragma-once() with correct "#pragma once" line'
+	CHECK is-pragma-once-line $' #pragma once'
+	CHECK is-pragma-once-line $'  #pragma once'
+	CHECK is-pragma-once-line $'\t#pragma once'
+	CHECK is-pragma-once-line $'\t\t#pragma once'
+
+	CHECK is-pragma-once-line $'#pragma once'
+	CHECK is-pragma-once-line $'#pragma  once'
+	CHECK is-pragma-once-line $'#pragma\tonce'
+	CHECK is-pragma-once-line $'#pragma\t\tonce'
+
+	CHECK is-pragma-once-line $'#pragma once '
+	CHECK is-pragma-once-line $'#pragma once  '
+	CHECK is-pragma-once-line $'#pragma once\t'
+	CHECK is-pragma-once-line $'#pragma once\t\t'
+
+	CHECK is-pragma-once-line $' #pragma once '
+	CHECK is-pragma-once-line $'  #pragma  once  '
+	CHECK is-pragma-once-line $'\t#pragma\tonce\t'
+	CHECK is-pragma-once-line $'\t\t#pragma\t\tonce\t\t'
+
+	CHECK is-pragma-once-line $' \t#pragma \tonce \t'
+	CHECK is-pragma-once-line $'\t #pragma\t once\t '
+
+TEST-CASE 'is-pragma-once() with malformed "#pragma once" line'
+	CHECK ! is-pragma-once-line $'#pragmaonce'
+	CHECK ! is-pragma-once-line $'#pragma twice'
+

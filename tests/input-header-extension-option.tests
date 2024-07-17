@@ -1,0 +1,118 @@
+USE-SANDBOX
+
+SECTION 'Generating single header'
+
+TEST-CASE 'amalgamate -e h'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-COMMAND amalgamate -e h
+	CHECK-CONTENTS \
+		OF-FILE 'project-amalgamated/project.h' \
+		WITH-FILE 'expected/project-h-amalgamated.h'
+
+TEST-CASE 'amalgamate -e hpp'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-COMMAND amalgamate -e hpp
+	CHECK-CONTENTS \
+		OF-FILE 'project-amalgamated/project.hpp' \
+		WITH-FILE 'expected/project-hpp-amalgamated.hpp'
+
+TEST-CASE 'amalgamate -e hxx'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-COMMAND amalgamate -e hxx
+	CHECK-CONTENTS \
+		OF-FILE 'project-amalgamated/project.hxx' \
+		WITH-FILE 'expected/project-hxx-amalgamated.hxx'
+
+TEST-CASE 'amalgamate -e h++'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-COMMAND amalgamate -e h++
+	CHECK-CONTENTS \
+		OF-FILE 'project-amalgamated/project.h++' \
+		WITH-FILE 'expected/project-h++-amalgamated.h++'
+
+
+SECTION 'Generating single source'
+
+TEST-CASE 'amalgamate -e h -S'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-COMMAND amalgamate -e h -S
+	CHECK-CONTENTS \
+		OF-FILE 'project-amalgamated/project.cpp' \
+		WITH-FILE 'expected/project-h-amalgamated.cpp'
+
+TEST-CASE 'amalgamate -e hpp -S'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-COMMAND amalgamate -e hpp -S
+	CHECK-CONTENTS \
+		OF-FILE 'project-amalgamated/project.cpp' \
+		WITH-FILE 'expected/project-hpp-amalgamated.cpp'
+
+TEST-CASE 'amalgamate -e hxx -S'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-COMMAND amalgamate -e hxx -S
+	CHECK-CONTENTS \
+		OF-FILE 'project-amalgamated/project.cpp' \
+		WITH-FILE 'expected/project-hxx-amalgamated.cpp'
+
+TEST-CASE 'amalgamate -e h++ -S'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-COMMAND amalgamate -e h++ -S
+	CHECK-CONTENTS \
+		OF-FILE 'project-amalgamated/project.cpp' \
+		WITH-FILE 'expected/project-h++-amalgamated.cpp'
+
+
+SECTION 'Generating pair with only header extension specified'
+
+TEST-CASE 'amalgamate -e h -M'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-COMMAND amalgamate -e h -M
+	CHECK-CONTENTS \
+		OF-FILE 'project-amalgamated/project.h' \
+		WITH-FILE 'expected/project-h-and-all-sources-amalgamated.h'
+	CHECK-CONTENTS \
+		OF-FILE 'project-amalgamated/project.cpp' \
+		WITH-FILE 'expected/project-h-and-all-sources-amalgamated.cpp'
+
+TEST-CASE 'amalgamate -e hpp -M'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-COMMAND amalgamate -e hpp -M
+	CHECK-CONTENTS \
+		OF-FILE 'project-amalgamated/project.hpp' \
+		WITH-FILE 'expected/project-hpp-and-all-sources-amalgamated.hpp'
+	CHECK-CONTENTS \
+		OF-FILE 'project-amalgamated/project.cpp' \
+		WITH-FILE 'expected/project-hpp-and-all-sources-amalgamated.cpp'
+
+TEST-CASE 'amalgamate -e hxx -M'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-COMMAND amalgamate -e hxx -M
+	CHECK-CONTENTS \
+		OF-FILE 'project-amalgamated/project.hxx' \
+		WITH-FILE 'expected/project-hxx-and-all-sources-amalgamated.hxx'
+	CHECK-CONTENTS \
+		OF-FILE 'project-amalgamated/project.cpp' \
+		WITH-FILE 'expected/project-hxx-and-all-sources-amalgamated.cpp'
+
+TEST-CASE 'amalgamate -e h++ -M'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-COMMAND amalgamate -e h++ -M
+	CHECK-CONTENTS \
+		OF-FILE 'project-amalgamated/project.h++' \
+		WITH-FILE 'expected/project-h++-and-all-sources-amalgamated.h++'
+	CHECK-CONTENTS \
+		OF-FILE 'project-amalgamated/project.cpp' \
+		WITH-FILE 'expected/project-h++-and-all-sources-amalgamated.cpp'
+

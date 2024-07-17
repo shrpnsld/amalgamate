@@ -1,0 +1,64 @@
+source $(SAMPLE amalgamate)
+
+TEST-CASE 'filter-array-with-array() with empty arrays'
+	subject1=()
+	subject2=()
+	result=($(filter-array-with-array ${#subject1[@]} "${subject1[@]}" "${subject2[@]}"))
+	CHECK [ ${#result[@]} == 0 ]
+
+TEST-CASE 'filter-array-with-array() with empty source array'
+	subject1=()
+	subject2=('one')
+	result=($(filter-array-with-array ${#subject1[@]} "${subject1[@]}" "${subject2[@]}"))
+	CHECK [ ${#result[@]} == 0 ]
+
+TEST-CASE 'filter-array-with-array() with empty filtering array'
+	subject1=('one' 'two' 'three')
+	subject2=()
+	result=($(filter-array-with-array ${#subject1[@]} "${subject1[@]}" "${subject2[@]}"))
+	CHECK [ ${#result[@]} == 3 ]
+	CHECK [ "${result[0]}" == 'one' ]
+	CHECK [ "${result[1]}" == 'two' ]
+	CHECK [ "${result[2]}" == 'three' ]
+
+TEST-CASE 'filter-array-with-array() with single-item equal arrays'
+	subject1=('one')
+	subject2=('one')
+	result=($(filter-array-with-array ${#subject1[@]} "${subject1[@]}" "${subject2[@]}"))
+	CHECK [ ${#result[@]} == 0 ]
+
+TEST-CASE 'filter-array-with-array() with single-item non-equal arrays'
+	subject1=('one')
+	subject2=('two')
+	result=($(filter-array-with-array ${#subject1[@]} "${subject1[@]}" "${subject2[@]}"))
+	CHECK [ ${#result[@]} == 1 ]
+	CHECK [ "${result[0]}" == 'one' ]
+
+TEST-CASE 'filter-array-with-array() with no matching filtering items'
+	subject1=('one' 'two' 'three')
+	subject2=('four' 'five')
+	result=($(filter-array-with-array ${#subject1[@]} "${subject1[@]}" "${subject2[@]}"))
+	CHECK [ ${#result[@]} == 3 ]
+	CHECK [ "${result[0]}" == 'one' ]
+	CHECK [ "${result[1]}" == 'two' ]
+	CHECK [ "${result[2]}" == 'three' ]
+
+TEST-CASE 'filter-array-with-array() with matching filtering items'
+	subject1=('one' 'two' 'three' 'four' 'five')
+	subject2=('three' 'two')
+	result=($(filter-array-with-array ${#subject1[@]} "${subject1[@]}" "${subject2[@]}"))
+	CHECK [ ${#result[@]} == 3 ]
+	CHECK [ "${result[0]}" == 'one' ]
+	CHECK [ "${result[1]}" == 'four' ]
+	CHECK [ "${result[2]}" == 'five' ]
+
+TEST-CASE 'filter-array-with-array() with source array having repeated items'
+	subject1=('one' 'two' 'three' 'three' 'four' 'one' 'three' 'five')
+	subject2=('three' 'two')
+	result=($(filter-array-with-array ${#subject1[@]} "${subject1[@]}" "${subject2[@]}"))
+	CHECK [ ${#result[@]} == 4 ]
+	CHECK [ "${result[0]}" == 'one' ]
+	CHECK [ "${result[1]}" == 'four' ]
+	CHECK [ "${result[2]}" == 'one' ]
+	CHECK [ "${result[3]}" == 'five' ]
+

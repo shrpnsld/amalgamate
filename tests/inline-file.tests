@@ -1,0 +1,85 @@
+source $(SAMPLE amalgamate)
+
+USE-SANDBOX
+
+SECTION 'Inlining files without testing indentation'
+
+TEST-CASE 'inline-file() with "one.hpp"'
+USE-REQUISITES 'one.hpp'
+	inline-file "$SANDBOX_ROOT/one.hpp" "$SANDBOX_ROOT/result.hpp" ''
+	CHECK-CONTENTS \
+		OF-FILE 'result.hpp' \
+		WITH-FILE 'expected/one-inlined.hpp'
+
+TEST-CASE 'inline-file() with "one.hpp", "two.hpp"'
+USE-REQUISITES 'one.hpp' 'two.hpp'
+	inline-file "$SANDBOX_ROOT/one.hpp" "$SANDBOX_ROOT/result.hpp" ''
+	inline-file "$SANDBOX_ROOT/two.hpp" "$SANDBOX_ROOT/result.hpp" ''
+	CHECK-CONTENTS \
+		OF-FILE 'result.hpp' \
+		WITH-FILE 'expected/one-two-inlined.hpp'
+
+TEST-CASE 'inline-file() with "one.hpp", "two.hpp"'
+USE-REQUISITES 'one.hpp' 'two.hpp' 'three.hpp'
+	inline-file "$SANDBOX_ROOT/one.hpp" "$SANDBOX_ROOT/result.hpp" ''
+	inline-file "$SANDBOX_ROOT/two.hpp" "$SANDBOX_ROOT/result.hpp" ''
+	inline-file "$SANDBOX_ROOT/three.hpp" "$SANDBOX_ROOT/result.hpp" ''
+	CHECK-CONTENTS \
+		OF-FILE 'result.hpp' \
+		WITH-FILE 'expected/one-two-three-inlined.hpp'
+
+
+SECTION 'Inlining files and using indentation'
+
+TEST-CASE 'inline-file() with double-space as indent'
+USE-REQUISITES 'one.hpp'
+	inline-file "$SANDBOX_ROOT/one.hpp" "$SANDBOX_ROOT/result.hpp" '  '
+	CHECK-CONTENTS \
+		OF-FILE 'result.hpp' \
+		WITH-FILE 'expected/one-inlined-with-double-space-indent.hpp'
+
+TEST-CASE 'inline-file() with quad-space as indent'
+USE-REQUISITES 'one.hpp'
+	inline-file "$SANDBOX_ROOT/one.hpp" "$SANDBOX_ROOT/result.hpp" '    '
+	CHECK-CONTENTS \
+		OF-FILE 'result.hpp' \
+		WITH-FILE 'expected/one-inlined-with-quad-space-indent.hpp'
+
+TEST-CASE 'inline-file() with "one.hpp", "two.hpp" and double-space indent'
+USE-REQUISITES 'one.hpp' 'two.hpp'
+	inline-file "$SANDBOX_ROOT/one.hpp" "$SANDBOX_ROOT/result.hpp" '  '
+	inline-file "$SANDBOX_ROOT/two.hpp" "$SANDBOX_ROOT/result.hpp" '  '
+	CHECK-CONTENTS \
+		OF-FILE 'result.hpp' \
+		WITH-FILE 'expected/one-two-inlined-with-double-space-indent.hpp'
+
+
+SECTION 'Inlining files and using different indentations for each one'
+
+TEST-CASE 'inline-file() with "one.hpp", "two.hpp", "three.hpp" and quad-space indent'
+USE-REQUISITES 'one.hpp' 'two.hpp' 'three.hpp'
+	inline-file "$SANDBOX_ROOT/one.hpp" "$SANDBOX_ROOT/result.hpp" '    '
+	inline-file "$SANDBOX_ROOT/two.hpp" "$SANDBOX_ROOT/result.hpp" '    '
+	inline-file "$SANDBOX_ROOT/three.hpp" "$SANDBOX_ROOT/result.hpp" '    '
+	CHECK-CONTENTS \
+		OF-FILE 'result.hpp' \
+		WITH-FILE 'expected/one-two-three-inlined-with-quad-space-indent.hpp'
+
+TEST-CASE 'inline-file() with "one.hpp", "two.hpp", "three.hpp" and mixed indent (variant 1)'
+USE-REQUISITES 'one.hpp' 'two.hpp' 'three.hpp'
+	inline-file "$SANDBOX_ROOT/one.hpp" "$SANDBOX_ROOT/result.hpp" ' '
+	inline-file "$SANDBOX_ROOT/two.hpp" "$SANDBOX_ROOT/result.hpp" '  '
+	inline-file "$SANDBOX_ROOT/three.hpp" "$SANDBOX_ROOT/result.hpp" '   '
+	CHECK-CONTENTS \
+		OF-FILE 'result.hpp' \
+		WITH-FILE 'expected/one-two-three-inlined-with-mixed-indent-variant-1.hpp'
+
+TEST-CASE 'inline-file() with "one.hpp", "two.hpp", "three.hpp" and mixed indent (variant 2)'
+USE-REQUISITES 'one.hpp' 'two.hpp' 'three.hpp'
+	inline-file "$SANDBOX_ROOT/one.hpp" "$SANDBOX_ROOT/result.hpp" '  '
+	inline-file "$SANDBOX_ROOT/two.hpp" "$SANDBOX_ROOT/result.hpp" '   '
+	inline-file "$SANDBOX_ROOT/three.hpp" "$SANDBOX_ROOT/result.hpp" ' '
+	CHECK-CONTENTS \
+		OF-FILE 'result.hpp' \
+		WITH-FILE 'expected/one-two-three-inlined-with-mixed-indent-variant-2.hpp'
+

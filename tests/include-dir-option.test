@@ -1,0 +1,26 @@
+USE-SANDBOX
+
+TEST-CASE 'amalgamate with "project-without-include"'
+USE-REQUISITES 'project-without-include'
+	cd 'project-without-include'
+	CHECK-COMMAND amalgamate -i 'src'
+	CHECK-CONTENTS \
+		OF-FILE 'project-without-include-amalgamated/project-without-include.hpp' \
+		WITH-FILE 'expected/project-without-include-amalgamated.hpp'
+
+TEST-CASE 'amalgamate -I include-one'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-COMMAND amalgamate -I 'include-one' -i 'src'
+	CHECK-CONTENTS \
+		OF-FILE 'project-amalgamated/project.hpp' \
+		WITH-FILE 'expected/project-amalgamated-with-include-one.hpp'
+
+TEST-CASE 'amalgamate -I include-two'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-COMMAND amalgamate -I 'include-two' -i 'src'
+	CHECK-CONTENTS \
+		OF-FILE 'project-amalgamated/project.hpp' \
+		WITH-FILE 'expected/project-amalgamated-with-include-two.hpp'
+

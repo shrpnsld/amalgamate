@@ -1,0 +1,335 @@
+USE-SANDBOX
+
+SECTION '-i'
+
+TEST-CASE 'amalgamate -v -i "src"'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-OUTPUT \
+		WITH-FILE-EXPANDING-VARS 'expected/input-src' \
+		COMMAND amalgamate -v -i src
+
+TEST-CASE 'amalgamate -v -i "src/project"'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-OUTPUT \
+		WITH-FILE-EXPANDING-VARS 'expected/input-src-project' \
+		COMMAND amalgamate -v -i src/project
+
+
+SECTION '-I'
+
+TEST-CASE 'amalgamate -v -I "src"'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-OUTPUT \
+		WITH-FILE-EXPANDING-VARS 'expected/include-src' \
+		COMMAND amalgamate -v -I src
+
+TEST-CASE 'amalgamate -v -I "src/project"'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-OUTPUT \
+		WITH-FILE-EXPANDING-VARS 'expected/include-src-project' \
+		COMMAND amalgamate -v -I src/project
+
+
+SECTION '-e'
+
+TEST-CASE 'amalgamate -v -e "h,hh"'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-OUTPUT \
+		WITH-FILE-EXPANDING-VARS 'expected/header-extensions-h-hh' \
+		COMMAND amalgamate -v -e h,hh
+
+TEST-CASE 'amalgamate -v -e "hpp,h++"'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-OUTPUT \
+		WITH-FILE-EXPANDING-VARS 'expected/header-extensions-hpp-h++' \
+		COMMAND amalgamate -v -e hpp,h++
+
+
+SECTION '-s'
+
+TEST-CASE 'amalgamate -v -s "c,cc"'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-OUTPUT \
+		WITH-FILE-EXPANDING-VARS 'expected/source-extensions-c-cc' \
+		COMMAND amalgamate -v -S -s c,cc
+
+TEST-CASE 'amalgamate -v -s "cpp,c++"'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-OUTPUT \
+		WITH-FILE-EXPANDING-VARS 'expected/source-extensions-cpp-c++' \
+		COMMAND amalgamate -v -S -s cpp,c++
+
+
+SECTION '-o'
+
+TEST-CASE 'amalgamate -v -o ..'
+USE-REQUISITES 'project'
+	cd 'project'
+	mkdir dist
+	CHECK-OUTPUT \
+		WITH-FILE-EXPANDING-VARS 'expected/output-dir-up' \
+		COMMAND amalgamate -v -o ..
+
+TEST-CASE 'amalgamate -v -o header-only'
+USE-REQUISITES 'project'
+	cd 'project'
+	mkdir header-only
+	CHECK-OUTPUT \
+		WITH-FILE-EXPANDING-VARS 'expected/output-header-only' \
+		COMMAND amalgamate -v -o header-only
+
+
+SECTION '-n'
+
+TEST-CASE 'amalgamate -v -n shmoject'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-OUTPUT \
+		WITH-FILE-EXPANDING-VARS 'expected/name-shmoject' \
+		COMMAND amalgamate -v -n shmoject
+
+TEST-CASE 'amalgamate -v -n shmouject'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-OUTPUT \
+		WITH-FILE-EXPANDING-VARS 'expected/name-shmouject' \
+		COMMAND amalgamate -v -n shmouject
+
+
+SECTION '-x'
+
+TEST-CASE 'amalgamate -v -x "hh,cc"'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-OUTPUT \
+		WITH-FILE-EXPANDING-VARS 'expected/output-extensions-hh-cc' \
+		COMMAND amalgamate -v -M -x hh,cc
+
+TEST-CASE 'amalgamate -v -x "h++,c++"'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-OUTPUT \
+		WITH-FILE-EXPANDING-VARS 'expected/output-extensions-h++-c++' \
+		COMMAND amalgamate -v -M -x h++,c++
+
+
+SECTION '-P'
+
+TEST-CASE 'amalgamate -v -P "prelude-1.txt"'
+USE-REQUISITES 'project' 'prelude-1.txt'
+	cd 'project'
+	CHECK-OUTPUT \
+		WITH-FILE-EXPANDING-VARS 'expected/header-prelude-1-txt' \
+		COMMAND amalgamate -v -P "../prelude-1.txt"
+
+TEST-CASE 'amalgamate -v -P "prelude-2.txt"'
+USE-REQUISITES 'project' 'prelude-2.txt'
+	cd 'project'
+	CHECK-OUTPUT \
+		WITH-FILE-EXPANDING-VARS 'expected/header-prelude-2-txt' \
+		COMMAND amalgamate -v -P "../prelude-2.txt"
+
+TEST-CASE 'amalgamate -v -P "prelude-1.txt" -S'
+USE-REQUISITES 'project' 'prelude-1.txt'
+	cd 'project'
+	CHECK-OUTPUT \
+		WITH-FILE-EXPANDING-VARS 'expected/header-prelude-1-txt-source-only' \
+		COMMAND amalgamate -v -P "../prelude-1.txt" -S
+
+TEST-CASE 'amalgamate -v -P "prelude-1.txt" -M'
+USE-REQUISITES 'project' 'prelude-1.txt'
+	cd 'project'
+	CHECK-OUTPUT \
+		WITH-FILE-EXPANDING-VARS 'expected/header-prelude-1-txt-pair' \
+		COMMAND amalgamate -v -P "../prelude-1.txt" -M
+
+
+SECTION '-p'
+
+TEST-CASE 'amalgamate -v -p "prelude-1.txt"'
+USE-REQUISITES 'project' 'prelude-1.txt'
+	cd 'project'
+	CHECK-OUTPUT \
+		WITH-FILE-EXPANDING-VARS 'expected/source-prelude-1-txt' \
+		COMMAND amalgamate -v -p "../prelude-1.txt"
+
+TEST-CASE 'amalgamate -v -p "prelude-2.txt"'
+USE-REQUISITES 'project' 'prelude-2.txt'
+	cd 'project'
+	CHECK-OUTPUT \
+		WITH-FILE-EXPANDING-VARS 'expected/source-prelude-2-txt' \
+		COMMAND amalgamate -v -p "../prelude-2.txt"
+
+TEST-CASE 'amalgamate -v -p "prelude-1.txt" -S'
+USE-REQUISITES 'project' 'prelude-1.txt'
+	cd 'project'
+	CHECK-OUTPUT \
+		WITH-FILE-EXPANDING-VARS 'expected/source-prelude-1-txt-source-only' \
+		COMMAND amalgamate -v -p "../prelude-1.txt" -S
+
+TEST-CASE 'amalgamate -v -p "prelude-1.txt" -M'
+USE-REQUISITES 'project' 'prelude-1.txt'
+	cd 'project'
+	CHECK-OUTPUT \
+		WITH-FILE-EXPANDING-VARS 'expected/source-prelude-1-txt-pair' \
+		COMMAND amalgamate -v -p "../prelude-1.txt" -M
+
+
+SECTION '-G'
+
+TEST-CASE 'amalgamate -v -G ""'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-OUTPUT \
+		WITH-FILE-EXPANDING-VARS 'expected/include-guard-automatic' \
+		COMMAND amalgamate -v -G ''
+
+TEST-CASE 'amalgamate -v -G "PROJECT_HPP_ALREADY_INCLUDED"'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-OUTPUT \
+		WITH-FILE-EXPANDING-VARS 'expected/include-guard-custom-1' \
+		COMMAND amalgamate -v -G 'PROJECT_HPP_ALREADY_INCLUDED'
+
+TEST-CASE 'amalgamate -v -G "PROJECT_HPP_INCLUDE_GUARD"'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-OUTPUT \
+		WITH-FILE-EXPANDING-VARS 'expected/include-guard-custom-2' \
+		COMMAND amalgamate -v -G 'PROJECT_HPP_INCLUDE_GUARD'
+
+
+SECTION '-L'
+
+TEST-CASE 'amalgamate -v -L "interlude-1.txt"'
+USE-REQUISITES 'project' 'interlude-1.txt'
+	cd 'project'
+	CHECK-OUTPUT \
+		WITH-FILE-EXPANDING-VARS 'expected/header-interlude-1-txt' \
+		COMMAND amalgamate -v -L '../interlude-1.txt'
+
+TEST-CASE 'amalgamate -v -L "interlude-2.txt"'
+USE-REQUISITES 'project' 'interlude-2.txt'
+	cd 'project'
+	CHECK-OUTPUT \
+		WITH-FILE-EXPANDING-VARS 'expected/header-interlude-2-txt' \
+		COMMAND amalgamate -v -L '../interlude-2.txt'
+
+
+SECTION '-1'
+
+TEST-CASE 'amalgamate -v -1 "src/header.hpp"'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-OUTPUT \
+		WITH-FILE-EXPANDING-VARS 'expected/first-file-header-hpp' \
+		COMMAND amalgamate -v -1 'src/project/header.hpp'
+
+TEST-CASE 'amalgamate -v -1 "src/source.cpp"'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-OUTPUT \
+		WITH-FILE-EXPANDING-VARS 'expected/first-file-source-cpp' \
+		COMMAND amalgamate -v -1 'src/project/source.cpp'
+
+
+SECTION '-b'
+
+TEST-CASE 'amalgamate -v -b 0'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-OUTPUT \
+		WITH-FILE-EXPANDING-VARS 'expected/reduce-blank-lines-0' \
+		COMMAND amalgamate -v -b 0
+
+TEST-CASE 'amalgamate -v -b 1'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-OUTPUT \
+		WITH-FILE-EXPANDING-VARS 'expected/reduce-blank-lines-1' \
+		COMMAND amalgamate -v -b 1
+
+TEST-CASE 'amalgamate -v -b 2'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-OUTPUT \
+		WITH-FILE-EXPANDING-VARS 'expected/reduce-blank-lines-2' \
+		COMMAND amalgamate -v -b 2
+
+
+SECTION '-- <flie>...'
+
+TEST-CASE 'amalgamate -v -- "src/project/header.hpp"'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-OUTPUT \
+		WITH-FILE-EXPANDING-VARS 'expected/file-list-1' \
+		COMMAND amalgamate -v -- 'src/project/header.hpp'
+
+TEST-CASE 'amalgamate -v -- "src/project/source.cpp"'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-OUTPUT \
+		WITH-FILE-EXPANDING-VARS 'expected/file-list-2' \
+		COMMAND amalgamate -v -- 'src/project/source.cpp'
+
+TEST-CASE 'amalgamate -v -- "src/project/header.hpp" "src/project/source.cpp"'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-OUTPUT \
+		WITH-FILE-EXPANDING-VARS 'expected/file-list-3' \
+		COMMAND amalgamate -v -- 'src/project/header.hpp' 'src/project/source.cpp'
+
+
+SECTION 'other single-case tests'
+
+TEST-CASE 'amalgamate'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-OUTPUT \
+		WITH-STRING '' \
+		COMMAND amalgamate
+
+TEST-CASE 'amalgamate -v'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-OUTPUT \
+		WITH-FILE-EXPANDING-VARS 'expected/just-verbose' \
+		COMMAND amalgamate -v
+
+TEST-CASE 'amalgamate -v -S'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-OUTPUT \
+		WITH-FILE-EXPANDING-VARS 'expected/source-only' \
+		COMMAND amalgamate -v -S
+
+TEST-CASE 'amalgamate -v -M'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-OUTPUT \
+		WITH-FILE-EXPANDING-VARS 'expected/pair' \
+		COMMAND amalgamate -v -M
+
+TEST-CASE 'amalgamate -v -g'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-OUTPUT \
+		WITH-FILE-EXPANDING-VARS 'expected/group-headers-on-top' \
+		COMMAND amalgamate -v -g
+
+TEST-CASE 'amalgamate -v -t'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-OUTPUT \
+		WITH-FILE-EXPANDING-VARS 'expected/trim-trailing-whitespace' \
+		COMMAND amalgamate -v -t
+

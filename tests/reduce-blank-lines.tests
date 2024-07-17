@@ -1,0 +1,119 @@
+source $(SAMPLE amalgamate)
+
+USE-SANDBOX
+
+SECTION 'Empty file'
+
+TEST-CASE 'reduce-blank-lines() with empty file'
+USE-REQUISITES 'empty.hpp'
+	reduce-blank-lines 'empty.hpp' 0
+	CHECK-CONTENTS \
+		OF-FILE 'empty.hpp' \
+		WITH-FILE 'expected/empty.hpp'
+
+	reduce-blank-lines 'empty.hpp' 1
+	CHECK-CONTENTS \
+		OF-FILE 'empty.hpp' \
+		WITH-FILE 'expected/empty.hpp'
+
+	reduce-blank-lines 'empty.hpp' 2
+	CHECK-CONTENTS \
+		OF-FILE 'empty.hpp' \
+		WITH-FILE 'expected/empty.hpp'
+
+
+SECTION 'Single blank lines'
+
+TEST-CASE 'reduce-blank-lines() with single blank lines reduced to 0'
+USE-REQUISITES 'single-blank-lines.hpp'
+	reduce-blank-lines 'single-blank-lines.hpp' 0
+	CHECK-CONTENTS \
+		OF-FILE 'single-blank-lines.hpp' \
+		WITH-FILE 'expected/single-blank-lines-reduced-to-0.hpp'
+
+TEST-CASE 'reduce-blank-lines() with single blank lines reduced to 1'
+USE-REQUISITES 'single-blank-lines.hpp'
+	reduce-blank-lines 'single-blank-lines.hpp' 1
+	CHECK-CONTENTS \
+		OF-FILE 'single-blank-lines.hpp' \
+		WITH-FILE 'expected/single-blank-lines-reduced-to-1.hpp'
+
+TEST-CASE 'reduce-blank-lines() with single blank lines reduced to 2'
+USE-REQUISITES 'single-blank-lines.hpp'
+	reduce-blank-lines 'single-blank-lines.hpp' 2
+	CHECK-CONTENTS \
+		OF-FILE 'single-blank-lines.hpp' \
+		WITH-FILE 'expected/single-blank-lines-reduced-to-2.hpp'
+
+
+SECTION 'Double blank lines'
+
+TEST-CASE 'reduce-blank-lines() with double blank lines reduced to 0'
+USE-REQUISITES 'double-blank-lines.hpp'
+	reduce-blank-lines 'double-blank-lines.hpp' 0
+	CHECK-CONTENTS \
+		OF-FILE 'double-blank-lines.hpp' \
+		WITH-FILE 'expected/double-blank-lines-reduced-to-0.hpp'
+
+TEST-CASE 'reduce-blank-lines() with double blank lines reduced to 1'
+USE-REQUISITES 'double-blank-lines.hpp'
+	reduce-blank-lines 'double-blank-lines.hpp' 1
+	CHECK-CONTENTS \
+		OF-FILE 'double-blank-lines.hpp' \
+		WITH-FILE 'expected/double-blank-lines-reduced-to-1.hpp'
+
+TEST-CASE 'reduce-blank-lines() with double blank lines reduced to 2'
+USE-REQUISITES 'double-blank-lines.hpp'
+	reduce-blank-lines 'double-blank-lines.hpp' 2
+	CHECK-CONTENTS \
+		OF-FILE 'double-blank-lines.hpp' \
+		WITH-FILE 'expected/double-blank-lines-reduced-to-2.hpp'
+
+
+SECTION 'Triple blank lines'
+
+TEST-CASE 'reduce-blank-lines() with triple blank lines reduced to 0'
+USE-REQUISITES 'triple-blank-lines.hpp'
+	reduce-blank-lines 'triple-blank-lines.hpp' 0
+	CHECK-CONTENTS \
+		OF-FILE 'triple-blank-lines.hpp' \
+		WITH-FILE 'expected/triple-blank-lines-reduced-to-0.hpp'
+
+TEST-CASE 'reduce-blank-lines() with triple blank lines reduced to 1'
+USE-REQUISITES 'triple-blank-lines.hpp'
+	reduce-blank-lines 'triple-blank-lines.hpp' 1
+	CHECK-CONTENTS \
+		OF-FILE 'triple-blank-lines.hpp' \
+		WITH-FILE 'expected/triple-blank-lines-reduced-to-1.hpp'
+
+TEST-CASE 'reduce-blank-lines() with triple blank lines reduced to 2'
+USE-REQUISITES 'triple-blank-lines.hpp'
+	reduce-blank-lines 'triple-blank-lines.hpp' 2
+	CHECK-CONTENTS \
+		OF-FILE 'triple-blank-lines.hpp' \
+		WITH-FILE 'expected/triple-blank-lines-reduced-to-2.hpp'
+
+
+SECTION 'Mixed'
+
+TEST-CASE 'reduce-blank-lines() with mixed amount of blank lines reduced to 0'
+USE-REQUISITES 'mixed-blank-lines.hpp'
+	reduce-blank-lines 'mixed-blank-lines.hpp' 0
+	CHECK-CONTENTS \
+		OF-FILE 'mixed-blank-lines.hpp' \
+		WITH-FILE 'expected/mixed-blank-lines-reduced-to-0.hpp'
+
+TEST-CASE 'reduce-blank-lines() with mixed amount of blank lines reduced to 1'
+USE-REQUISITES 'mixed-blank-lines.hpp'
+	reduce-blank-lines 'mixed-blank-lines.hpp' 1
+	CHECK-CONTENTS \
+		OF-FILE 'mixed-blank-lines.hpp' \
+		WITH-FILE 'expected/mixed-blank-lines-reduced-to-1.hpp'
+
+TEST-CASE 'reduce-blank-lines() with mixed amount of blank lines reduced to 2'
+USE-REQUISITES 'mixed-blank-lines.hpp'
+	reduce-blank-lines 'mixed-blank-lines.hpp' 2
+	CHECK-CONTENTS \
+		OF-FILE 'mixed-blank-lines.hpp' \
+		WITH-FILE 'expected/mixed-blank-lines-reduced-to-2.hpp'
+

@@ -1,0 +1,23 @@
+[Input]
+Input directory: $PWD
+Header search path: $PWD
+Input header extensions: h hh
+Input source extensions: c cc cpp cxx c++
+Header prelude file: no
+Header interlude file: no
+
+[Output]
+Destination: $PWD/project-amalgamated
+Base name: project
+Header only. Extension: h
+Include guard: #pragma once
+Group uninlined headers on top: no
+Reduce consecutive blank lines to: no
+Trim trailing whitespace: no
+Insert annotations: no
+
+Adding include guard...
+Amalgamating files...
+./src/project/source.cpp
+
+Done.

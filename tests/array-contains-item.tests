@@ -1,0 +1,22 @@
+source $(SAMPLE amalgamate)
+
+TEST-CASE 'array-contains-item() with empty array'
+	subject=()
+	CHECK ! array-contains-item 'one' "${subject[@]}"
+
+TEST-CASE 'array-contains-item() with single-item array'
+	subject=('one')
+	CHECK array-contains-item 'one' "${subject[@]}"
+	CHECK ! array-contains-item 'two' "${subject[@]}"
+
+TEST-CASE 'array-contains-item() with multiple-item array'
+	subject=('one' 'two' 'three')
+	CHECK array-contains-item 'one' "${subject[@]}"
+	CHECK array-contains-item 'two' "${subject[@]}"
+	CHECK array-contains-item 'three' "${subject[@]}"
+	CHECK ! array-contains-item 'four' "${subject[@]}"
+
+TEST-CASE 'array-contains-item() and items "with space"'
+	subject=('one one' 'two two' 'three three')
+	CHECK array-contains-item 'one one' "${subject[@]}"
+

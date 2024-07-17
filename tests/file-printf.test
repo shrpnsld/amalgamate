@@ -1,0 +1,29 @@
+source $(SAMPLE amalgamate)
+
+USE-SANDBOX
+
+TEST-CASE 'file-printf() into a new file'
+	file-printf 'file.txt' 'hellomoto!\n'
+	CHECK-CONTENTS \
+		OF-FILE 'file.txt' \
+		WITH-FILE 'expected/new-file.txt'
+
+TEST-CASE 'file-printf() into an existing file'
+USE-REQUISITES 'file.txt'
+	file-printf 'file.txt' 'hellomoto!\n'
+	CHECK-CONTENTS \
+		OF-FILE 'file.txt' \
+		WITH-FILE 'expected/appended-file.txt'
+
+TEST-CASE 'file-printf "%d"'
+	file-printf 'file.txt' '%d\n' 456
+	CHECK-CONTENTS \
+		OF-FILE 'file.txt' \
+		WITH-FILE 'expected/format-d.txt'
+
+TEST-CASE 'file-printf "%s"'
+	file-printf 'file.txt' '%s\n' 'hellomoto!'
+	CHECK-CONTENTS \
+		OF-FILE 'file.txt' \
+		WITH-FILE 'expected/format-s.txt'
+

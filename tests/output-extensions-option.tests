@@ -1,0 +1,45 @@
+USE-SANDBOX 'simple-projects'
+
+SECTION '-x "h,c"'
+
+TEST-CASE 'amalgamate -x "h,c" with header-only project'
+USE-REQUISITES 'header-only'
+	cd 'header-only'
+	CHECK-COMMAND amalgamate -x 'h,c' -M
+	CHECK [ -r 'header-only-amalgamated/header-only.h' ]
+
+TEST-CASE 'amalgamate -x "h,c" with source-only project'
+USE-REQUISITES 'source-only'
+	cd 'source-only'
+	CHECK-COMMAND amalgamate -x 'h,c' -M
+	CHECK [ -r 'source-only-amalgamated/source-only.h' ]
+
+TEST-CASE 'amalgamate -x "h,c" with header and source project'
+USE-REQUISITES 'header-and-source'
+	cd 'header-and-source'
+	CHECK-COMMAND amalgamate -x 'h,c' -M
+	CHECK [ -r 'header-and-source-amalgamated/header-and-source.h' ]
+	CHECK [ -r 'header-and-source-amalgamated/header-and-source.c' ]
+
+
+SECTION '-x "hxx,cxx"'
+
+TEST-CASE 'amalgamate -x "hxx,cxx" with header-only project'
+USE-REQUISITES 'header-only'
+	cd 'header-only'
+	CHECK-COMMAND amalgamate -x 'hxx,cxx' -M
+	CHECK [ -r 'header-only-amalgamated/header-only.hxx' ]
+
+TEST-CASE 'amalgamate -x "hxx,cxx" with source-only project'
+USE-REQUISITES 'source-only'
+	cd 'source-only'
+	CHECK-COMMAND amalgamate -x 'hxx,cxx' -M
+	CHECK [ -r 'source-only-amalgamated/source-only.hxx' ]
+
+TEST-CASE 'amalgamate -x "hxx,cxx" with header and source project'
+USE-REQUISITES 'header-and-source'
+	cd 'header-and-source'
+	CHECK-COMMAND amalgamate -x 'hxx,cxx' -M
+	CHECK [ -r 'header-and-source-amalgamated/header-and-source.hxx' ]
+	CHECK [ -r 'header-and-source-amalgamated/header-and-source.cxx' ]
+

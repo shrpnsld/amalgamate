@@ -1,0 +1,112 @@
+USE-SANDBOX
+
+SECTION 'Default include guard identifier with special characters in project name'
+
+TEST-CASE 'amalgamate -G "" with "project-name"'
+USE-REQUISITES 'project-name'
+	cd 'project-name'
+	CHECK-COMMAND amalgamate -G ''
+	CHECK-CONTENTS \
+		OF-FILE 'project-name-amalgamated/project-name.hpp' \
+		WITH-FILE 'expected/project-name-amalgamated.hpp'
+
+TEST-CASE 'amalgamate -G "" with "project.name"'
+USE-REQUISITES 'project.name'
+	cd 'project.name'
+	CHECK-COMMAND amalgamate -G ''
+	CHECK-CONTENTS \
+		OF-FILE 'project.name-amalgamated/project.name.hpp' \
+		WITH-FILE 'expected/project.name-amalgamated.hpp'
+
+TEST-CASE 'amalgamate -G "" with "project(name)"'
+USE-REQUISITES 'project(name)'
+	cd 'project(name)'
+	CHECK-COMMAND amalgamate -G ''
+	CHECK-CONTENTS \
+		OF-FILE 'project(name)-amalgamated/project(name).hpp' \
+		WITH-FILE 'expected/project(name)-amalgamated.hpp'
+
+TEST-CASE 'amalgamate -G "" with "project_name"'
+USE-REQUISITES 'project_name'
+	cd 'project_name'
+	CHECK-COMMAND amalgamate -G ''
+	CHECK-CONTENTS \
+		OF-FILE 'project_name-amalgamated/project_name.hpp' \
+		WITH-FILE 'expected/project_name-amalgamated.hpp'
+
+
+SECTION 'Default include guard identifier with different header extensions'
+
+TEST-CASE 'amalgamate -G ""'
+USE-REQUISITES 'project-h'
+	cd 'project-h'
+	CHECK-COMMAND amalgamate -G ''
+	CHECK-CONTENTS \
+		OF-FILE 'project-h-amalgamated/project-h.h' \
+		WITH-FILE 'expected/project-h-amalgamated.h'
+
+TEST-CASE 'amalgamate -G "" with "project-h"'
+USE-REQUISITES 'project-hxx'
+	cd 'project-hxx'
+	CHECK-COMMAND amalgamate -G ''
+	CHECK-CONTENTS \
+		OF-FILE 'project-hxx-amalgamated/project-hxx.hxx' \
+		WITH-FILE 'expected/project-hxx-amalgamated.hxx'
+
+TEST-CASE 'amalgamate -G "" -x hpp,cpp with "project-hxx"'
+USE-REQUISITES 'project-hxx'
+	cd 'project-hxx'
+	CHECK-COMMAND amalgamate -G '' -x hpp,cpp
+	CHECK-CONTENTS \
+		OF-FILE 'project-hxx-amalgamated/project-hxx.hpp' \
+		WITH-FILE 'expected/project-hxx-amalgamated.hpp'
+
+
+SECTION 'Default include guard wtih different amalgamation outputs'
+
+TEST-CASE 'amalgamate -G ""'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-COMMAND amalgamate -G ''
+	CHECK-CONTENTS \
+		OF-FILE 'project-amalgamated/project.hpp' \
+		WITH-FILE 'expected/project-amalgamated-into-header.hpp'
+
+TEST-CASE 'amalgamate -G "" -S'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-COMMAND amalgamate -G '' -S
+	CHECK-CONTENTS \
+		OF-FILE 'project-amalgamated/project.cpp' \
+		WITH-FILE 'expected/project-amalgamated-into-source.cpp'
+
+TEST-CASE 'amalgamate -G "" -M'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-COMMAND amalgamate -G '' -M
+	CHECK-CONTENTS \
+		OF-FILE 'project-amalgamated/project.hpp' \
+		WITH-FILE 'expected/project-amalgamated-into-pair.hpp'
+	CHECK-CONTENTS \
+		OF-FILE 'project-amalgamated/project.cpp' \
+		WITH-FILE 'expected/project-amalgamated-into-pair.cpp'
+
+
+SECTION 'Custom include guard identifier'
+
+TEST-CASE 'amalgamate -G "ANOTHER_INCLUDE_GUARD_ID"'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-COMMAND amalgamate -G 'ANOTHER_INCLUDE_GUARD_ID'
+	CHECK-CONTENTS \
+		OF-FILE 'project-amalgamated/project.hpp' \
+		WITH-FILE 'expected/project-amalgamated-with-another-include-guard-id.hpp'
+
+TEST-CASE 'amalgamate -G "DIFFERENT_INCLUDE_GUARD_ID"'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-COMMAND amalgamate -G 'DIFFERENT_INCLUDE_GUARD_ID'
+	CHECK-CONTENTS \
+		OF-FILE 'project-amalgamated/project.hpp' \
+		WITH-FILE 'expected/project-amalgamated-with-different-include-guard-id.hpp'
+

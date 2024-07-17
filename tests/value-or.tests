@@ -1,0 +1,10 @@
+source $(SAMPLE amalgamate)
+
+TEST-CASE 'value-or() with empty value'
+	result=$(value-or '' 'alternate')
+	CHECK [ "$result" == 'alternate' ]
+
+TEST-CASE 'value-or() with non-empty value'
+	result=$(value-or 'some' 'alternate')
+	CHECK [ "$result" == 'some' ]
+

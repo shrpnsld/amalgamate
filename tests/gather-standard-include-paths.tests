@@ -1,0 +1,90 @@
+source $(SAMPLE amalgamate)
+
+USE-SANDBOX
+
+TEST-CASE 'gather-standard-include-paths() with empty file'
+	paths=()
+	result=($(gather-standard-include-paths "${paths[@]}"))
+	CHECK [ ${#result[@]} == 0 ]
+
+TEST-CASE 'gather-standard-include-paths() with empty file'
+LINK-REQUISITES 'empty.hpp'
+	paths=(
+		'empty.hpp'
+		)
+	result=($(gather-standard-include-paths "${paths[@]}"))
+	CHECK [ ${#result[@]} == 0 ]
+
+TEST-CASE 'gather-standard-include-paths() with nothing to gather'
+LINK-REQUISITES 'nothing.hpp'
+	paths=(
+		'nothing.hpp'
+		)
+	result=($(gather-standard-include-paths "${paths[@]}"))
+	CHECK [ ${#result[@]} == 0 ]
+
+TEST-CASE 'gather-standard-include-paths() with "single-non-standard.hpp"'
+LINK-REQUISITES 'single-non-standard.hpp'
+	paths=(
+		'single-non-standard.hpp'
+		)
+	result=($(gather-standard-include-paths "${paths[@]}"))
+	CHECK [ ${#result[@]} == 0 ]
+
+TEST-CASE 'gather-standard-include-paths() with "multiple-non-standard.hpp"'
+LINK-REQUISITES 'multiple-non-standard.hpp'
+	paths=(
+		'multiple-non-standard.hpp'
+		)
+	result=($(gather-standard-include-paths "${paths[@]}"))
+	CHECK [ ${#result[@]} == 0 ]
+
+TEST-CASE 'gather-standard-include-paths() with "single-standard.hpp"'
+LINK-REQUISITES 'single-standard.hpp'
+	paths=(
+		'single-standard.hpp'
+		)
+	result=($(gather-standard-include-paths "${paths[@]}"))
+	CHECK [ ${#result[@]} == 1 ]
+	CHECK [ "${result[0]}" == 'iostream' ]
+
+TEST-CASE 'gather-standard-include-paths() with "multiple-standard.hpp"'
+LINK-REQUISITES 'multiple-standard.hpp'
+	paths=(
+		'multiple-standard.hpp'
+		)
+	result=($(gather-standard-include-paths "${paths[@]}"))
+	CHECK [ ${#result[@]} == 3 ]
+	CHECK [ "${result[0]}" == 'functional' ]
+	CHECK [ "${result[1]}" == 'iterator' ]
+	CHECK [ "${result[2]}" == 'vector' ]
+
+TEST-CASE 'gather-standard-include-paths() with "multiple-both.hpp"'
+LINK-REQUISITES 'multiple-both.hpp'
+	paths=(
+		'multiple-both.hpp'
+		)
+	result=($(gather-standard-include-paths "${paths[@]}"))
+	CHECK [ ${#result[@]} == 3 ]
+	CHECK [ "${result[0]}" == 'algorithm' ]
+	CHECK [ "${result[1]}" == 'iostream' ]
+	CHECK [ "${result[2]}" == 'string' ]
+
+TEST-CASE 'gather-standard-include-paths() with multiple paths'
+LINK-REQUISITES 'single-standard.hpp' 'single-non-standard.hpp' 'multiple-standard.hpp' 'multiple-non-standard.hpp' 'multiple-both.hpp'
+	paths=(
+		'single-standard.hpp'
+		'single-non-standard.hpp'
+		'multiple-standard.hpp'
+		'multiple-non-standard.hpp'
+		'multiple-both.hpp'
+		)
+	result=($(gather-standard-include-paths "${paths[@]}"))
+	CHECK [ ${#result[@]} == 6 ]
+	CHECK [ "${result[0]}" == 'algorithm' ]
+	CHECK [ "${result[1]}" == 'functional' ]
+	CHECK [ "${result[2]}" == 'iostream' ]
+	CHECK [ "${result[3]}" == 'iterator' ]
+	CHECK [ "${result[4]}" == 'string' ]
+	CHECK [ "${result[5]}" == 'vector' ]
+

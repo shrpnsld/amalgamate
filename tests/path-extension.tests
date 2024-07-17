@@ -1,0 +1,43 @@
+source $(SAMPLE amalgamate)
+
+TEST-CASE 'path-extension() with "path.extension"'
+	result=$(path-extension 'path.extension')
+	CHECK [ "$result" == 'extension' ]
+
+	result=$(path-extension 'deeper/path.extension')
+	CHECK [ "$result" == 'extension' ]
+
+	result=$(path-extension 'more/deeper/path.extension')
+	CHECK [ "$result" == 'extension' ]
+
+	result=$(path-extension 'path.hpp')
+	CHECK [ "$result" == 'hpp' ]
+
+	result=$(path-extension 'deeper/path.hpp')
+	CHECK [ "$result" == 'hpp' ]
+
+	result=$(path-extension 'more/deeper/path.hpp')
+	CHECK [ "$result" == 'hpp' ]
+
+TEST-CASE 'path-extension() without extension'
+	result=$(path-extension 'path.')
+	CHECK [ "$result" == '' ]
+
+	result=$(path-extension 'deeper/path.')
+	CHECK [ "$result" == '' ]
+
+	result=$(path-extension 'more/deeper/path.')
+	CHECK [ "$result" == '' ]
+
+	result=$(path-extension 'path')
+	CHECK [ "$result" == '' ]
+
+	result=$(path-extension 'deeper/path')
+	CHECK [ "$result" == '' ]
+
+	result=$(path-extension 'more/deeper/path')
+	CHECK [ "$result" == '' ]
+
+	result=$(path-extension '.hidden')
+	CHECK [ "$result" == '' ]
+

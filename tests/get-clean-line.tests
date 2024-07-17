@@ -1,0 +1,24 @@
+source $(SAMPLE amalgamate)
+
+TEST-CASE 'get-clean-line() with tag'
+	result=$(get-clean-line ' #include <socket.h>// [amalgamate:leave]')
+	CHECK [ "$result" == ' #include <socket.h>' ]
+
+	result=$(get-clean-line $'\t#include <socket.h>// [amalgamate:leave]')
+	CHECK [ "$result" == $'\t#include <socket.h>' ]
+
+	result=$(get-clean-line '#include <socket.h>// [amalgamate:leave]')
+	CHECK [ "$result" == '#include <socket.h>' ]
+
+	result=$(get-clean-line '#include <socket.h> // [amalgamate:leave]')
+	CHECK [ "$result" == '#include <socket.h>' ]
+
+	result=$(get-clean-line $'#include <socket.h>\t// [amalgamate:leave]')
+	CHECK [ "$result" == '#include <socket.h>' ]
+
+	result=$(get-clean-line $'#include <socket.h> \t// [amalgamate:leave]')
+	CHECK [ "$result" == '#include <socket.h>' ]
+
+	result=$(get-clean-line $'#include <socket.h>\t // [amalgamate:leave]')
+	CHECK [ "$result" == '#include <socket.h>' ]
+

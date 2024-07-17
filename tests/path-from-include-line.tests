@@ -1,0 +1,21 @@
+source $(SAMPLE amalgamate)
+
+TEST-CASE 'path-from-include-line() with valid include line'
+	result=$(path-from-include-line '#include "header"')
+	CHECK [ "$result" == 'header' ]
+
+	result=$(path-from-include-line '#include "header.hpp"')
+	CHECK [ "$result" == 'header.hpp' ]
+
+	result=$(path-from-include-line ' #include "header.hpp"')
+	CHECK [ "$result" == 'header.hpp' ]
+
+	result=$(path-from-include-line '# include "header.hpp"')
+	CHECK [ "$result" == 'header.hpp' ]
+
+	result=$(path-from-include-line '#include "header.hpp" ')
+	CHECK [ "$result" == 'header.hpp' ]
+
+	result=$(path-from-include-line '#include "header.hpp" // not relevant')
+	CHECK [ "$result" == 'header.hpp' ]
+

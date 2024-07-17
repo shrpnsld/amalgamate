@@ -1,0 +1,29 @@
+USE-SANDBOX
+
+TEST-CASE 'amalgamate "header-only" project'
+USE-REQUISITES 'header-only'
+	cd 'header-only'
+	CHECK-COMMAND amalgamate -S
+	CHECK-CONTENTS \
+		OF-FILE 'header-only-amalgamated/header-only.cpp' \
+		WITH-FILE 'expected/header-only-amalgamated.cpp'
+	CHECK ! [ -r 'header-only-amalgamated/header-only.hpp' ]
+
+TEST-CASE 'amalgamate "source-only" project'
+USE-REQUISITES 'source-only'
+	cd 'source-only'
+	CHECK-COMMAND amalgamate -S
+	CHECK-CONTENTS \
+		OF-FILE 'source-only-amalgamated/source-only.cpp' \
+		WITH-FILE 'expected/source-only-amalgamated.cpp'
+	CHECK ! [ -r 'source-only-amalgamated/source-only.h' ]
+
+TEST-CASE 'amalgamate "header-and-source" project'
+USE-REQUISITES 'header-and-source'
+	cd 'header-and-source'
+	CHECK-COMMAND amalgamate -S
+	CHECK-CONTENTS \
+		OF-FILE 'header-and-source-amalgamated/header-and-source.cpp' \
+		WITH-FILE 'expected/header-and-source-amalgamated.cpp'
+	CHECK ! [ -r 'header-and-source-amalgamated/header-and-source.hpp' ]
+

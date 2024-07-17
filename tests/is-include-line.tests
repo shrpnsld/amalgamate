@@ -1,0 +1,67 @@
+source $(SAMPLE amalgamate)
+
+TEST-CASE 'is-include-line() with non-standard include line'
+	CHECK is-include-line $'#include"not-iostream.hpp"'
+
+	CHECK is-include-line $' #include "not-iostream.hpp"'
+	CHECK is-include-line $'  #include "not-iostream.hpp"'
+	CHECK is-include-line $'\t#include "not-iostream.hpp"'
+	CHECK is-include-line $'\t\t#include "not-iostream.hpp"'
+
+	CHECK is-include-line $'#include "not-iostream.hpp"'
+	CHECK is-include-line $'#include  "not-iostream.hpp"'
+	CHECK is-include-line $'#include\t"not-iostream.hpp"'
+	CHECK is-include-line $'#include\t\t"not-iostream.hpp"'
+
+	CHECK is-include-line $'#include "not-iostream.hpp" '
+	CHECK is-include-line $'#include "not-iostream.hpp"  '
+	CHECK is-include-line $'#include "not-iostream.hpp"\t'
+	CHECK is-include-line $'#include "not-iostream.hpp"\t\t'
+
+	CHECK is-include-line $' #include "not-iostream.hpp" '
+	CHECK is-include-line $'  #include  "not-iostream.hpp"  '
+	CHECK is-include-line $'\t#include\t"not-iostream.hpp"\t'
+	CHECK is-include-line $'\t\t#include\t\t"not-iostream.hpp"\t\t'
+
+	CHECK is-include-line $' \t#include \t"not-iostream.hpp" \t'
+	CHECK is-include-line $'\t #include\t "not-iostream.hpp"\t '
+
+TEST-CASE 'is-include-line() with include line with non-alpha path'
+	CHECK is-include-line $'#include "io-stream"'
+	CHECK is-include-line $'#include "io/stream"'
+	CHECK is-include-line $'#include "iostream.hpp"'
+	CHECK is-include-line $'#include "iostream.h++"'
+	CHECK is-include-line $'#include "iostream.v2"'
+
+TEST-CASE 'is-include-line() with include line'
+	CHECK ! is-include-line $'#include<iostream>'
+
+	CHECK ! is-include-line $' #include <iostream>'
+	CHECK ! is-include-line $'  #include <iostream>'
+	CHECK ! is-include-line $'\t#include <iostream>'
+	CHECK ! is-include-line $'\t\t#include <iostream>'
+
+	CHECK ! is-include-line $'#include <iostream>'
+	CHECK ! is-include-line $'#include  <iostream>'
+	CHECK ! is-include-line $'#include\t<iostream>'
+	CHECK ! is-include-line $'#include\t\t<iostream>'
+
+	CHECK ! is-include-line $'#include <iostream> '
+	CHECK ! is-include-line $'#include <iostream>  '
+	CHECK ! is-include-line $'#include <iostream>\t'
+	CHECK ! is-include-line $'#include <iostream>\t\t'
+
+	CHECK ! is-include-line $' #include <iostream> '
+	CHECK ! is-include-line $'  #include  <iostream>  '
+	CHECK ! is-include-line $'\t#include\t<iostream>\t'
+	CHECK ! is-include-line $'\t\t#include\t\t<iostream>\t\t'
+
+	CHECK ! is-include-line $' \t#include \t<iostream> \t'
+	CHECK ! is-include-line $'\t #include\t <iostream>\t '
+
+TEST-CASE 'is-include-line() with malformed include line'
+	CHECK ! is-include-line $'#include"iostream'
+	CHECK ! is-include-line $'#include iostream"'
+	CHECK ! is-include-line $'#include ""'
+	CHECK ! is-include-line $'#include " "'
+

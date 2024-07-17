@@ -1,0 +1,26 @@
+USE-SANDBOX
+
+TEST-CASE 'amalgamate with "first" project'
+USE-REQUISITES 'first'
+	cd 'first'
+	CHECK-COMMAND amalgamate
+	CHECK-CONTENTS \
+		OF-FILE 'first-amalgamated/first.hpp' \
+		WITH-FILE 'expected/first-amalgamated.hpp'
+
+TEST-CASE 'amalgamate -i with "second" project'
+USE-REQUISITES 'second'
+	cd 'second'
+	CHECK-COMMAND amalgamate -i src
+	CHECK-CONTENTS \
+		OF-FILE 'second-amalgamated/second.hpp' \
+		WITH-FILE 'expected/second-amalgamated.hpp'
+
+TEST-CASE 'amalgamate -i with "third" project'
+USE-REQUISITES 'third'
+	cd 'third'
+	CHECK-COMMAND amalgamate -i sources
+	CHECK-CONTENTS \
+		OF-FILE 'third-amalgamated/third.hpp' \
+		WITH-FILE 'expected/third-amalgamated.hpp'
+

@@ -1,0 +1,9 @@
+USE-SANDBOX
+
+TEST-CASE 'amalgamate -t'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-COMMAND amalgamate -t
+	CHECK-CONTENTS \
+		OF-FILE 'project-amalgamated/project.hpp' \
+		WITH-FILE 'expected/project-amalgamated.hpp'

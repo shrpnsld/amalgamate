@@ -1,0 +1,187 @@
+source $(SAMPLE amalgamate)
+
+USE-SANDBOX 'path-expansion'
+
+SECTION 'Relative paths'
+
+TEST-CASE 'expand-path() with path at the same level as current'
+LINK-REQUISITES 'one.txt'
+	result=$(
+		expand-path 'one.txt'
+	)
+	CHECK [ "$result" == "$PWD/one.txt" ]
+
+	result=$(
+		expand-path './one.txt'
+	)
+	CHECK [ "$result" == "$PWD/one.txt" ]
+
+TEST-CASE 'expand-path() with relative path one level above'
+LINK-REQUISITES 'one'
+	result=$(
+		cd "$PWD/one"
+		expand-path '../one.txt'
+	)
+	CHECK [ "$result" == "$PWD/one.txt" ]
+
+	result=$(
+		cd "$PWD/one"
+		expand-path './../one.txt'
+	)
+	CHECK [ "$result" == "$PWD/one.txt" ]
+
+TEST-CASE 'expand-path() with relative path two levels above'
+LINK-REQUISITES 'one'
+	result=$(
+		cd "$PWD/one/three"
+		expand-path '../../one.txt'
+	)
+	CHECK [ "$result" == "$PWD/one.txt" ]
+
+	result=$(
+		cd "$PWD/one/three"
+		expand-path './../../one.txt'
+	)
+	CHECK [ "$result" == "$PWD/one.txt" ]
+
+TEST-CASE 'expand-dir-path() with relative path one level above and one level deep'
+LINK-REQUISITES 'one' 'two'
+	result=$(
+		cd "$PWD/one"
+		expand-path '../two/five.txt'
+	)
+	CHECK [ "$result" == "$PWD/two/five.txt" ]
+
+	result=$(
+		cd "$PWD/one"
+		expand-path './../two/five.txt'
+	)
+	CHECK [ "$result" == "$PWD/two/five.txt" ]
+
+TEST-CASE 'expand-dir-path() with relative path one level above and two levels deep'
+LINK-REQUISITES 'one' 'two'
+	result=$(
+		cd "$PWD/one"
+		expand-path '../two/five/eleven.txt'
+	)
+	CHECK [ "$result" == "$PWD/two/five/eleven.txt" ]
+
+	result=$(
+		cd "$PWD/one"
+		expand-path './../two/five/eleven.txt'
+	)
+	CHECK [ "$result" == "$PWD/two/five/eleven.txt" ]
+
+TEST-CASE 'expand-dir-path() with relative path two levels above and one level deep'
+LINK-REQUISITES 'one' 'two'
+	result=$(
+		cd "$PWD/one/three"
+		expand-path '../../two/five.txt'
+	)
+	CHECK [ "$result" == "$PWD/two/five.txt" ]
+
+	result=$(
+		cd "$PWD/one/three"
+		expand-path './../../two/five.txt'
+	)
+	CHECK [ "$result" == "$PWD/two/five.txt" ]
+
+TEST-CASE 'expand-dir-path() with relative path two levels above and two levels deep'
+LINK-REQUISITES 'one' 'two'
+	result=$(
+		cd "$PWD/one/three"
+		expand-path '../../two/five/eleven.txt'
+	)
+	CHECK [ "$result" == "$PWD/two/five/eleven.txt" ]
+
+	result=$(
+		cd "$PWD/one/three"
+		expand-path './../../two/five/eleven.txt'
+	)
+	CHECK [ "$result" == "$PWD/two/five/eleven.txt" ]
+
+
+SECTION 'Absolute paths'
+
+TEST-CASE 'expand-path() with absolute path same as current'
+LINK-REQUISITES 'one'
+	result=$(
+		expand-path "$PWD/one"
+	)
+	CHECK [ "$result" == "$PWD/one" ]
+
+TEST-CASE 'expand-path() with absolute path at the same level as current'
+LINK-REQUISITES 'one.txt'
+	result=$(
+		expand-path "$PWD/one.txt"
+	)
+	CHECK [ "$result" == "$PWD/one.txt" ]
+
+TEST-CASE 'expand-path() with absolute path one level above'
+LINK-REQUISITES 'one' 'two.txt'
+	result=$(
+		path="$PWD/two.txt"
+		cd 'one'
+		expand-path "$path"
+	)
+	CHECK [ "$result" == "$PWD/two.txt" ]
+
+TEST-CASE 'expand-path() with absolute path two levels above'
+LINK-REQUISITES 'one' 'two.txt'
+	result=$(
+		path="$PWD/two.txt"
+		cd 'one/three'
+		expand-path "$path"
+	)
+	CHECK [ "$result" == "$PWD/two.txt" ]
+
+TEST-CASE 'expand-path() with absolute path one level deep'
+LINK-REQUISITES 'one'
+	result=$(
+		expand-path "$PWD/one/three.txt"
+	)
+	CHECK [ "$result" == "$PWD/one/three.txt" ]
+
+TEST-CASE 'expand-path() with absolute path two levels deep'
+LINK-REQUISITES 'one'
+	result=$(
+		expand-path "$PWD/one/three/eight.txt"
+	)
+	CHECK [ "$result" == "$PWD/one/three/eight.txt" ]
+
+TEST-CASE 'expand-path() with absolute path one level above and one level deep'
+LINK-REQUISITES 'one' 'two'
+	result=$(
+		path="$PWD/two/five.txt"
+		cd 'one'
+		expand-path "$path"
+	)
+	CHECK [ "$result" == "$PWD/two/five.txt" ]
+
+TEST-CASE 'expand-path() with absolute path one level above and two levels deep'
+LINK-REQUISITES 'one' 'two'
+	result=$(
+		path="$PWD/two/five/eleven.txt"
+		cd 'one'
+		expand-path "$path"
+	)
+	CHECK [ "$result" == "$PWD/two/five/eleven.txt" ]
+
+TEST-CASE 'expand-path() with absolute path two levels above and one level deep'
+LINK-REQUISITES 'one' 'two'
+	result=$(
+		path="$PWD/two/five.txt"
+		cd 'one/three'
+		expand-path "$path"
+	)
+	CHECK [ "$result" == "$PWD/two/five.txt" ]
+
+TEST-CASE 'expand-path() with absolute path two levels above and two levels deep'
+LINK-REQUISITES 'one' 'two'
+	result=$(
+		path="$PWD/two/five/eleven.txt"
+		cd 'one/three'
+		expand-path "$path"
+	)
+	CHECK [ "$result" == "$PWD/two/five/eleven.txt" ]
+

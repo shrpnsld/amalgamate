@@ -1,0 +1,7 @@
+#ifndef DIFFERENT_INCLUDE_GUARD_ID
+#define DIFFERENT_INCLUDE_GUARD_ID
+
+// header
+// source
+
+#endif // DIFFERENT_INCLUDE_GUARD_ID

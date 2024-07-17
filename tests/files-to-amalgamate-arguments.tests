@@ -1,0 +1,26 @@
+USE-SANDBOX
+
+TEST-CASE 'amalgamate -- "one.hpp"'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-COMMAND amalgamate -- 'one.hpp'
+	CHECK-CONTENTS \
+		OF-FILE 'project-amalgamated/project.hpp' \
+		WITH-FILE 'expected/one-amalgamated.hpp'
+
+TEST-CASE 'amalgamate -- "one.hpp" "two.hpp"'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-COMMAND amalgamate -- 'one.hpp' 'two.hpp'
+	CHECK-CONTENTS \
+		OF-FILE 'project-amalgamated/project.hpp' \
+		WITH-FILE 'expected/one-two-amalgamated.hpp'
+
+TEST-CASE 'amalgamate -- "one.hpp" "two.hpp" "three.hpp"'
+USE-REQUISITES 'project'
+	cd 'project'
+	CHECK-COMMAND amalgamate -- 'one.hpp' 'two.hpp' 'three.hpp'
+	CHECK-CONTENTS \
+		OF-FILE 'project-amalgamated/project.hpp' \
+		WITH-FILE 'expected/one-two-three-amalgamated.hpp'
+

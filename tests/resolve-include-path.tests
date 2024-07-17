@@ -1,0 +1,112 @@
+source $(SAMPLE amalgamate)
+
+USE-SANDBOX 'path-expansion'
+
+TEST-CASE 'resolve-include-path() with relative path at the same level'
+LINK-REQUISITES 'one.txt' 'two.txt'
+	file_path="$PWD/one.txt"
+	include_path='two.txt'
+	result=$(resolve-include-path "$include_path" "$file_path")
+	CHECK [ "$result" == "$PWD/two.txt" ]
+
+	file_path="$PWD/one.txt"
+	include_path='./two.txt'
+	result=$(resolve-include-path "$include_path" "$file_path")
+	CHECK [ "$result" == "$PWD/two.txt" ]
+
+TEST-CASE 'resolve-include-path() with relative path one level deep'
+LINK-REQUISITES 'one' 'one.txt'
+	file_path="$PWD/one.txt"
+	include_path='one/three.txt'
+	result=$(resolve-include-path "$include_path" "$file_path")
+	CHECK [ "$result" == "$PWD/one/three.txt" ]
+
+	file_path="$PWD/one.txt"
+	include_path='./one/three.txt'
+	result=$(resolve-include-path "$include_path" "$file_path")
+	CHECK [ "$result" == "$PWD/one/three.txt" ]
+
+TEST-CASE 'resolve-include-path() with relative path two levels deep'
+LINK-REQUISITES 'one' 'one.txt'
+	file_path="$PWD/one.txt"
+	include_path='one/three/eight.txt'
+	result=$(resolve-include-path "$include_path" "$file_path")
+	CHECK [ "$result" == "$PWD/one/three/eight.txt" ]
+
+	file_path="$PWD/one.txt"
+	include_path='./one/three/eight.txt'
+	result=$(resolve-include-path "$include_path" "$file_path")
+	CHECK [ "$result" == "$PWD/one/three/eight.txt" ]
+
+TEST-CASE 'resolve-include-path() with relative path one level above'
+LINK-REQUISITES 'one'
+	file_path="$PWD/one/three/eight.txt"
+	include_path='../four.txt'
+	result=$(resolve-include-path "$include_path" "$file_path")
+	CHECK [ "$result" == "$PWD/one/four.txt" ]
+
+	file_path="$PWD/one/three/eight.txt"
+	include_path='./../four.txt'
+	result=$(resolve-include-path "$include_path" "$file_path")
+	CHECK [ "$result" == "$PWD/one/four.txt" ]
+
+TEST-CASE 'resolve-include-path() with relative path two levels above'
+LINK-REQUISITES 'one'
+	file_path="$PWD/one/three/eight.txt"
+	include_path='../../one.txt'
+	result=$(resolve-include-path "$include_path" "$file_path")
+	CHECK [ "$result" == "$PWD/one.txt" ]
+
+	file_path="$PWD/one/three/eight.txt"
+	include_path='./../../one.txt'
+	result=$(resolve-include-path "$include_path" "$file_path")
+	CHECK [ "$result" == "$PWD/one.txt" ]
+
+TEST-CASE 'resolve-include-path() with relative path one level above and one level deep'
+LINK-REQUISITES 'one'
+	file_path="$PWD/one/three/eight.txt"
+	include_path='../four/nine.txt'
+	result=$(resolve-include-path "$include_path" "$file_path")
+	CHECK [ "$result" == "$PWD/one/four/nine.txt" ]
+
+	file_path="$PWD/one/three/eight.txt"
+	include_path='./../four/nine.txt'
+	result=$(resolve-include-path "$include_path" "$file_path")
+	CHECK [ "$result" == "$PWD/one/four/nine.txt" ]
+
+TEST-CASE 'resolve-include-path() with relative path one level above and two levels deep'
+LINK-REQUISITES 'one' 'two'
+	file_path="$PWD/one/three.txt"
+	include_path='../two/five/eleven.txt'
+	result=$(resolve-include-path "$include_path" "$file_path")
+	CHECK [ "$result" == "$PWD/two/five/eleven.txt" ]
+
+	file_path="$PWD/one/three.txt"
+	include_path='./../two/five/eleven.txt'
+	result=$(resolve-include-path "$include_path" "$file_path")
+	CHECK [ "$result" == "$PWD/two/five/eleven.txt" ]
+
+TEST-CASE 'resolve-include-path() with relative path two levels above and one level deep'
+LINK-REQUISITES 'one' 'two'
+	file_path="$PWD/one/three/eight.txt"
+	include_path='../../two/five.txt'
+	result=$(resolve-include-path "$include_path" "$file_path")
+	CHECK [ "$result" == "$PWD/two/five.txt" ]
+
+	file_path="$PWD/one/three/eight.txt"
+	include_path='./../../two/five.txt'
+	result=$(resolve-include-path "$include_path" "$file_path")
+	CHECK [ "$result" == "$PWD/two/five.txt" ]
+
+TEST-CASE 'resolve-include-path() with relative path two levels above and two levels deep'
+LINK-REQUISITES 'one' 'two'
+	file_path="$PWD/one/three/eight.txt"
+	include_path='../../two/five/eleven.txt'
+	result=$(resolve-include-path "$include_path" "$file_path")
+	CHECK [ "$result" == "$PWD/two/five/eleven.txt" ]
+
+	file_path="$PWD/one/three/eight.txt"
+	include_path='./../../two/five/eleven.txt'
+	result=$(resolve-include-path "$include_path" "$file_path")
+	CHECK [ "$result" == "$PWD/two/five/eleven.txt" ]
+

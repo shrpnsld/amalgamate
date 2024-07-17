@@ -1,0 +1,26 @@
+USE-SANDBOX
+
+TEST-CASE 'amalgamate -g with "no-standard-headers" project'
+USE-REQUISITES 'no-standard-headers'
+	cd 'no-standard-headers'
+	CHECK-COMMAND amalgamate -g
+	CHECK-CONTENTS \
+		OF-FILE 'no-standard-headers-amalgamated/no-standard-headers.hpp' \
+		WITH-FILE 'expected/no-standard-headers.hpp'
+
+TEST-CASE 'amalgamate -g with "unique-headers" project'
+USE-REQUISITES 'unique-headers'
+	cd 'unique-headers'
+	CHECK-COMMAND amalgamate -g
+	CHECK-CONTENTS \
+		OF-FILE 'unique-headers-amalgamated/unique-headers.hpp' \
+		WITH-FILE 'expected/unique-headers.hpp'
+
+TEST-CASE 'amalgamate -g with "repeated-headers" project'
+USE-REQUISITES 'repeated-headers'
+	cd 'repeated-headers'
+	CHECK-COMMAND amalgamate -g
+	CHECK-CONTENTS \
+		OF-FILE 'repeated-headers-amalgamated/repeated-headers.hpp' \
+		WITH-FILE 'expected/repeated-headers.hpp'
+

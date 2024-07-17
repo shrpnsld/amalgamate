@@ -1,0 +1,10 @@
+USE-SANDBOX
+
+TEST-CASE 'amalgamate -g -L interlude.txt'
+USE-REQUISITES 'project' 'interlude.txt'
+	cd 'project'
+	CHECK-COMMAND amalgamate -g -L '../interlude.txt'
+	CHECK-CONTENTS \
+		OF-FILE 'project-amalgamated/project.hpp' \
+		WITH-FILE 'expected/project-amalgamated.hpp'
+

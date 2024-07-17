@@ -1,0 +1,127 @@
+source $(SAMPLE amalgamate)
+
+USE-SANDBOX
+
+TEST-CASE 'find-by-extensions() with "simple"'
+USE-REQUISITES 'simple'
+	result=($(find-by-extensions 'simple' 'hpp' 'cpp' | sort))
+	expected=(
+		'simple/main.cpp'
+		'simple/main.hpp'
+		'simple/utils.cpp'
+		'simple/utils.hpp'
+		)
+	CHECK [ ${#result[@]} == 4 ]
+	CHECK [ "${result[0]}" == "${expected[0]}" ]
+	CHECK [ "${result[1]}" == "${expected[1]}" ]
+	CHECK [ "${result[2]}" == "${expected[2]}" ]
+	CHECK [ "${result[3]}" == "${expected[3]}" ]
+
+TEST-CASE 'find-by-extensions() with "deep"'
+USE-REQUISITES 'deep'
+	result=($(find-by-extensions 'deep' 'hpp' 'cpp' | sort))
+	expected=(
+		'deep/src/component-one/component-one.cpp'
+		'deep/src/component-one/component-one.hpp'
+		'deep/src/component-three/component-three.cpp'
+		'deep/src/component-three/component-three.hpp'
+		'deep/src/component-two/component-two.cpp'
+		'deep/src/component-two/component-two.hpp'
+		'deep/src/main.cpp'
+		'deep/src/main.hpp'
+		'deep/src/utils/util-one.cpp'
+		'deep/src/utils/util-one.hpp'
+		'deep/src/utils/util-two.cpp'
+		'deep/src/utils/util-two.hpp'
+		)
+	CHECK [ ${#result[@]} == 12 ]
+	CHECK [ "${result[0]}" == "${expected[0]}" ]
+	CHECK [ "${result[1]}" == "${expected[1]}" ]
+	CHECK [ "${result[2]}" == "${expected[2]}" ]
+	CHECK [ "${result[3]}" == "${expected[3]}" ]
+	CHECK [ "${result[4]}" == "${expected[4]}" ]
+	CHECK [ "${result[5]}" == "${expected[5]}" ]
+	CHECK [ "${result[6]}" == "${expected[6]}" ]
+	CHECK [ "${result[7]}" == "${expected[7]}" ]
+	CHECK [ "${result[8]}" == "${expected[8]}" ]
+	CHECK [ "${result[9]}" == "${expected[9]}" ]
+	CHECK [ "${result[10]}" == "${expected[10]}" ]
+	CHECK [ "${result[11]}" == "${expected[11]}" ]
+
+TEST-CASE 'find-by-extensions() with "messy"'
+USE-REQUISITES 'messy'
+	result=($(find-by-extensions 'messy' 'h' 'hpp' 'hxx' 'cpp' 'cxx' | sort))
+	expected=(
+		'messy/constants.h'
+		'messy/main.cpp'
+		'messy/main.hpp'
+		'messy/utils.cxx'
+		'messy/utils.hxx'
+		)
+	CHECK [ ${#result[@]} == 5 ]
+	CHECK [ "${result[0]}" == "${expected[0]}" ]
+	CHECK [ "${result[1]}" == "${expected[1]}" ]
+	CHECK [ "${result[2]}" == "${expected[2]}" ]
+	CHECK [ "${result[3]}" == "${expected[3]}" ]
+	CHECK [ "${result[4]}" == "${expected[4]}" ]
+
+TEST-CASE 'find-by-extensions() with "deep-and-messy"'
+USE-REQUISITES 'deep-and-messy'
+	result=($(find-by-extensions 'deep-and-messy' 'h' 'hpp' 'hxx' 'h++' 'c' 'cpp' 'cxx' 'c++' | sort))
+	expected=(
+		'deep-and-messy/src/component-one/component-one.cpp'
+		'deep-and-messy/src/component-one/component-one.hpp'
+		'deep-and-messy/src/component-three/component-three.c++'
+		'deep-and-messy/src/component-three/component-three.h++'
+		'deep-and-messy/src/component-two/component-two.cpp'
+		'deep-and-messy/src/component-two/component-two.h'
+		'deep-and-messy/src/main.cpp'
+		'deep-and-messy/src/main.h'
+		'deep-and-messy/src/utils/util-one.c'
+		'deep-and-messy/src/utils/util-one.h'
+		'deep-and-messy/src/utils/util-two.cxx'
+		'deep-and-messy/src/utils/util-two.hxx'
+		)
+	CHECK [ ${#result[@]} == 12 ]
+	CHECK [ "${result[0]}" == "${expected[0]}" ]
+	CHECK [ "${result[1]}" == "${expected[1]}" ]
+	CHECK [ "${result[2]}" == "${expected[2]}" ]
+	CHECK [ "${result[3]}" == "${expected[3]}" ]
+	CHECK [ "${result[4]}" == "${expected[4]}" ]
+	CHECK [ "${result[5]}" == "${expected[5]}" ]
+	CHECK [ "${result[6]}" == "${expected[6]}" ]
+	CHECK [ "${result[7]}" == "${expected[7]}" ]
+	CHECK [ "${result[8]}" == "${expected[8]}" ]
+	CHECK [ "${result[9]}" == "${expected[9]}" ]
+	CHECK [ "${result[10]}" == "${expected[10]}" ]
+	CHECK [ "${result[11]}" == "${expected[11]}" ]
+
+TEST-CASE 'find-by-extension() with "not-a-cpp"'
+USE-REQUISITES 'not-a-cpp'
+	result=($(find-by-extensions 'not-a-cpp' 'h' 'hpp' 'hxx' 'h++' 'c' 'cpp' 'cxx' 'c++' | sort))
+	CHECK [ ${#result[@]} == 0 ]
+
+TEST-CASE 'find-by-extension() with "empty"'
+USE-REQUISITES 'empty'
+	result=($(find-by-extensions 'empty' 'h' 'hpp' 'hxx' 'h++' 'c' 'cpp' 'cxx' 'c++' | sort))
+	CHECK [ ${#result[@]} == 0 ]
+
+TEST-CASE 'find-by-extensions() with "deep-and-messy" selecting "h" and "cpp" files'
+USE-REQUISITES 'deep-and-messy'
+	result=($(find-by-extensions 'deep-and-messy' 'h' 'cpp' | sort))
+	expected=(
+		'deep-and-messy/src/component-one/component-one.cpp'
+		'deep-and-messy/src/component-two/component-two.cpp'
+		'deep-and-messy/src/component-two/component-two.h'
+		'deep-and-messy/src/main.cpp'
+		'deep-and-messy/src/main.h'
+		'deep-and-messy/src/utils/util-one.h'
+		)
+	CHECK [ ${#result[@]} == 6 ]
+	CHECK [ "${result[0]}" == "${expected[0]}" ]
+	CHECK [ "${result[1]}" == "${expected[1]}" ]
+	CHECK [ "${result[2]}" == "${expected[2]}" ]
+	CHECK [ "${result[3]}" == "${expected[3]}" ]
+	CHECK [ "${result[4]}" == "${expected[4]}" ]
+	CHECK [ "${result[5]}" == "${expected[5]}" ]
+

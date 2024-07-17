@@ -1,0 +1,20 @@
+source $(SAMPLE amalgamate)
+
+TEST-CASE 'detect-extension() with same extensions'
+	paths=('one.hpp')
+	result=$(detect-extension 'h' "${paths[@]}")
+	CHECK [ "$result" == 'hpp' ]
+
+	paths=('one.hpp' 'two.hpp')
+	result=$(detect-extension 'h' "${paths[@]}")
+	CHECK [ "$result" == 'hpp' ]
+
+	paths=('one.hpp' 'two.hpp' 'three.hpp')
+	result=$(detect-extension 'h' "${paths[@]}")
+	CHECK [ "$result" == 'hpp' ]
+
+TEST-CASE 'detect-extension() with different extensions'
+	paths=('one.hpp' 'two.hxx')
+	result=$(detect-extension 'h' "${paths[@]}")
+	CHECK [ "$result" == 'h' ]
+

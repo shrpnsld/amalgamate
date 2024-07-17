@@ -1,0 +1,67 @@
+source $(SAMPLE amalgamate)
+
+TEST-CASE 'is-standard-include-line() with standard include line'
+	CHECK is-standard-include-line $'#include<iostream>'
+
+	CHECK is-standard-include-line $' #include <iostream>'
+	CHECK is-standard-include-line $'  #include <iostream>'
+	CHECK is-standard-include-line $'\t#include <iostream>'
+	CHECK is-standard-include-line $'\t\t#include <iostream>'
+
+	CHECK is-standard-include-line $'#include <iostream>'
+	CHECK is-standard-include-line $'#include  <iostream>'
+	CHECK is-standard-include-line $'#include\t<iostream>'
+	CHECK is-standard-include-line $'#include\t\t<iostream>'
+
+	CHECK is-standard-include-line $'#include <iostream> '
+	CHECK is-standard-include-line $'#include <iostream>  '
+	CHECK is-standard-include-line $'#include <iostream>\t'
+	CHECK is-standard-include-line $'#include <iostream>\t\t'
+
+	CHECK is-standard-include-line $' #include <iostream> '
+	CHECK is-standard-include-line $'  #include  <iostream>  '
+	CHECK is-standard-include-line $'\t#include\t<iostream>\t'
+	CHECK is-standard-include-line $'\t\t#include\t\t<iostream>\t\t'
+
+	CHECK is-standard-include-line $' \t#include \t<iostream> \t'
+	CHECK is-standard-include-line $'\t #include\t <iostream>\t '
+
+TEST-CASE 'is-standard-include-line() with standard include line with non-alpha path'
+	CHECK is-standard-include-line $'#include <io-stream>'
+	CHECK is-standard-include-line $'#include <io/stream>'
+	CHECK is-standard-include-line $'#include <iostream.hpp>'
+	CHECK is-standard-include-line $'#include <iostream.h++>'
+	CHECK is-standard-include-line $'#include <iostream.v2>'
+
+TEST-CASE 'is-standard-include-line() with non-standard include line'
+	CHECK ! is-standard-include-line $'#include"not-iostream.hpp"'
+
+	CHECK ! is-standard-include-line $' #include "not-iostream.hpp"'
+	CHECK ! is-standard-include-line $'  #include "not-iostream.hpp"'
+	CHECK ! is-standard-include-line $'\t#include "not-iostream.hpp"'
+	CHECK ! is-standard-include-line $'\t\t#include "not-iostream.hpp"'
+
+	CHECK ! is-standard-include-line $'#include "not-iostream.hpp"'
+	CHECK ! is-standard-include-line $'#include  "not-iostream.hpp"'
+	CHECK ! is-standard-include-line $'#include\t"not-iostream.hpp"'
+	CHECK ! is-standard-include-line $'#include\t\t"not-iostream.hpp"'
+
+	CHECK ! is-standard-include-line $'#include "not-iostream.hpp" '
+	CHECK ! is-standard-include-line $'#include "not-iostream.hpp"  '
+	CHECK ! is-standard-include-line $'#include "not-iostream.hpp"\t'
+	CHECK ! is-standard-include-line $'#include "not-iostream.hpp"\t\t'
+
+	CHECK ! is-standard-include-line $' #include "not-iostream.hpp" '
+	CHECK ! is-standard-include-line $'  #include  "not-iostream.hpp"  '
+	CHECK ! is-standard-include-line $'\t#include\t"not-iostream.hpp"\t'
+	CHECK ! is-standard-include-line $'\t\t#include\t\t"not-iostream.hpp"\t\t'
+
+	CHECK ! is-standard-include-line $' \t#include \t"not-iostream.hpp" \t'
+	CHECK ! is-standard-include-line $'\t #include\t "not-iostream.hpp"\t '
+
+TEST-CASE 'is-standard-include-line() with malformed standard include line'
+	CHECK ! is-standard-include-line $'#include<iostream'
+	CHECK ! is-standard-include-line $'#include iostream>'
+	CHECK ! is-standard-include-line $'#include <>'
+	CHECK ! is-standard-include-line $'#include < >'
+

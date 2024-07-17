@@ -1,0 +1,36 @@
+source $(SAMPLE amalgamate)
+
+TEST-CASE 'make-include-guard-id() with simple file name'
+	result=$(make-include-guard-id 'header')
+	CHECK [ "$result" == 'HEADER_INCLUDED' ]
+
+	result=$(make-include-guard-id 'Header')
+	CHECK [ "$result" == 'HEADER_INCLUDED' ]
+
+TEST-CASE 'make-include-guard-id() with "." in the file name'
+	result=$(make-include-guard-id 'header.hpp')
+	CHECK [ "$result" == 'HEADER_HPP_INCLUDED' ]
+
+TEST-CASE 'make-include-guard-id() with "-" in the file name'
+	result=$(make-include-guard-id 'some-header')
+	CHECK [ "$result" == 'SOME_HEADER_INCLUDED' ]
+
+TEST-CASE 'make-include-guard-id() with "(" in the file name'
+	result=$(make-include-guard-id 'some(header')
+	CHECK [ "$result" == 'SOME_HEADER_INCLUDED' ]
+
+TEST-CASE 'make-include-guard-id() with ")" in the file name'
+	result=$(make-include-guard-id 'some)header')
+	CHECK [ "$result" == 'SOME_HEADER_INCLUDED' ]
+
+TEST-CASE 'make-include-guard-id() with "_" in the file name'
+	result=$(make-include-guard-id 'some_header')
+	CHECK [ "$result" == 'SOME_HEADER_INCLUDED' ]
+
+TEST-CASE 'make-include-guard-id() with all of the above'
+	result=$(make-include-guard-id 'some-header.hpp')
+	CHECK [ "$result" == 'SOME_HEADER_HPP_INCLUDED' ]
+
+	result=$(make-include-guard-id 'some_header.hpp')
+	CHECK [ "$result" == 'SOME_HEADER_HPP_INCLUDED' ]
+

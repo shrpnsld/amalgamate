@@ -1,0 +1,50 @@
+source $(SAMPLE amalgamate)
+
+TEST-CASE 'is-blank-line() with empty string'
+	CHECK is-blank-line ''
+
+TEST-CASE 'is-blank-line() with spaces"'
+	CHECK is-blank-line ' '
+	CHECK is-blank-line '  '
+
+TEST-CASE 'is-blank-line() with tabs'
+	CHECK is-blank-line $'\t'
+	CHECK is-blank-line $'\t\t'
+
+TEST-CASE 'is-blank-line() with spaces and tabs'
+	CHECK is-blank-line $' \t'
+	CHECK is-blank-line $'\t '
+	CHECK is-blank-line $' \t \t'
+	CHECK is-blank-line $'\t \t '
+
+TEST-CASE 'is-blank-line() with non-space only'
+	CHECK ! is-blank-line 'a'
+	CHECK ! is-blank-line 'aa'
+	CHECK ! is-blank-line 'aaa'
+
+TEST-CASE 'is-blank-line() with non-space and space'
+	CHECK ! is-blank-line ' a'
+	CHECK ! is-blank-line 'a '
+	CHECK ! is-blank-line ' a '
+	CHECK ! is-blank-line '  a  '
+	CHECK ! is-blank-line 'a a'
+	CHECK ! is-blank-line 'aa aa'
+
+TEST-CASE 'is-blank-line() with non-space and tab'
+	CHECK ! is-blank-line $'\ta'
+	CHECK ! is-blank-line $'a\t'
+	CHECK ! is-blank-line $'\ta\t'
+	CHECK ! is-blank-line $'\t\ta\t\t'
+	CHECK ! is-blank-line $'a\ta'
+	CHECK ! is-blank-line $'aa\taa'
+
+TEST-CASE 'is-blank-line() with non-space, space and tab'
+	CHECK ! is-blank-line $' \ta'
+	CHECK ! is-blank-line $'a \t'
+	CHECK ! is-blank-line $'\t a'
+	CHECK ! is-blank-line $'a\t '
+	CHECK ! is-blank-line $' \ta \t'
+	CHECK ! is-blank-line $'\t a\t '
+	CHECK ! is-blank-line $'  a\t\t'
+	CHECK ! is-blank-line $'\t\ta  '
+

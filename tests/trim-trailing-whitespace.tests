@@ -1,0 +1,25 @@
+source $(SAMPLE amalgamate)
+
+USE-SANDBOX
+
+TEST-CASE 'trim-trailing-whitespace() with empty file'
+USE-REQUISITES 'empty.hpp'
+	trim-trailing-whitespace 'empty.hpp'
+	CHECK-CONTENTS \
+		OF-FILE 'empty.hpp' \
+		WITH-FILE 'expected/empty.hpp'
+
+TEST-CASE 'trim-trailing-whitespace() with trimmed file'
+USE-REQUISITES 'trimmed.hpp'
+	trim-trailing-whitespace 'trimmed.hpp'
+	CHECK-CONTENTS \
+		OF-FILE 'trimmed.hpp' \
+		WITH-FILE 'expected/trimmed.hpp'
+
+TEST-CASE 'trim-trailing-whitespace() with non-trimmed file'
+USE-REQUISITES 'non-trimmed.hpp'
+	trim-trailing-whitespace 'non-trimmed.hpp'
+	CHECK-CONTENTS \
+		OF-FILE 'non-trimmed.hpp' \
+		WITH-FILE 'expected/non-trimmed.hpp'
+
