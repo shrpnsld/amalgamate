@@ -1,0 +1,3 @@
+[submodule "external/bash-test"]
+	path = external/bash-test
+	url = https://github.com/shrpnsld/bash-test
