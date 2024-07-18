@@ -35,6 +35,7 @@ $ amalgamate [options] # amalgamate all files in current directory and their dep
 * `-P <file>` – add this file on top of amalgamated header.
 * `-p <file>` – add this file on top of amalgamated source.
 * `-G <id>` or `-G ''` – Instead of `#pragma once` use include guard with macro `id` or generate macro from header name.
+* `-L <file>` – Add this file after include guard, but before any includes inside amalgamated header.
 * `-g` – group uninlined headers on top.
 * `-1 <path>` – put this file on top of amalgamation queue (path should be relative to the input directory).
 * `-b <count>` – reduce consecutive blank lines to no more than `<count>`.
