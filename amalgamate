@@ -5,14 +5,14 @@
 
 # [bash-it:start]
 
-SCRIPT_NAME=$(basename $0)
+readonly SCRIPT_NAME=$(basename $0)
 
 if [[ -t 1 ]] && (( $(tput colors) > 0 ))
 then
-	TS_N='\e[0m'
-	TS_RED='\e[0;31m'
-	TS_B='\e[1m'
-	TS_U='\e[4m'
+	readonly TS_N='\e[0m'
+	readonly TS_RED='\e[0;31m'
+	readonly TS_B='\e[1m'
+	readonly TS_U='\e[4m'
 fi
 
 printf-error()
@@ -25,13 +25,13 @@ printf-error()
 #
 # Constants
 
-OUTPUT_DIRECTORY_SUFFIX='amalgamated'
-DEFAULT_INPUT_HEADER_EXTENSIONS=(h hh hpp hxx h++ tpp txx tpl ii ixx ipp inl)
-DEFAULT_INPUT_SOURCE_EXTENSIONS=(c cc cpp cxx c++)
-DEFAULT_OUTPUT_HEADER_EXTENSION='h'
-DEFAULT_OUTPUT_SOURCE_EXTENSION='cpp'
+readonly OUTPUT_DIRECTORY_SUFFIX='amalgamated'
+readonly DEFAULT_INPUT_HEADER_EXTENSIONS=(h hh hpp hxx h++ tpp txx tpl ii ixx ipp inl)
+readonly DEFAULT_INPUT_SOURCE_EXTENSIONS=(c cc cpp cxx c++)
+readonly DEFAULT_OUTPUT_HEADER_EXTENSION='h'
+readonly DEFAULT_OUTPUT_SOURCE_EXTENSION='cpp'
 
-HELP_MESSAGE=\
+readonly HELP_MESSAGE=\
 "${TS_B}USAGE${TS_N}
   ${TS_B}amalgamate${TS_N} [options] – amalgamate everything it can find in the input directory
   ${TS_B}amalgamate${TS_N} [options] -- <file>... – amalgamate specified files
@@ -62,8 +62,8 @@ ${TS_B}OPTIONS${TS_N}
 ${TS_B}More information at${TS_N} ${TS_U}https://github.com/shrpnsld/amalgamate${TS_N}
 "
 
-HEADER_STRING_TEMPLATE='%s// ============================================================================\n%s// == %s ==\n%s// =='
-FOOTER_STRING_TEMPLATE='%s// ==\n%s// == %s ==\n%s// ============================================================================'
+readonly HEADER_STRING_TEMPLATE='%s// ============================================================================\n%s// == %s ==\n%s// =='
+readonly FOOTER_STRING_TEMPLATE='%s// ==\n%s// == %s ==\n%s// ============================================================================'
 
 #
 # Options
@@ -100,9 +100,9 @@ PROCESS_STANDARD_HEADER_FUNCTION=file-printf
 #
 # Functions
 
-PARAMETER_TYPE_OPTION=1
-PARAMETER_TYPE_DELIMITER=2
-PARAMETER_TYPE_BAD=255
+readonly PARAMETER_TYPE_OPTION=1
+readonly PARAMETER_TYPE_DELIMITER=2
+readonly PARAMETER_TYPE_BAD=255
 parameter-type()
 {
 	local string=$1
@@ -121,7 +121,7 @@ parameter-type()
 	return $PARAMETER_TYPE_BAD
 }
 
-PARSE_OPTION_UNKNOWN_OPTION=255
+readonly PARSE_OPTION_UNKNOWN_OPTION=255
 parse-option()
 {
 	local option=$1
