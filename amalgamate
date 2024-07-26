@@ -335,13 +335,13 @@ validate-options()
 	fi
 
 	# '-p' is same as '-P' when generating single header
-	if $AMALGAMATE_INTO_HEADER && ! $AMALGAMATE_INTO_SOURCE && [ -z "$HEADER_PRELUDE_FILE_PATH" ] && [ -n "$SOURCE_PRELUDE_FILE_PATH" ]
+	if $AMALGAMATE_INTO_HEADER && ! $AMALGAMATE_INTO_SOURCE && [[ -z $HEADER_PRELUDE_FILE_PATH ]] && [[ -n $SOURCE_PRELUDE_FILE_PATH ]]
 	then
 		HEADER_PRELUDE_FILE_PATH="$SOURCE_PRELUDE_FILE_PATH"
 	fi
 
 	# '-P' is same as '-p' when generating single source
-	if $AMALGAMATE_INTO_SOURCE && ! $AMALGAMATE_INTO_HEADER && [ -z "$SOURCE_PRELUDE_FILE_PATH" ] && [ -n "$HEADER_PRELUDE_FILE_PATH" ]
+	if $AMALGAMATE_INTO_SOURCE && ! $AMALGAMATE_INTO_HEADER && [[ -z $SOURCE_PRELUDE_FILE_PATH ]] && [[ -n $HEADER_PRELUDE_FILE_PATH ]]
 	then
 		SOURCE_PRELUDE_FILE_PATH="$HEADER_PRELUDE_FILE_PATH"
 	fi
@@ -785,7 +785,7 @@ get-tag()
 {
 	local line=$1
 
-	if ! [[ "$line" =~ ^.*\/\/[\ \	]*\[[\ \	]*amalgamate[\ \	]*:[\ \	]*[a-z]+[\ \	]*\][\ \	]*$ ]]
+	if ! [[ $line =~ ^.*\/\/[\ \	]*\[[\ \	]*amalgamate[\ \	]*:[\ \	]*[a-z]+[\ \	]*\][\ \	]*$ ]]
 	then
 		return
 	fi
@@ -838,7 +838,7 @@ inline-file()
 	file-print-header-annotation "$output_path" "$relative_file_path" "$indent"
 
 	local line
-	while read -r line || [ -n "$line" ]
+	while read -r line || [[ -n $line ]]
 	do
 		local tag=$(get-tag "$line")
 		if [[ $tag == 'leave' ]]
@@ -974,7 +974,7 @@ reduce-blank-lines()
 
 	local empty_line_count=0
 	local line
-	while read -r line || [ -n "$line" ]
+	while read -r line || [[ -n $line ]]
 	do
 		if [[ -z $line ]]
 		then
@@ -1196,7 +1196,7 @@ trim-trailing-whitespace()
 		then
 			printf-message 'Grouping standard headers on top...\n'
 			standard_includes=($(gather-standard-include-paths "${HEADER_FILES[@]}" "${SOURCE_FILES[@]}"))
-			if [[ ${#standard_includes[@]} > 0 ]]
+			if (( ${#standard_includes[@]} > 0 ))
 			then
 				file-printf "$output_header_path" '#include <%s>\n' "${standard_includes[@]}"
 			fi
@@ -1223,7 +1223,7 @@ trim-trailing-whitespace()
 		then
 			printf-message 'Grouping standard headers on top...\n'
 			standard_includes=($(gather-standard-include-paths "${HEADER_FILES[@]}" "${SOURCE_FILES[@]}"))
-			if [[ ${#standard_includes[@]} > 0 ]]
+			if (( ${#standard_includes[@]} > 0 ))
 			then
 				file-printf "$output_source_path" '#include <%s>\n' "${standard_includes[@]}"
 			fi
@@ -1265,12 +1265,12 @@ trim-trailing-whitespace()
 
 			standard_includes_in_sources=($(filter-array-with-array "${#standard_includes_in_sources[@]}" "${standard_includes_in_sources[@]}" "${#standard_includes_in_headers[@]}" "${standard_includes_in_headers[@]}"))
 
-			if [[ ${#standard_includes_in_headers[@]} > 0 ]]
+			if (( ${#standard_includes_in_headers[@]} > 0 ))
 			then
 				file-printf "$output_header_path" '#include <%s>\n' "${standard_includes_in_headers[@]}"
 			fi
 
-			if [[ ${#standard_includes_in_sources[@]} > 0 ]]
+			if (( ${#standard_includes_in_sources[@]} > 0 ))
 			then
 				file-printf "$output_source_path" '#include <%s>\n' "${standard_includes_in_sources[@]}"
 			fi
