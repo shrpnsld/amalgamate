@@ -590,7 +590,7 @@ find-by-extensions()
 		arguments+=" -or -name '*.$extension'"
 	done
 
-	eval 'find "'"$path"'" -type f '"$arguments"
+	eval 'find "'"$path"'" -type f '"$arguments" | sort
 }
 
 is-include-line()
