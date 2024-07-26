@@ -1,5 +1,7 @@
 # amalgamate
 
+![tests](https://github.com/shrpnsld/amalgamate/actions/workflows/tests.yml/badge.svg)
+
 Combines multiple C/C++ header and source files into a single header, a single source, or a header-source pair.
 
 ### Features
