@@ -1,34 +1,34 @@
 #pragma once
 
 // ============================================================================
-// == ./utility.hpp ==
+// == ./implementation.hpp ==
 // ==
 // #pragma once
-void utility()
+	// ============================================================================
+	// == ./utility.hpp ==
+	// ==
+	// #pragma once
+	void utility()
+	{
+	}
+	// ==
+	// == ./utility.hpp ==
+	// ============================================================================
+
+
+void func()
 {
+	utility()
 }
 // ==
-// == ./utility.hpp ==
+// == ./implementation.hpp ==
 // ============================================================================
 
 // ============================================================================
 // == ./interface.hpp ==
 // ==
 // #pragma once
-	// ============================================================================
-	// == ./implementation.hpp ==
-	// ==
-	// #pragma once
-	// #include "utility.hpp"    // amalgamate: file already inlined
-
-	void func()
-	{
-		utility()
-	}
-	// ==
-	// == ./implementation.hpp ==
-	// ============================================================================
-
+// #include "implementation.hpp"    // amalgamate: file already inlined
 // #include "utility.hpp"    // amalgamate: file already inlined
 
 void inteface()
