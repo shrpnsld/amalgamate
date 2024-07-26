@@ -967,8 +967,8 @@ reduce-blank-lines()
 	local file_path=$1
 	local empty_line_limit=$2
 
-	local temp="$file_path.tmp"
-	mktemp "$temp" &> /dev/null
+	local file_name=$(basename "$file_path")
+	local temp=$(mktemp -t "$file_name.tmp.XXX")
 
 	IFS=$'\n'
 
