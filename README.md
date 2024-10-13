@@ -7,24 +7,21 @@ Combines multiple C/C++ header and source files into a single header, a single s
 ### Features
 
 * Offers a lot of control over the amalgamation process, but does not require you to use all of it.
-* Written with Bash 3.2, so it works even on macOS with its stock Bash installation.
+* Written in Bash 3.2, so it works even on macOS with its stock Bash installation.
+* No dependencies (except for an optional one that's only needed for running tests).
 
 
 
-# Usage
+## Usage
+
 
 ```bash
-$ # Get it
-$ git clone https://github.com/shrpnsld/amalgamate.git
+$ amalgamate [options]
 ```
-```bash
-$ # Use it
-$ amalgamate [options] # amalgamate all files in current directory and their dependencies
-```
-
 
 
 ### Options
+
 * `-i <path>` – input directory (defalt: current working directory).
 * `-I <path>` – include directory (default: input directory).
 * `-e <ext,ens,ions...>` – input header extensions.
@@ -47,14 +44,14 @@ $ amalgamate [options] # amalgamate all files in current directory and their dep
 * `-- <file> ...` – specify files to amalgamate, rather than amalgamate everything in the input directory.
 * `-h` – show help message.
 
+
 ### Tags
 
 Some lines in the source code may need additional rules for processing, which you can mark with tags in the comments `[amalgamate:<tag>]`:
 
-* `leave` – do not process line and insert it as is into amalgamated file.
-* `remove` – do not insert line into amalgamated file.
-* `uncomment` – uncomment line in amalgamated file.
-
+* `leave` – do not process this line and insert it as-is into the amalgamated file.
+* `remove` – do not insert this line into the amalgamated file.
+* `uncomment` – uncomment this line in the amalgamated file.
 
 #### Example:
 
@@ -67,7 +64,7 @@ Some lines in the source code may need additional rules for processing, which yo
 
 
 
-# Notes
+## Notes
 
 Default extensions for input headers are *h*, *hh*, *hpp*, *hxx*, *h++*, *tpp*, *txx*, *tpl*, *ii*, *ixx*, *ipp*, *inl*. Default extensions for input sources are *c*, *cc*, *cpp*, *cxx*, *c++*.
 
@@ -75,7 +72,7 @@ Default extensions for input headers are *h*, *hh*, *hpp*, *hxx*, *h++*, *tpp*, 
 
 `-L` can be used to place commented defines that control the amalgamated project's behavior. In some cases, this might be more convenient than changing the parent project's settings.
 
-`-G ''` will generate the macro name by uppercasing the header name, changing non-letter characters with `_`, and adding the suffix `_INCLUDED`. For example, *some-header.hpp* will have the include guard macro `SOME_HEADER_HPP_INCLUDED`.
+`-G ''` will generate the macro name by uppercasing the header name, substituting non-alphanumaric characters with `_`, and adding the suffix `_INCLUDED`. For example, *some-header.hpp* will have the include guard macro `SOME_HEADER_HPP_INCLUDED`.
 
 `-1` can be useful when you want the content of a certain file to appear before the content of any other file (but after the prelude, include guard, interlude, and include directives). The typical usage is to put the module interface as the first code the user will see in the amalgamated file.
 
